@@ -57,7 +57,8 @@ theorem no_compressionCharging_of_weightedCount_lt_min
       D.boundaryLoop.lift.first.winding
       D.boundaryLoop.lift.second.winding)
     (hsmall : (S.outerFinite.toFinset.card : ℝ) +
-      2 * (S.cutFinite.toFinset.card : ℝ) < (min p q : ℝ)) :
+      2 * (S.cutFinite.toFinset.card : ℝ) <
+        ((Nat.min p q : ℕ) : ℝ)) :
     ¬ Nonempty (CompressionCharging S D p q) := by
   rintro ⟨charge⟩
   have hcard : min p q ≤ S.countedEvents.card := by
@@ -70,7 +71,7 @@ theorem no_compressionCharging_of_weightedCount_lt_min
       charge.injOn
     simpa using h
   rw [card_countedEvents] at hcard
-  have hcardReal : (min p q : ℝ) ≤
+  have hcardReal : ((Nat.min p q : ℕ) : ℝ) ≤
       (S.outerFinite.toFinset.card : ℝ) +
         2 * (S.cutFinite.toFinset.card : ℝ) := by
     exact_mod_cast hcard
@@ -85,7 +86,8 @@ theorem no_compressionCharging_of_distortion_lt
       (transportedLoopCoordinates Phi D.boundaryLoop.curve)
       D.boundaryLoop.lift.first.winding
       D.boundaryLoop.lift.second.winding)
-    (hcontra : 160 * (distortion K).toReal < (min p q : ℝ)) :
+    (hcontra : 160 * (distortion K).toReal <
+      ((Nat.min p q : ℕ) : ℝ)) :
     ¬ Nonempty (CompressionCharging S D p q) :=
   S.no_compressionCharging_of_weightedCount_lt_min D p q C
     (S.weightedCount_lt_min p q hcontra)

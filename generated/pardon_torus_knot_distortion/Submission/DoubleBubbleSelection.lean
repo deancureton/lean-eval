@@ -146,9 +146,11 @@ strictly smaller than `min p q`. -/
 theorem DoubleBubbleSelection.weightedCount_lt_min
     {K : Knot} {frame : Equiv.Perm (Fin 3)} {c : R3} {r : ℝ}
     (S : DoubleBubbleSelection K frame c r) (p q : ℕ)
-    (hcontra : 160 * (distortion K).toReal < (min p q : ℝ)) :
+    (hcontra : 160 * (distortion K).toReal <
+      ((Nat.min p q : ℕ) : ℝ)) :
     (S.outerFinite.toFinset.card : ℝ) +
-        2 * (S.cutFinite.toFinset.card : ℝ) < (min p q : ℝ) :=
+        2 * (S.cutFinite.toFinset.card : ℝ) <
+      ((Nat.min p q : ℕ) : ℝ) :=
   S.weightedCount_le.trans_lt hcontra
 
 end
