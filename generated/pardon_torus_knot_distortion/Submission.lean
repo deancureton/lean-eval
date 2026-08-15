@@ -5,8 +5,11 @@ import Submission.ArcCoordinate
 import Submission.BoxGeometry
 import Submission.Coarea.FiniteBranches
 import Submission.Distortion
+import Submission.LocalArc
 import Submission.Shrinking
 import Submission.Topology.CircleDegree
+import Submission.Topology.DiskWinding
+import Submission.Torus.AmbientTransfer
 import Submission.Torus.Standard
 
 open LeanEval.KnotTheory.PardonDistortion
