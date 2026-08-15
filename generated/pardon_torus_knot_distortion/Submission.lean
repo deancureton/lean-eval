@@ -19,6 +19,10 @@ import Submission.Coarea.PlaneSlice
 import Submission.Coarea.SmoothCarrierPlaneSelection
 import Submission.Coarea.SmoothCarrierPlaneAvoiding
 import Submission.Coarea.SurfaceRegularBasedDoubleBubbleSelection
+import Submission.Coarea.SuperellipsoidCriticalScales
+import Submission.Coarea.SuperellipsoidCutSelection
+import Submission.Coarea.SuperellipsoidOuterSelection
+import Submission.Coarea.SuperellipsoidSeamSard
 import Submission.CompressionExclusion
 import Submission.Distortion
 import Submission.DoubleBubbleSelection
@@ -34,6 +38,10 @@ import Submission.RegularDoubleBubbleSelection
 import Submission.RegularPardonGeometricStep
 import Submission.Shrinking
 import Submission.SardMoreira
+import Submission.SuperellipsoidCompressionExclusion
+import Submission.SuperellipsoidDoubleBubbleSelection
+import Submission.SuperellipsoidGeometry
+import Submission.SuperellipsoidPardonGeometricStep
 import Submission.Topology.CircleDegree
 import Submission.Topology.CircleSignedDegree
 import Submission.Topology.CoordinatePlane
@@ -55,6 +63,8 @@ import Submission.Topology.IntersectionCertificate
 import Submission.Topology.InnermostCircleSurgery
 import Submission.Topology.InessentialRegularPlaneSection
 import Submission.Topology.InessentialSliceCircle
+import Submission.Topology.InessentialTorusCircleDisk
+import Submission.Topology.JordanTranslate
 import Submission.Topology.LocalFlatness
 import Submission.Topology.LoopCarrier
 import Submission.Topology.LoopHalfspaceCut
@@ -78,7 +88,10 @@ import Submission.Topology.RegularCircleRootGlobalDegree
 import Submission.Topology.RegularLevelTangentODE
 import Submission.Topology.SmoothWindingApproximation
 import Submission.Topology.FourierSmoothApproximation
+import Submission.Topology.FinitePunctureAxisCarrier
+import Submission.Topology.FinitePunctureCarrierPushout
 import Submission.Topology.SmoothLoopCarrier
+import Submission.Topology.TorusDiskPuncture
 import Submission.Topology.TransportedTorusRegularLevels
 import Submission.Topology.TransverseContinuation
 import Submission.Topology.TransverseBranchIFT

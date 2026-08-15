@@ -3,9 +3,10 @@
 This note describes the proof of the `pardon_torus_knot_distortion` benchmark theorem and maps
 each mathematical step to the solver modules under
 `generated/pardon_torus_knot_distortion/Submission/`.  The formulation follows Pardon's
-double-bubble proof, with rational boxes of aspect ratio `5/4` in place of irrational cube-root
-boxes.  This change preserves the published constant `160` and makes all box arithmetic exact in
-Lean.
+double-bubble proof.  Rational boxes of aspect ratio `5/4` control the nesting, while a smooth
+degree-256 superellipsoid is used for the actual outer cut.  The smooth body removes all
+face/ridge compatibility issues, preserves the exact shrink factor, and improves the event bound
+from the published `160D` to `156D`.
 
 ## Statement and contradiction setup
 
@@ -76,20 +77,34 @@ half-boxes then fit in a cyclically oriented successor box of scale
 All of these are rational identities or strict rational inequalities.  They are proved in
 `BoxGeometry.lean`, `OrientedBox.lean`, and the selection packaging modules.
 
-## 3. The two coarea selections
+## 3. The two smooth coarea selections
 
-First choose an outer scale `R` in `(r,(8/7)r]`.  Apply the one-dimensional coarea formula to the
-Lipschitz rational-box gauge along the knot.  The local arclength bound is at most `10RD`, and the
-available shell width is `r/7`.  A regular shell exists whose number of knot intersections is at
-most
+In framed, normalized coordinates put
 
 ```text
-80D.
+G(x) = (Σᵢ |xᵢ|^256)^(1/256),       P(x) = Σᵢ xᵢ^256.
 ```
 
-The selected value simultaneously avoids all critical values of the six smooth face-coordinate
-lifts of the transported torus.  Planar Sard–Moreira makes their union null, so the same shell is
-regular on every face without changing the knot count.
+Thus `G ≤ R` and `P ≤ R^256` describe the same closed superellipsoid.  Write
+
+```text
+a = 193/192,       b = 8/7.
+```
+
+The rational box of scale `r` is contained in the superellipsoid of scale `a r`, while the
+superellipsoid of scale `R` is contained in the rational box of scale `R`.  The latter box has the
+sharper diameter bound `(9/2)R`.  Hence the portion of the knot in the body has arclength at most
+`9RD`.  The gauge is `a`-Lipschitz in the ambient Euclidean metric.  Applying the branch-free
+one-dimensional coarea theorem over the interval `(a r,b r]` therefore gives a scale `R` with
+
+```text
+#(K ∩ {G = R}) ≤ a * 9b/(b-a) * D < 76D.
+```
+
+The same `R` is chosen so that `R^256` is a regular value of `P` restricted to the transported
+torus.  Planar Sard says that the polynomial critical values form a null set.  On the compact
+positive scale interval, the positive 256th-root map is Lipschitz, so pulling those values back to
+scales preserves nullity.  Thus regularity costs no intersections.
 
 Next choose a cutting height in the central interval of width `2r/7`.  Applying coarea to the long
 coordinate gives at most
@@ -98,59 +113,73 @@ coordinate gives at most
 40D
 ```
 
-knot intersections.  The exceptional set is enlarged by the critical values of two smooth
-independent carrier loops, and by the single long-coordinate value of their common basepoint.
-These sets are null, so the count is unchanged.  Hence the cut is regular for the knot and both
-loops, and the basepoint lies strictly on one side.
+knot intersections.  The exceptional set is enlarged by three further null sets: the critical
+values of the long coordinate on the whole transported torus, the critical heights of the
+one-dimensional outer seam, and the finitely many heights of knot points already counted on the
+outer surface.  The first set is null by planar Sard.  For the second, apply equal-dimensional
+Sard to the planar map `(P,height) : ℝ² → ℝ²`.  A determinant-critical seam point maps
+to a critical value of this pair.  The critical-value set is planar-null, so Fubini says that its
+vertical section is one-dimensional-null for almost every polynomial level.  The outer scale is
+chosen to avoid the exceptional levels, using the same locally Lipschitz positive 256th-root map
+as above.  Avoiding the third finite set makes the outer and cutting event sets literally
+disjoint.
 
-The branch-free Lipschitz coarea theorem, Sard port, and selectors are in `Coarea/General.lean`,
-`Coarea/Lipschitz.lean`, `SardMoreira/`, `Coarea/FacewiseRegularOuterBoundarySelection.lean`,
-`Coarea/SmoothCarrierPlaneSelection.lean`, and `Coarea/SmoothCarrierPlaneAvoiding.lean`.
+The branch-free Lipschitz coarea theorem, Sard port, and smooth selectors are in
+`Coarea/General.lean`, `Coarea/Lipschitz.lean`, `SardMoreira/`,
+`SuperellipsoidGeometry.lean`, `Coarea/SuperellipsoidOuterSelection.lean`,
+`Coarea/SuperellipsoidCriticalScales.lean`, `Coarea/SuperellipsoidCutSelection.lean`, and the
+Sard–Fubini seam selector.
 
 ## 4. Cutting the torus and the double-bubble alternative
 
-The carried-genus witness consists of two loops on the transported torus with independent winding
-pairs.  They pass through one common basepoint.  Smooth Fourier approximation preserves the
-basepoint and both winding pairs while putting both loops in general position with the selected
-plane.
-
-The selected outer boundary and cutting disk form a double bubble.  Starting with the outer box
-boundary, perform a one-parameter sphere surgery across the cutting disk.  At the end there are
-the two half-box boundary spheres.  Put this family in general position with the transported
-torus; away from finitely many surgery times, every intersection is a finite union of embedded
-circles.
+The outer superellipsoid and the cutting disk form a double bubble.  Perform the standard
+two-surgery on the outer sphere along the disk.  This gives a one-parameter family of embedded
+spheres; at the terminal time it is the disjoint union of slight inward roundings of the two
+half-spheres.  The seam was chosen away from the knot, and all geometric containments are strict,
+so the rounding neither changes a knot intersection nor loses the successor-box containment.
+After a generic perturbation, the sphere is transverse to the transported torus except at finitely
+many elementary surgery times.  At every regular time its knot intersections inject into the
+disjoint event set consisting of one outer copy and two tagged cut copies, hence number at most
+`156D`.
 
 There are two cases.
 
-1. Every intersection circle throughout the sphere surgery is inessential on the torus.  At a
-   regular time, exactly one component of the torus cut along those circles retains the full
-   rank-two image in `H₁(T²; ℚ)`; all other pieces are planar.  A single elementary surgery changes
-   that image rank by at most one, while for a torus its possible full-genus values are zero and
-   two.  Hence the full-genus component cannot disappear as the sphere varies.  At the terminal
-   double bubble it lies inside one of the two half-boxes.  Choosing two based generators in that
-   component gives the based independent winding-loop carrier needed for the shrinking step.
+1. Some regular sphere in the surgery family contains an essential torus circle.  Choose an
+   innermost essential circle on that sphere.  It bounds a sphere-side disk whose other torus intersections
+   are all inessential.  A zero-winding embedded torus circle lifts to a planar Jordan curve; the
+   planar Schoenflies theorem fills it, and disjointness from every nonzero lattice translate
+   makes the projected filling an embedded disk on the torus.  Repeated innermost-circle surgery
+   replaces the sphere-side disk across these torus disks.  The finite number of intersection
+   circles strictly decreases, so the process terminates at an embedded compressing disk with the
+   same essential boundary and with open interior disjoint from the torus.
 
-2. Some sphere in the family has an essential intersection circle.  Choose an innermost essential
-   circle on that sphere.  The disk it bounds on the sphere contains only inessential torus
-   intersections; repeatedly use an innermost-circle surgery to remove them.  The finite circle
-   count strictly decreases, so the process terminates at an embedded disk whose boundary is
-   essential on the torus and whose open interior misses the torus.  This is a genuine compressing
-   disk.  The sphere-surgery trace shows that its boundary is assembled from outer-boundary arcs
-   and two copies of cutting-disk arcs, which is exactly the later event charging.
+2. Every regular sphere in the family has only inessential torus intersections.  For any regular
+   time, retain only the maximal pairwise-disjoint torus fillings.  The complement of these disks
+   is obtained from a torus punctured at finitely many points: in Schoenflies coordinates, a
+   compactly supported radial homeomorphism pushes a point out to the corresponding closed disk,
+   and supports are chosen successively away from all other maximal disks.  The deformation from
+   the identity preserves winding.  In the finitely punctured product torus, choose a first Circle
+   coordinate and a second Circle coordinate missed by all punctures; the corresponding longitude
+   and meridian share a basepoint, avoid every puncture, and have winding pairs `(1,0)` and `(0,1)`.
+   Pushing them forward gives the unique rank-two carrier component of the sphere complement.
+   Across an elementary sphere or intersection surgery the inside/outside rank can change by at
+   most one, while for an inessential cut on a torus it is always either zero or two.  It is
+   therefore constant through the family.  Initially the carrier is inside the outer sphere;
+   finally it is inside one of the two terminal spheres.  Thus one successor half carries the full
+   rank-two winding witness.
 
-The quotient-safe regular level and finite component framework is in
-`Topology/CoordinatePlaneIntersectionCircles.lean`.  Regular planar charts descend through the
-product-circle covering in `Topology/RegularLevelQuotientCharts.lean`; the compact connected
-one-manifold classification is organized through the rotated-gradient flow in
-`Topology/PeriodicOrbitClassification.lean` and `Topology/RegularLevelTangentODE.lean`.  The
-explicit affine plane and containing disk are in `Topology/CoordinatePlane.lean` and
-`Topology/CoordinatePlaneDisk.lean`.  Cyclic crossing bookkeeping and rerouting infrastructure is
-in `Topology/SortedCrossingConstruction.lean`, `Topology/CrossingSignFlip.lean`,
-`Topology/ArcReplacementConstruction.lean`, and the winding splice modules.  The finite surgery
-termination proof is in `Topology/InnermostCircleSurgery.lean`.  The strong planar Schoenflies
-source is vendored under `Submission/PlaneSchoenflies/`.  The remaining geometric integration is
-the sphere-surgery family and its rank-two homology invariance; endpoint path connectivity alone
-is intentionally not used as a substitute for that theorem.
+Regular planar charts descend through the product-circle covering in
+`Topology/RegularLevelQuotientCharts.lean`; compact connected one-manifold classification and its
+complete rotated-gradient orbits are in `Topology/PeriodicOrbitClassification.lean` and
+`Topology/RegularLevelTangentODE.lean`.  Finite surgery termination is in
+`Topology/InnermostCircleSurgery.lean`.  The strong planar Schoenflies source is vendored under
+`Submission/PlaneSchoenflies/`; its torus-side application is in
+`Topology/InessentialTorusCircleDisk.lean`.  The compactly-supported one-disk radial pushout is in
+`Topology/TorusDiskPuncture.lean`, and the finite-puncture carrier and homotopy-preserving pushout
+adapters are in `Topology/FinitePunctureAxisCarrier.lean` and
+`Topology/FinitePunctureCarrierPushout.lean`.  The final double-bubble module uses these concrete
+carriers to prove the rank-zero/rank-two alternative at regular times and its invariance across
+the finitely many elementary surgery events.
 
 ## 5. Representativity of the transported `(p,q)` knot
 
@@ -182,13 +211,15 @@ intervals count the seam once.  This direct one-dimensional construction is deve
 
 ## 6. Charging the compression and obtaining the contradiction
 
-The compressing boundary is assembled from arcs in the outer box boundary and two copies of arcs
-in the cutting plane.  Every intersection with the knot can therefore be charged injectively to
-either one outer-boundary crossing or one of two tagged copies of a cutting-plane crossing.  The
-number of available events is at most
+The compressing boundary lies on one of the two half-spheres before the inessential-circle
+surgeries; every surgery is performed through a disk on the torus and preserves the boundary.
+After the harmless seam rounding, every boundary intersection with the knot can therefore be
+charged injectively to either one outer-surface crossing or one tagged copy of a cutting-disk
+crossing.  Keeping two tagged cut copies uniformly covers the two half-spheres.  The number of
+available events is at most
 
 ```text
-80D + 2 * 40D = 160D.
+76D + 2 * 40D = 156D ≤ 160D.
 ```
 
 Representativity supplies at least `min(p,q)` distinct intersections.  Under the contrary
@@ -196,15 +227,16 @@ assumption `160D < min(p,q)`, no such injection can exist.  Consequently the com
 of the cut alternative is impossible, and one successor half-box must carry genus.  Iterating the
 `69/70` shrink contradicts local flatness, proving the desired bound.
 
-The event finsets, reparametrization transfer, injection, and final cardinal arithmetic are in
-`DoubleBubbleSelection.lean`, `GeometricEventCharging.lean`, `ReparamCharging.lean`,
-`CompressionExclusion.lean`, and `BasedPardonGeometricStep.lean`.
+The smooth event finsets and cardinal arithmetic are in
+`SuperellipsoidDoubleBubbleSelection.lean`; reparametrization transfer, signed-root certificates,
+and compression exclusion are in `ReparamCharging.lean`, `Topology/ShiftedCompressingDisk.lean`,
+`Topology/SmoothEssentialSectionCircle.lean`, and `CompressionExclusion.lean`.
 
 ## Remaining kernel-level integration boundary
 
-The numerical, coarea, compactness, winding, solid-torus, finite-surgery termination, and event
-charging layers above are implemented and axiom-audited.  The last integration theorem must
-assemble the regular plane-section circles, Schoenflies disks, excursion reroutings, and the
-direct signed-root certificate into `HasBasedRegularResolvedDoubleBubbleSteps`, using the supplied
-ambient-isotopy/reparametrization equation.  The benchmark capstone then consists only of choosing
-that isotopy witness and invoking `pardonTarget_of_basedRegularResolvedDoubleBubbleSteps`.
+The numerical, coarea, compactness, winding, solid-torus, regular-level, one-dimensional degree,
+and finite-surgery layers above are implemented and axiom-audited.  The final integration theorem
+assembles the two finite half-sphere circle systems, the finite sequential disk pushout, and the
+charged essential-circle branch into the one-step shrinking alternative.  The benchmark capstone
+then chooses the supplied ambient isotopy and reparametrization and invokes the nested-box
+contradiction.
