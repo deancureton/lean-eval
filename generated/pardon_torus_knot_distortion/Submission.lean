@@ -18,6 +18,7 @@ import Submission.Coarea.OrientedBoundarySelection
 import Submission.Coarea.PlaneSlice
 import Submission.Coarea.SmoothCarrierPlaneSelection
 import Submission.Coarea.SmoothCarrierPlaneAvoiding
+import Submission.Coarea.SurfaceRegularBasedDoubleBubbleSelection
 import Submission.CompressionExclusion
 import Submission.Distortion
 import Submission.DoubleBubbleSelection
@@ -69,6 +70,7 @@ import Submission.Topology.SolidTorus
 import Submission.Topology.SlopeNormalization
 import Submission.Topology.SL2ZIntersectionCertificate
 import Submission.Topology.SmoothEssentialSectionCircle
+import Submission.Topology.SmoothSectionCircleFromOrbit
 import Submission.Topology.SurfaceRegularValue
 import Submission.Topology.RegularLevelComponents
 import Submission.Topology.RegularLevelQuotientCharts
