@@ -1,5 +1,13 @@
 import ChallengeDeps
 import Submission.Helpers
+import Submission.ArcLength
+import Submission.ArcCoordinate
+import Submission.BoxGeometry
+import Submission.Coarea.FiniteBranches
+import Submission.Distortion
+import Submission.Shrinking
+import Submission.Topology.CircleDegree
+import Submission.Torus.Standard
 
 open LeanEval.KnotTheory.PardonDistortion
 open Set
