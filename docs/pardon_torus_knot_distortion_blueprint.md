@@ -114,33 +114,43 @@ pairs.  They pass through one common basepoint.  Smooth Fourier approximation pr
 basepoint and both winding pairs while putting both loops in general position with the selected
 plane.
 
-At a regular cut, each loop has finitely many transverse crossings.  Sort those crossings on its
-parameter circle.  Between successive crossings each arc is entirely in one open halfspace, and
-the signs alternate.  For an excursion into the side opposite the basepoint, compare its two
-endpoints in the plane section.
+The selected outer boundary and cutting disk form a double bubble.  Starting with the outer box
+boundary, perform a one-parameter sphere surgery across the cutting disk.  At the end there are
+the two half-box boundary spheres.  Put this family in general position with the transported
+torus; away from finitely many surgery times, every intersection is a finite union of embedded
+circles.
 
-The plane section is a compact regular one-manifold, hence a finite disjoint union of embedded
-circles.  There are two cases.
+There are two cases.
 
-1. Every excursion has endpoints on the same inessential section circle.  Replace it by an arc of
-   that circle.  Any two choices differ by a loop around the section circle, whose torus winding
-   is zero.  Thus both original winding pairs are preserved.  The two rerouted loops still meet at
-   the common basepoint, lie in its half-box, and remain independent.  That half-box carries genus.
+1. Every intersection circle throughout the sphere surgery is inessential on the torus.  At a
+   regular time, exactly one component of the torus cut along those circles retains the full
+   rank-two image in `H₁(T²; ℚ)`; all other pieces are planar.  A single elementary surgery changes
+   that image rank by at most one, while for a torus its possible full-genus values are zero and
+   two.  Hence the full-genus component cannot disappear as the sphere varies.  At the terminal
+   double bubble it lies inside one of the two half-boxes.  Choosing two based generators in that
+   component gives the based independent winding-loop carrier needed for the shrinking step.
 
-2. Some obstruction circle is essential.  As a planar embedded circle it bounds a disk in the
-   cutting plane.  Choose an innermost essential circle.  Any intersection circles in its disk are
-   inessential; repeatedly use an innermost-circle surgery to remove them.  The finite circle count
-   strictly decreases, so the process terminates at an embedded disk whose boundary is essential
-   on the torus and whose open interior misses the torus.  This is a genuine compressing disk.
+2. Some sphere in the family has an essential intersection circle.  Choose an innermost essential
+   circle on that sphere.  The disk it bounds on the sphere contains only inessential torus
+   intersections; repeatedly use an innermost-circle surgery to remove them.  The finite circle
+   count strictly decreases, so the process terminates at an embedded disk whose boundary is
+   essential on the torus and whose open interior misses the torus.  This is a genuine compressing
+   disk.  The sphere-surgery trace shows that its boundary is assembled from outer-boundary arcs
+   and two copies of cutting-disk arcs, which is exactly the later event charging.
 
 The quotient-safe regular level and finite component framework is in
-`Topology/CoordinatePlaneIntersectionCircles.lean`.  The explicit affine plane and containing
-disk are in `Topology/CoordinatePlane.lean` and `Topology/CoordinatePlaneDisk.lean`.  Cyclic
-crossing bookkeeping and rerouting infrastructure is in `Topology/SortedCrossingConstruction.lean`,
-`Topology/CrossingSignFlip.lean`, `Topology/ArcReplacementConstruction.lean`, and the winding
-splice modules.  The finite surgery termination proof is in
-`Topology/InnermostCircleSurgery.lean`.  The strong planar Schoenflies source is vendored under
-`Submission/PlaneSchoenflies/`.
+`Topology/CoordinatePlaneIntersectionCircles.lean`.  Regular planar charts descend through the
+product-circle covering in `Topology/RegularLevelQuotientCharts.lean`; the compact connected
+one-manifold classification is organized through the rotated-gradient flow in
+`Topology/PeriodicOrbitClassification.lean` and `Topology/RegularLevelTangentODE.lean`.  The
+explicit affine plane and containing disk are in `Topology/CoordinatePlane.lean` and
+`Topology/CoordinatePlaneDisk.lean`.  Cyclic crossing bookkeeping and rerouting infrastructure is
+in `Topology/SortedCrossingConstruction.lean`, `Topology/CrossingSignFlip.lean`,
+`Topology/ArcReplacementConstruction.lean`, and the winding splice modules.  The finite surgery
+termination proof is in `Topology/InnermostCircleSurgery.lean`.  The strong planar Schoenflies
+source is vendored under `Submission/PlaneSchoenflies/`.  The remaining geometric integration is
+the sphere-surgery family and its rank-two homology invariance; endpoint path connectivity alone
+is intentionally not used as a substitute for that theorem.
 
 ## 5. Representativity of the transported `(p,q)` knot
 
@@ -166,7 +176,8 @@ For the signed intersection certificate, a Bézout `SL(2,ℤ)` coordinate change
 slope `(p,q)` to `(1,0)`.  Intersections are exactly regular roots of the transformed second circle
 coordinate.  The signed sum of those roots is its winding, namely `p*n-q*m`.  Half-open parameter
 intervals count the seam once.  This direct one-dimensional construction is developed in
-`Topology/CircleSignedDegree.lean`, `Topology/RegularCircleRootConstruction.lean`, and
+`Topology/CircleSignedDegree.lean`, `Topology/RegularCircleRootConstruction.lean`,
+`Topology/RegularCircleRootDegree.lean`, `Topology/RegularCircleRootGlobalDegree.lean`, and
 `Topology/SL2ZIntersectionCertificate.lean`.
 
 ## 6. Charging the compression and obtaining the contradiction
@@ -197,4 +208,3 @@ assemble the regular plane-section circles, Schoenflies disks, excursion rerouti
 direct signed-root certificate into `HasBasedRegularResolvedDoubleBubbleSteps`, using the supplied
 ambient-isotopy/reparametrization equation.  The benchmark capstone then consists only of choosing
 that isotopy witness and invoking `pardonTarget_of_basedRegularResolvedDoubleBubbleSteps`.
-

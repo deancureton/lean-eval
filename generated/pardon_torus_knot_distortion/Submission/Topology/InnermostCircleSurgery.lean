@@ -171,6 +171,10 @@ structure FiniteInnermostCircleSurgeryContract
   initial_remaining_subset : ∀ i hi, remaining (initial i hi) ⊆ system.circles
   initial_remaining_inside : ∀ i hi j, j ∈ remaining (initial i hi) → system.inside j i
   Step : State → State → Prop
+  /-- Innermost surgery changes only the interior of the disk; its parametrized essential
+  boundary is retained exactly. -/
+  step_boundary : ∀ {s t}, Step s t →
+    (stateDisk t).boundaryLoop = (stateDisk s).boundaryLoop
   step_removes_inessential : ∀ {s t}, Step s t →
     ∃ i ∈ remaining s, ¬ (system.circle i).Essential ∧ i ∉ remaining t
   step_remaining_subset : ∀ {s t}, Step s t → remaining t ⊆ remaining s
@@ -194,6 +198,15 @@ theorem reachable_refl (C : FiniteInnermostCircleSurgeryContract Phi ι system)
 theorem reachable_tail (C : FiniteInnermostCircleSurgeryContract Phi ι system)
     {s t u : C.State} (hst : C.Reachable s t) (htu : C.Step t u) : C.Reachable s u :=
   Relation.ReflTransGen.tail hst htu
+
+/-- Every finite surgery sequence preserves the parametrized essential boundary exactly. -/
+theorem boundaryLoop_eq_of_reachable
+    (C : FiniteInnermostCircleSurgeryContract Phi ι system)
+    {s t : C.State} (hst : C.Reachable s t) :
+    (C.stateDisk t).boundaryLoop = (C.stateDisk s).boundaryLoop := by
+  induction hst with
+  | refl => rfl
+  | tail hreach hstep ih => exact (C.step_boundary hstep).trans ih
 
 /-- Remaining intersection labels can only decrease along a finite surgery sequence. -/
 theorem remaining_subset_of_reachable
@@ -270,6 +283,21 @@ theorem exists_generalCompressingDiskWitness
   obtain ⟨t, _hreach, hdisjoint⟩ :=
     C.exists_reachable_interiorDisjoint (C.initial i hi)
   exact ⟨(C.stateDisk t).toGeneralCompressingDiskWitness hdisjoint⟩
+
+/-- Starting from a specified innermost essential section circle produces a compression whose
+boundary loop is definitionally the same parametrized loop.  This retains the smoothness and
+transversality data needed by the direct signed-intersection certificate. -/
+theorem exists_generalCompressingDiskWitness_with_boundary
+    (C : FiniteInnermostCircleSurgeryContract Phi ι system)
+    (i : ι) (hi : system.InnermostEssential i) :
+    ∃ D : GeneralCompressingDiskWitness Phi,
+      D.boundaryLoop = (system.circle i).windingLoop := by
+  obtain ⟨t, hreach, hdisjoint⟩ :=
+    C.exists_reachable_interiorDisjoint (C.initial i hi)
+  let D := (C.stateDisk t).toGeneralCompressingDiskWitness hdisjoint
+  refine ⟨D, ?_⟩
+  change (C.stateDisk t).boundaryLoop = (system.circle i).windingLoop
+  exact (C.boundaryLoop_eq_of_reachable hreach).trans (C.initial_boundary i hi)
 
 end FiniteInnermostCircleSurgeryContract
 

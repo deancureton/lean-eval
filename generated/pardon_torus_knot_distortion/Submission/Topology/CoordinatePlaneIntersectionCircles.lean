@@ -225,7 +225,7 @@ noncomputable def embeddedCircleOfComponent
     parametrization := fun t ↦ rfl
   }
 
-private theorem component_circle_range
+theorem component_circle_range
     (S : RegularCoordinateTorusLevel Phi frame a b)
     (C : ComponentCircleClassification
       (coordinateTorusLevelSet Phi frame S.selection.level))

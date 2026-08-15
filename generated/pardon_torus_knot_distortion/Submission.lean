@@ -52,10 +52,13 @@ import Submission.Topology.GeneralCompression
 import Submission.Topology.HalfspaceCut
 import Submission.Topology.IntersectionCertificate
 import Submission.Topology.InnermostCircleSurgery
+import Submission.Topology.InessentialRegularPlaneSection
+import Submission.Topology.InessentialSliceCircle
 import Submission.Topology.LocalFlatness
 import Submission.Topology.LoopCarrier
 import Submission.Topology.LoopHalfspaceCut
 import Submission.Topology.OneManifoldCircleClassification
+import Submission.Topology.PeriodicOrbitClassification
 import Submission.Topology.PlaneSliceComponents
 import Submission.Topology.PlaneSectionCircleSystem
 import Submission.Topology.CyclicOrderConstruction
@@ -65,8 +68,12 @@ import Submission.Topology.Representativity
 import Submission.Topology.SolidTorus
 import Submission.Topology.SlopeNormalization
 import Submission.Topology.SL2ZIntersectionCertificate
+import Submission.Topology.SmoothEssentialSectionCircle
 import Submission.Topology.SurfaceRegularValue
 import Submission.Topology.RegularLevelComponents
+import Submission.Topology.RegularLevelQuotientCharts
+import Submission.Topology.RegularCircleRootGlobalDegree
+import Submission.Topology.RegularLevelTangentODE
 import Submission.Topology.SmoothWindingApproximation
 import Submission.Topology.FourierSmoothApproximation
 import Submission.Topology.SmoothLoopCarrier
