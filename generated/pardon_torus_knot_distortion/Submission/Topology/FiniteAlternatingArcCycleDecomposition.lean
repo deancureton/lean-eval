@@ -373,14 +373,68 @@ private noncomputable def orientedPathAt (e : P.edge) :
       Fin.cases (by simpa [Fin.rev] using (D.path e).symm)
         (fun j : Fin 0 ↦ Fin.elim0 j) j)
 
+private theorem range_orientedPathAt (e : P.edge) :
+    ∀ j : Fin 2, Set.range (D.orientedPathAt e j) = Set.range (D.path e) :=
+  Fin.cases rfl (fun j : Fin 1 ↦ Fin.cases (Path.symm_range _) (fun j : Fin 0 ↦ Fin.elim0 j) j)
+
+private theorem injective_orientedPathAt (e : P.edge)
+    (h : Function.Injective (D.path e)) :
+    ∀ j : Fin 2, Function.Injective (D.orientedPathAt e j) :=
+  Fin.cases h (fun j : Fin 1 ↦ Fin.cases
+    (h.comp unitInterval.symm_bijective.injective) (fun j : Fin 0 ↦ Fin.elim0 j) j)
+
 /-- Orient the unique edge of the pairing away from a specified endpoint. -/
 noncomputable def orientedPath (v : vertex) :
     Path (point v) (point (P.endpointMate v)) := by
-  rcases hp : P.endpointEquiv.symm v with ⟨e, j⟩
-  have hv : P.endpointEquiv (e, j) = v := by
-    rw [← hp, P.endpointEquiv.apply_symm_apply]
-  exact (D.orientedPathAt e j).cast (congrArg point hv.symm) (congrArg point (by
+  let p := P.endpointEquiv.symm v
+  have hv : P.endpointEquiv p = v := P.endpointEquiv.apply_symm_apply v
+  exact (D.orientedPathAt p.1 p.2).cast (congrArg point hv.symm) (congrArg point (by
     rw [← hv, P.endpointMate_endpointEquiv]))
+
+@[simp]
+theorem orientedPath_zero (v : vertex) : D.orientedPath v 0 = point v :=
+  Path.source _
+
+@[simp]
+theorem orientedPath_one (v : vertex) :
+    D.orientedPath v 1 = point (P.endpointMate v) :=
+  Path.target _
+
+private theorem orientedPath_apply (v : vertex) (t : unitInterval) :
+    D.orientedPath v t =
+      D.orientedPathAt (P.endpointEquiv.symm v).1 (P.endpointEquiv.symm v).2 t := by
+  simp only [orientedPath, Path.cast_coe]
+
+/-- Pointwise evaluation when an endpoint edge is oriented from its zero endpoint. -/
+theorem orientedPath_endpointEquiv_zero_apply (e : P.edge) (t : unitInterval) :
+    D.orientedPath (P.endpointEquiv (e, 0)) t = D.path e t := by
+  rw [D.orientedPath_apply]
+  rw [P.endpointEquiv.symm_apply_apply]
+  rfl
+
+/-- Pointwise evaluation when an endpoint edge is oriented from its one endpoint. -/
+theorem orientedPath_endpointEquiv_one_apply (e : P.edge) (t : unitInterval) :
+    D.orientedPath (P.endpointEquiv (e, 1)) t = (D.path e).symm t := by
+  rw [D.orientedPath_apply]
+  rw [P.endpointEquiv.symm_apply_apply]
+  rfl
+
+/-- Reorienting an endpoint edge does not change its geometric carrier. -/
+theorem range_orientedPath (v : vertex) :
+    Set.range (D.orientedPath v) =
+      Set.range (D.path (P.endpointEquiv.symm v).1) := by
+  rw [show ⇑(D.orientedPath v) =
+      ⇑(D.orientedPathAt (P.endpointEquiv.symm v).1 (P.endpointEquiv.symm v).2) from
+    funext (D.orientedPath_apply v)]
+  exact D.range_orientedPathAt _ _
+
+/-- Injectivity of the unoriented edge paths is preserved by canonical endpoint orientation. -/
+theorem injective_orientedPath (h : ∀ e, Function.Injective (D.path e))
+    (v : vertex) : Function.Injective (D.orientedPath v) := by
+  rw [show ⇑(D.orientedPath v) =
+      ⇑(D.orientedPathAt (P.endpointEquiv.symm v).1 (P.endpointEquiv.symm v).2) from
+    funext (D.orientedPath_apply v)]
+  exact D.injective_orientedPathAt _ (h _) _
 
 end EndpointPathFamily
 
