@@ -167,8 +167,20 @@ around the standard segment.  Explicit one-dimensional order homeomorphisms iden
 `Plane` with the rectangle while fixing `[-1,1] × {0}` pointwise.  Restricting the covering to
 the resulting strip gives a homeomorphism onto a transported-torus surface patch, remains inside
 the automatically separated ambient band, and has exactly the required seam-core formula.  This
-is the planned construction of `GlobalBandTubularChartData`; it reduces the remaining topology
-to an extendible-planar-arc strip lemma built entirely from the vendored Schoenflies APIs.
+construction is formalized by `ExtendibleArcTubularStrip.lean` and
+`SuperellipsoidGlobalBandTubularChart.lean`: it produces `GlobalBandTubularChartData` with exact
+core parametrization and containment in the canonical separated band neighborhood.
+
+In these actual band coordinates the local two-surgery has an explicit quadratic model.  On
+`Q = {x² + y² ≤ 2}`, put `p = x² - 1`, `s = 1 - y²`, and
+`f_t = (1-t)p + ts`.  The functions `p` and `s` agree on the frontier of `Q`; their zero sets are
+respectively the two vertical and two horizontal four-port pairings.  An explicit normal tube
+around the transported torus turns the graphs of `f_t` into embedded ambient patches, while a
+fiberwise Möbius homeomorphism maps the initial graph to every later graph and fixes the whole
+frontier.  The local graph, tube, and exact carrier equations are formalized in
+`NormalTube.lean`, `FourPortMorseGraphPatch.lean`,
+`SuperellipsoidGlobalFourPortMorseGraph.lean`, and
+`SuperellipsoidGlobalFourPortCarrier.lean`.
 
 After a generic perturbation, the sphere is transverse to the transported torus except at finitely
 many elementary surgery times.  At every regular time its knot intersections inject into the
@@ -271,10 +283,18 @@ and compression exclusion are in `ReparamCharging.lean`, `Topology/ShiftedCompre
 
 The numerical, coarea, compactness, winding, solid-torus, regular-level, one-dimensional degree,
 finite sequential disk-pushout, canonical maximal-disk, and finite-surgery layers above are
-implemented and axiom-audited.  The finite heterogeneous parity induction and the direct
-raw-regular essential-circle charging route are also implemented.  The remaining kernel-level
-integration constructs the covering-plane tubular strips and local four-port equations, realizes
-the resulting finite sequence by moving sphere collars, and supplies the stagewise essential-disk
-surgery data.  The existing finite-stage adapter then yields the one-step shrinking alternative.
+implemented and axiom-audited.  So are the finite heterogeneous parity induction, the exact
+extendible-arc tubular strips, the transported-torus band charts, the quadratic four-port normal
+graphs, and charging transported from the original outer/cut barrier loops to smoothed stage
+loops through transverse continuation.
+
+The remaining kernel-level integration is global rather than local: attach the frontier-fixed
+four-port patches to an embedded outer sphere and obtain two separated terminal child spheres,
+package the resulting regular sphere-family stages and parity partitions, and supply the
+stagewise essential sphere-disk surgery and transverse continuation data.  The analytic
+superellipsoid and its two closed convex truncations already have exact topological-sphere
+parametrizations; the attachment must still perform the global neck pinch around the full cut
+disk instead of pretending that disjoint local torus bands alone change the number of sphere
+components.  The existing finite-stage adapter then yields the one-step shrinking alternative.
 The benchmark capstone finally chooses the supplied ambient isotopy and reparametrization and
 invokes the already formalized nested-box contradiction.
