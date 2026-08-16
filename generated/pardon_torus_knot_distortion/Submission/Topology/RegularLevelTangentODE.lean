@@ -310,7 +310,7 @@ private theorem exists_localPlaneIntegralCurveFamily {v : Plane → Plane}
   }⟩
 
 /-- Compactness of the fundamental square supplies one positive Picard time there. -/
-private theorem exists_uniformPlaneIntegralCurvesOnFundamentalSquare {v : Plane → Plane}
+theorem exists_uniformPlaneIntegralCurvesOnFundamentalSquare {v : Plane → Plane}
     (hv : ContDiff ℝ 1 v) :
     ∃ radius > 0, ∀ x ∈ fundamentalSquare, ∃ curve : ℝ → Plane,
       curve 0 = x ∧ IsIntegralCurveOn curve (fun _ ↦ v) (Ioo (-radius) radius) := by
@@ -561,12 +561,12 @@ structure CompleteRegularLevelIntegralCurve (f : Plane → ℝ) (y : ℝ)
 
 /-- Regard an ordinary planar vector field as a section of the tangent bundle of the standard
 vector-space manifold. -/
-private def planeTangentVectorField (v : Plane → Plane) (z : Plane) :
+def planeTangentVectorField (v : Plane → Plane) (z : Plane) :
     TangentSpace 𝓘(ℝ, Plane) z :=
   (NormedSpace.fromTangentSpace z).symm (v z)
 
 /-- On a normed vector space, the manifold and Fréchet formulations of an integral curve agree. -/
-private theorem isMIntegralCurveOn_iff_isIntegralCurveOn_plane
+theorem isMIntegralCurveOn_iff_isIntegralCurveOn_plane
     (γ : ℝ → Plane) (v : Plane → Plane) (s : Set ℝ) :
     IsMIntegralCurveOn (I := 𝓘(ℝ, Plane)) γ (planeTangentVectorField v) s ↔
       IsIntegralCurveOn γ (fun _ ↦ v) s := by
@@ -583,7 +583,7 @@ private theorem isMIntegralCurveOn_iff_isIntegralCurveOn_plane
     exact (h t ht).hasFDerivWithinAt
 
 /-- The corresponding equivalence for complete integral curves. -/
-private theorem isMIntegralCurve_iff_isIntegralCurve_plane
+theorem isMIntegralCurve_iff_isIntegralCurve_plane
     (γ : ℝ → Plane) (v : Plane → Plane) :
     IsMIntegralCurve (I := 𝓘(ℝ, Plane)) γ (planeTangentVectorField v) ↔
       IsIntegralCurve γ (fun _ ↦ v) := by
@@ -667,7 +667,7 @@ theorem CompleteRegularLevelIntegralCurve.contDiff
 /-- A `C¹` curve with nowhere-vanishing derivative is locally injective.  At each point, one
 coordinate of the derivative is nonzero, and the one-dimensional inverse function theorem applied
 to that coordinate supplies the required injective neighborhood. -/
-private theorem isLocallyInjective_of_contDiff_deriv_ne_zero
+theorem isLocallyInjective_of_contDiff_deriv_ne_zero
     {γ : ℝ → Plane} (hγ : ContDiff ℝ 1 γ)
     (hderiv : ∀ t, deriv γ t ≠ 0) : IsLocallyInjective γ := by
   intro t
@@ -724,7 +724,7 @@ injective map from the real line to a Hausdorff locally-line-modelled space is a
 homeomorphism.  The proof restricts to a compact interval inside one target chart; compactness
 gives an embedding, while monotonicity of the chart coordinate identifies the image of the open
 interior with an open real interval. -/
-private theorem isLocalHomeomorph_of_continuous_locallyInjective_locallyLineModeled
+theorem isLocalHomeomorph_of_continuous_locallyInjective_locallyLineModeled
     {X : Type*} [TopologicalSpace X] [T2Space X]
     (hX : IsLocallyLineModeled X) {q : ℝ → X}
     (hq : Continuous q) (hinj : IsLocallyInjective q) : IsLocalHomeomorph q := by
@@ -830,7 +830,7 @@ private theorem isLocalHomeomorph_of_continuous_locallyInjective_locallyLineMode
 
 /-- Composition preserves local injectivity when both factors are locally injective and the first
 map is continuous. -/
-private theorem IsLocallyInjective.comp_of_continuous
+theorem IsLocallyInjective.comp_of_continuous
     {A B C : Type*} [TopologicalSpace A] [TopologicalSpace B]
     {f : A → B} {g : B → C} (hg : IsLocallyInjective g)
     (hf : IsLocallyInjective f) (hfc : Continuous f) :
@@ -844,7 +844,7 @@ private theorem IsLocallyInjective.comp_of_continuous
 
 /-- Restricting the codomain of a local homeomorphism to an open subset containing its range
 preserves the local-homeomorphism property. -/
-private theorem isLocalHomeomorph_codRestrict_open
+theorem isLocalHomeomorph_codRestrict_open
     {A B : Type*} [TopologicalSpace A] [TopologicalSpace B]
     {q : A → B} (hq : IsLocalHomeomorph q) (s : Set B) (hs : IsOpen s)
     (hqs : ∀ a, q a ∈ s) :

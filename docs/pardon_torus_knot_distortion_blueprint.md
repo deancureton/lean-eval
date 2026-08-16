@@ -137,6 +137,18 @@ two-surgery on the outer sphere along the disk.  This gives a one-parameter fami
 spheres; at the terminal time it is the disjoint union of slight inward roundings of the two
 half-spheres.  The seam was chosen away from the knot, and all geometric containments are strict,
 so the rounding neither changes a knot intersection nor loses the successor-box containment.
+
+The literal union of the outer sphere and the cutting disk is not itself a disjoint union of
+intersection circles.  At every transverse torus--seam point its intersection with the torus has
+three incident half-edges: two along the outer section and one along the inward part of the cut
+section.  In particular, one cannot replace one T-vertex by an embedded one-manifold inside an
+isolated neighborhood, since a compact one-manifold patch has an even number of boundary
+endpoints.  The actual two-surgery pairs consecutive seam vertices along an excursion arc of the
+cutting section.  A narrow band containing the whole excursion has four outer endpoints, and the
+moving sphere realizes the two possible pairings before and after surgery while agreeing with the
+original intersection outside the band.  Ordering the finitely many seam points gives finitely
+many such paired bands.
+
 After a generic perturbation, the sphere is transverse to the transported torus except at finitely
 many elementary surgery times.  At every regular time its knot intersections inject into the
 disjoint event set consisting of one outer copy and two tagged cut copies, hence number at most
@@ -177,9 +189,11 @@ complete rotated-gradient orbits are in `Topology/PeriodicOrbitClassification.le
 `Topology/InessentialTorusCircleDisk.lean`.  The compactly-supported one-disk radial pushout is in
 `Topology/TorusDiskPuncture.lean`, and the finite-puncture carrier and homotopy-preserving pushout
 adapters are in `Topology/FinitePunctureAxisCarrier.lean` and
-`Topology/FinitePunctureCarrierPushout.lean`.  The final double-bubble module uses these concrete
-carriers to prove the rank-zero/rank-two alternative at regular times and its invariance across
-the finitely many elementary surgery events.
+`Topology/FinitePunctureCarrierPushout.lean`.  The final double-bubble layer combines these
+concrete carriers with the paired-band local models.  At a regular time it gives the
+rank-zero/rank-two alternative; across one paired-band surgery it proves that the rank-two side
+cannot disappear without producing an essential intersection circle.  Finite induction over the
+ordered bands transports the carrier from the initial outer sphere to one terminal half-sphere.
 
 ## 5. Representativity of the transported `(p,q)` knot
 
@@ -235,8 +249,9 @@ and compression exclusion are in `ReparamCharging.lean`, `Topology/ShiftedCompre
 ## Remaining kernel-level integration boundary
 
 The numerical, coarea, compactness, winding, solid-torus, regular-level, one-dimensional degree,
-and finite-surgery layers above are implemented and axiom-audited.  The final integration theorem
-assembles the two finite half-sphere circle systems, the finite sequential disk pushout, and the
-charged essential-circle branch into the one-step shrinking alternative.  The benchmark capstone
-then chooses the supplied ambient isotopy and reparametrization and invokes the nested-box
-contradiction.
+and finite-surgery layers above are implemented and axiom-audited.  The remaining kernel-level
+integration constructs the paired-band resolution from the regular outer and cutting sections,
+validates the finite sequential disk pushout, and proves the one-event rank-two-carrier invariance
+or charged-essential-circle alternative.  Finite induction then yields the one-step shrinking
+alternative.  The benchmark capstone finally chooses the supplied ambient isotopy and
+reparametrization and invokes the already formalized nested-box contradiction.

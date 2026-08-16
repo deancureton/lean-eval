@@ -1,13 +1,14 @@
 import Submission.CapstoneReduction
+import Submission.Coarea.SuperellipsoidSeamFubini
 import Submission.SuperellipsoidCompressionExclusion
 import Submission.Topology.BasedSmoothLoopCarrier
 
 /-!
 # Smooth-superellipsoid handoff to Pardon's shrinking contradiction
 
-This module leaves only the two genuinely topological constructions visible: finite complete
-orbits of each regular outer seam, and the resolved sphere-surgery alternative.  All coarea,
-event-count, successor-box, extended-real, and infinite-iteration work is discharged here.
+This module leaves only the genuinely topological resolved sphere-surgery alternative visible.
+Planar Sard and Fubini supply the regular outer seam unconditionally; all coarea, event-count,
+successor-box, extended-real, and infinite-iteration work is discharged here.
 -/
 
 open Set
@@ -20,13 +21,6 @@ open Submission.Topology
 open Submission.SurfaceRegularValue
 
 noncomputable section
-
-/-- Every regular smooth outer level has a finite family of complete rotated-gradient orbits
-covering its lift modulo deck translations. -/
-def HasFiniteRegularSuperellipsoidSeamOrbitCovers (Phi : AmbientIsotopy) : Prop :=
-  ∀ frame c R,
-    IsRegularValue (superellipsoidPolynomialLift Phi frame c) (R ^ 256) →
-      Nonempty (FiniteSuperellipsoidSeamOrbitCover Phi frame c R)
 
 /-- Resolution of one selected smooth double bubble. -/
 structure SuperellipsoidResolvedDoubleBubbleStep
@@ -61,7 +55,6 @@ theorem real_bound_of_superellipsoidResolvedDoubleBubbleSteps
     (K : Knot) (Phi : AmbientIsotopy) (sigma : CircleReparam)
     (hclass : ∀ t, Phi.H 1 (K.curve t) =
       standardTorusCurve p q (sigma.f t))
-    (horbits : HasFiniteRegularSuperellipsoidSeamOrbitCovers Phi)
     (hresolved : HasSuperellipsoidResolvedDoubleBubbleSteps
       p q hp hq hc K Phi sigma hclass)
     (hfinite : distortion K ≠ ⊤) :
@@ -74,10 +67,8 @@ theorem real_bound_of_superellipsoidResolvedDoubleBubbleSteps
   obtain ⟨WB⟩ :=
     exists_smoothBasedLoopCarrierWitness_of_orientedBasedLoopCarrier
       Phi frame c hr hcarrier
-  obtain ⟨S⟩ := exists_superellipsoidDoubleBubbleSelection_of_orbitCover
-    K Phi frame c hr hfinite WB.toSmoothLoopCarrierWitness (by
-      intro outer
-      exact horbits frame c outer.scale outer.surfaceRegular)
+  obtain ⟨S⟩ := exists_superellipsoidDoubleBubbleSelection_unconditional
+    K Phi frame c hr hfinite WB.toSmoothLoopCarrierWitness
   obtain ⟨G⟩ := hresolved frame c r hr hcarrier WB S
   have hsides : CarriesTransportedBasedLoopGenus Phi
         (superellipsoidBody frame c S.outer.scale ∩
@@ -117,14 +108,13 @@ theorem pardonTarget_of_superellipsoidResolvedDoubleBubbleSteps
     (K : Knot) (Phi : AmbientIsotopy) (sigma : CircleReparam)
     (hclass : ∀ t, Phi.H 1 (K.curve t) =
       standardTorusCurve p q (sigma.f t))
-    (horbits : HasFiniteRegularSuperellipsoidSeamOrbitCovers Phi)
     (hresolved : HasSuperellipsoidResolvedDoubleBubbleSteps
       p q hp hq hc K Phi sigma hclass) :
     (1 / 160 : ℝ≥0∞) * ((Nat.min p q : ℕ) : ℝ≥0∞) ≤ distortion K := by
   apply pardonTarget_le_of_real_bound p q K
   intro hfinite
   exact real_bound_of_superellipsoidResolvedDoubleBubbleSteps
-    p q hp hq hc K Phi sigma hclass horbits hresolved hfinite
+    p q hp hq hc K Phi sigma hclass hresolved hfinite
 
 end
 

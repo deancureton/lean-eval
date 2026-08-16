@@ -584,6 +584,20 @@ theorem isOpen_zeroWindingSchoenfliesOpenSupport
     IsOpen (C.zeroWindingSchoenfliesOpenSupport hzero R) :=
   (C.zeroWindingAmbientHomeomorph hzero).symm.isOpenMap _ isOpen_ball
 
+theorem mem_zeroWindingSchoenfliesOpenSupport_iff
+    (C : EmbeddedTorusIntersectionCircle Phi)
+    (hzero : C.windingLoop.windingPair = (0, 0)) (R : ℝ)
+    (x : TorusCoveringPlane) :
+    x ∈ C.zeroWindingSchoenfliesOpenSupport hzero R ↔
+      C.zeroWindingAmbientHomeomorph hzero x ∈
+        ball (0 : TorusCoveringPlane) R := by
+  constructor
+  · rintro ⟨y, hy, rfl⟩
+    simpa using hy
+  · intro hx
+    exact ⟨C.zeroWindingAmbientHomeomorph hzero x, hx,
+      (C.zeroWindingAmbientHomeomorph hzero).symm_apply_apply x⟩
+
 theorem zeroWindingSchoenfliesOpenSupport_subset_support
     (C : EmbeddedTorusIntersectionCircle Phi)
     (hzero : C.windingLoop.windingPair = (0, 0)) (R : ℝ) :
@@ -729,6 +743,18 @@ theorem zeroWindingPlanePunctureDeformation_apply_of_radius_le
   simp only [zeroWindingPlanePunctureDeformation,
     Homeomorph.apply_symm_apply, zeroWindingPlanePunctureToOrigin]
   exact RadialPuncture.planePunctureDeformation_apply_of_le R hR _ _ hx
+
+theorem zeroWindingPlanePunctureDeformation_apply_of_not_mem_openSupport
+    (C : EmbeddedTorusIntersectionCircle Phi)
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (R : ℝ) (hR : 1 < R) (u : Set.Icc (0 : ℝ) 1)
+    (x : C.zeroWindingPlanePuncture hzero)
+    (hx : (x : TorusCoveringPlane) ∉ C.zeroWindingSchoenfliesOpenSupport hzero R) :
+    C.zeroWindingPlanePunctureDeformation hzero R hR u x = x := by
+  apply C.zeroWindingPlanePunctureDeformation_apply_of_radius_le hzero R hR u x
+  rw [C.mem_zeroWindingSchoenfliesOpenSupport_iff,
+    mem_ball, dist_zero_right, not_lt] at hx
+  exact hx
 
 /-- Conjugate the fixed-tail radial pushout by Schoenflies.  It replaces the chosen lifted center
 by the entire closed lifted Jordan disk. -/

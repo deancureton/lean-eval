@@ -13,12 +13,14 @@ and the globally avoiding vertical circle then reaches the common cross basepoin
 
 open Set Topology
 open scoped Topology
+open LeanEval.KnotTheory.PardonDistortion
 
 noncomputable section
 
 namespace Submission.Topology
 
 open Submission.Torus
+open Submission.PardonDistortion
 
 /-- Complement of finitely many specified points in the product circle. -/
 def productFinitePointComplement {ι : Type*} (centers : ι → Circle × Circle) :
@@ -30,28 +32,28 @@ def productFinitePointComplement {ι : Type*} (centers : ι → Circle × Circle
 /-- A short path starting at `x`, avoiding a local finite family throughout, whose endpoint also
 avoids a second global finite family. -/
 structure CircleFiniteEscapePath {κ ι : Type*}
-    (local : κ → Circle) (global : ι → Circle) (x : Circle) where
+    (localFamily : κ → Circle) (global : ι → Circle) (x : Circle) where
   endpoint : Circle
   endpoint_ne_global : ∀ i, endpoint ≠ global i
   path : Path x endpoint
-  path_ne_local : ∀ t j, path t ≠ local j
+  path_ne_local : ∀ t j, path t ≠ localFamily j
 
 /-- Every point outside a finite local family has a short escape path which remains outside that
 family and ends outside any prescribed finite global family. -/
 theorem exists_circleFiniteEscapePath
     {κ ι : Type*} [Fintype κ] [Fintype ι]
-    (local : κ → Circle) (global : ι → Circle) (x : Circle)
-    (hx : ∀ j, x ≠ local j) :
-    Nonempty (CircleFiniteEscapePath local global x) := by
-  let U : Set Circle := (Set.range local)ᶜ
-  have hUOpen : IsOpen U := (Set.finite_range local).isClosed.isOpen_compl
+    (localFamily : κ → Circle) (global : ι → Circle) (x : Circle)
+    (hx : ∀ j, x ≠ localFamily j) :
+    Nonempty (CircleFiniteEscapePath localFamily global x) := by
+  let U : Set Circle := (Set.range localFamily)ᶜ
+  have hUOpen : IsOpen U := (Set.finite_range localFamily).isClosed.isOpen_compl
   have hxU : x ∈ U := by
     intro hxrange
     obtain ⟨j, hj⟩ := hxrange
     exact hx j hj.symm
-  have hpreimage : Circle.exp ⁻¹' U ∈ 𝒩 ((x : ℂ).arg) := by
+  have hpreimage : Circle.exp ⁻¹' U ∈ 𝓝 ((x : ℂ).arg) := by
     apply Circle.exp.continuous.continuousAt.preimage_mem_nhds
-    simpa [Circle.exp_arg] using hxU
+    simpa [Circle.exp_arg] using hUOpen.mem_nhds hxU
   obtain ⟨ε, hε, hball⟩ := Metric.mem_nhds_iff.mp hpreimage
   let η := min ε 1
   have hη : 0 < η := lt_min hε zero_lt_one
@@ -70,6 +72,7 @@ theorem exists_circleFiniteEscapePath
       constructor <;> linarith [e.property.1, e.property.2]
     apply Subtype.ext
     exact add_left_cancel <| Circle.exp_injOn_Ico hlength hdIco heIco hde
+  let _ : Infinite (Set.Ioo (0 : ℝ) η) := Set.Ioo.infinite hη
   have harcInfinite : (Set.range arc).Infinite :=
     Set.infinite_range_of_injective harcInjective
   obtain ⟨y, ⟨d, rfl⟩, hyGlobal⟩ :=
@@ -87,7 +90,7 @@ theorem exists_circleFiniteEscapePath
     path_ne_local := ?_
   }⟩
   · intro i hcenter
-    exact hyGlobal ⟨i, hcenter⟩
+    exact hyGlobal ⟨i, hcenter.symm⟩
   · intro t j hlocal
     have hsegment : Path.segment (x : ℂ).arg
         ((x : ℂ).arg + (d : ℝ)) t ∈
@@ -99,6 +102,7 @@ theorem exists_circleFiniteEscapePath
       have hd0 : 0 < (d : ℝ) := d.property.1
       have hdη : (d : ℝ) < η := d.property.2
       have hηε : η ≤ ε := min_le_left ε 1
+      simp only [smul_eq_mul]
       rw [show (1 - (t : ℝ)) * (x : ℂ).arg +
           (t : ℝ) * ((x : ℂ).arg + (d : ℝ)) - (x : ℂ).arg =
           (t : ℝ) * (d : ℝ) by ring, abs_of_nonneg (mul_nonneg ht0 hd0.le)]
@@ -107,7 +111,7 @@ theorem exists_circleFiniteEscapePath
         (Path.segment (x : ℂ).arg ((x : ℂ).arg + (d : ℝ)) t) ∈ U :=
       hball hsegment
     exact hU ⟨j, by
-      simpa [escapePath, rawPath] using hlocal⟩
+      simpa [escapePath, rawPath] using hlocal.symm⟩
 
 /-! ## Joining every point to the avoiding cross -/
 
@@ -119,7 +123,7 @@ variable {ι : Type*} [Fintype ι] {centers : ι → Circle × Circle}
 def productBasepoint (B : AvoidingAxisBase centers) : Circle × Circle :=
   (B.first, B.second)
 
-theorem productBasepoint_mem (B : AvoidingAxisBase centers) :
+omit [Fintype ι] in theorem productBasepoint_mem (B : AvoidingAxisBase centers) :
     B.productBasepoint ∈ productFinitePointComplement centers := by
   intro i hcenter
   exact B.first_ne i (congrArg Prod.fst hcenter)
@@ -129,6 +133,7 @@ avoiding cross basepoint. -/
 theorem joinedIn_productBasepoint (B : AvoidingAxisBase centers)
     (x : Circle × Circle) (hx : x ∈ productFinitePointComplement centers) :
     JoinedIn (productFinitePointComplement centers) x B.productBasepoint := by
+  classical
   let localIndex := {i : ι // (centers i).1 = x.1}
   let localSecond : localIndex → Circle := fun i ↦ (centers i.1).2
   have hxLocal : ∀ i, x.2 ≠ localSecond i := by
@@ -201,11 +206,12 @@ theorem transportedFinitePointComplement_isPathConnected
     IsPathConnected
       (Set.univ : Set (transportedFinitePointComplement Phi centers)) := by
   let e := productFinitePointComplementHomeomorph (Phi := Phi) centers
+  let _ : PathConnectedSpace (productFinitePointComplement centers) :=
+    isPathConnected_iff_pathConnectedSpace.mp
+      (productFinitePointComplement_isPathConnected centers)
   have hsource : IsPathConnected
       (Set.univ : Set (productFinitePointComplement centers)) :=
-    isPathConnected_iff_pathConnectedSpace.mpr <|
-      isPathConnected_iff_pathConnectedSpace.mp
-        (productFinitePointComplement_isPathConnected centers)
+    isPathConnected_univ
   have himage : e '' (Set.univ : Set (productFinitePointComplement centers)) = Set.univ :=
     Set.image_univ_of_surjective e.surjective
   rw [← himage]

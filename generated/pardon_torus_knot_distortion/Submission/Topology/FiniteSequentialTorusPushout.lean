@@ -19,7 +19,7 @@ carrier.
 -/
 
 open LeanEval.KnotTheory.PardonDistortion
-open Set Topology
+open Metric Set Topology
 open scoped Function Topology
 
 noncomputable section
@@ -27,6 +27,7 @@ noncomputable section
 namespace Submission.Topology
 
 open Submission.Torus
+open Submission.PardonDistortion
 
 variable {Phi : AmbientIsotopy} {ι : Type*}
   {centers : ι → Circle × Circle} {target : Set (transportedTorus Phi)}
@@ -161,7 +162,8 @@ def supportPunctureLift (i : ι)
   ⟨D.supportLift i x hx, by
     intro hlift
     apply x.2 i
-    rw [transported_zeroWindingDiskCenterCoordinates]
+    rw [finiteZeroWindingDiskCenters,
+      transported_zeroWindingDiskCenterCoordinates]
     exact (D.projection_supportLift i x hx).symm.trans <|
       congrArg (torusCoveringProjectionToTorus Phi) hlift⟩
 
@@ -238,6 +240,8 @@ theorem localDeformationValue_mem_support (i : ι) (u : Set.Icc (0 : ℝ) 1)
   rw [(C i).mem_zeroWindingSchoenfliesSupport_iff,
     (C i).zeroWindingAmbientHomeomorph_planePunctureDeformation]
   apply RadialPuncture.planePunctureDeformation_mem_closedBall
+  change (C i).zeroWindingAmbientHomeomorph (hzero i)
+      (D.supportPunctureLift i x hx) ∈ closedBall 0 (D.radius i)
   rw [← (C i).mem_zeroWindingSchoenfliesSupport_iff]
   exact (D.supportLift i x hx).2
 
@@ -255,20 +259,9 @@ theorem localDeformationValue_eq_self_of_not_mem_openSupport
       (C i).zeroWindingSchoenfliesOpenSupport (hzero i) (D.radius i) := by
     intro hlift
     exact hxopen ⟨D.supportLift i x hx, hlift, D.projection_supportLift i x hx⟩
-  have hnorm : D.radius i ≤
-      ‖(C i).zeroWindingAmbientHomeomorph (hzero i) (D.supportLift i x hx)‖ := by
-    rw [zeroWindingSchoenfliesOpenSupport, mem_image] at hliftOpen
-    have hnotball : (C i).zeroWindingAmbientHomeomorph (hzero i)
-        (D.supportLift i x hx) ∉ ball (0 : TorusCoveringPlane) (D.radius i) := by
-      intro hball
-      apply hliftOpen
-      exact ⟨(C i).zeroWindingAmbientHomeomorph (hzero i)
-        (D.supportLift i x hx), hball,
-        (C i).zeroWindingAmbientHomeomorph (hzero i) |>.symm_apply_apply _⟩
-    simpa only [mem_ball, dist_zero_right, not_lt] using hnotball
-  rw [localDeformationValue,
-    (C i).zeroWindingPlanePunctureDeformation_apply_of_radius_le
-      (hzero i) (D.radius i) (D.one_lt_radius i) _ _ hnorm]
+  unfold localDeformationValue
+  rw [(C i).zeroWindingPlanePunctureDeformation_apply_of_not_mem_openSupport
+    (hzero i) (D.radius i) (D.one_lt_radius i) _ _ hliftOpen]
   exact D.projection_supportLift i x hx
 
 theorem localStageValue_eq_self_of_not_mem_openSupport
@@ -303,30 +296,53 @@ theorem continuous_supportPunctureLift (i : ι) :
     Continuous (fun x : D.sourceSupport i ↦
       D.supportPunctureLift i x.1 x.2) := by
   apply Continuous.subtype_mk
-  exact ((C i).zeroWindingSupportProjectionHomeomorph (hzero i) (D.radius i)
-      (D.projection_injective i)).symm.continuous.comp <|
-    Continuous.subtype_mk
-      (continuous_subtype_val.comp continuous_subtype_val) _
+  exact continuous_subtype_val.comp <|
+    ((C i).zeroWindingSupportProjectionHomeomorph (hzero i) (D.radius i)
+        (D.projection_injective i)).symm.continuous.comp <|
+      Continuous.subtype_mk
+        (continuous_subtype_val.comp continuous_subtype_val) _
 
 theorem continuous_localStageOnSupport (i : ι) :
     Continuous (D.localStageOnSupport i) :=
   (isLocalHomeomorph_torusCoveringProjectionToTorus Phi).continuous.comp <|
-    ((C i).zeroWindingPlanePunctureToDiskComplement (hzero i)
-      (D.radius i) (D.one_lt_radius i)).continuous.comp
-        (D.continuous_supportPunctureLift i)
+    continuous_subtype_val.comp <|
+      ((C i).zeroWindingPlanePunctureToDiskComplement (hzero i)
+        (D.radius i) (D.one_lt_radius i)).continuous.comp
+          (D.continuous_supportPunctureLift i)
+
+/-- Pair a deformation time with the punctured-plane lift of a support point. -/
+def localDeformationInput (i : ι) :
+    Set.Icc (0 : ℝ) 1 × D.sourceSupport i →
+      Set.Icc (0 : ℝ) 1 × (C i).zeroWindingPlanePuncture (hzero i) :=
+  fun z ↦ (z.1, D.supportPunctureLift i z.2.1 z.2.2)
+
+theorem continuous_localDeformationInput (i : ι) :
+    Continuous (D.localDeformationInput i) :=
+  continuous_fst.prodMk <|
+    (D.continuous_supportPunctureLift i).comp continuous_snd
+
+/-- The clean plane deformation on the product of the unit interval and a closed support. -/
+def localPlaneDeformationOnSupport (i : ι) :
+    Set.Icc (0 : ℝ) 1 × D.sourceSupport i →
+      (C i).zeroWindingPlanePuncture (hzero i) :=
+  Function.uncurry ((C i).zeroWindingPlanePunctureDeformation (hzero i)
+    (D.radius i) (D.one_lt_radius i)) ∘ D.localDeformationInput i
+
+theorem continuous_localPlaneDeformationOnSupport (i : ι) :
+    Continuous (D.localPlaneDeformationOnSupport i) :=
+  ((C i).continuous_uncurry_zeroWindingPlanePunctureDeformation
+      (hzero i) (D.radius i) (D.one_lt_radius i)).comp
+    (D.continuous_localDeformationInput i)
 
 /-- The clean local deformation on the product of the unit interval and its closed support. -/
 def localDeformationOnSupport (i : ι)
     (z : Set.Icc (0 : ℝ) 1 × D.sourceSupport i) : transportedTorus Phi :=
-  D.localDeformationValue i z.1 z.2.1 z.2.2
+  torusCoveringProjectionToTorus Phi (D.localPlaneDeformationOnSupport i z)
 
 theorem continuous_localDeformationOnSupport (i : ι) :
     Continuous (D.localDeformationOnSupport i) :=
   (isLocalHomeomorph_torusCoveringProjectionToTorus Phi).continuous.comp <|
-    ((C i).continuous_uncurry_zeroWindingPlanePunctureDeformation
-      (hzero i) (D.radius i) (D.one_lt_radius i)).comp <|
-        continuous_fst.prodMk <|
-          (D.continuous_supportPunctureLift i).comp continuous_snd
+    continuous_subtype_val.comp (D.continuous_localPlaneDeformationOnSupport i)
 
 /-- The total one-disk stage: use the descended radial map on the closed support and the identity
 off it.  The two formulas agree on the support seam. -/
@@ -412,12 +428,18 @@ theorem totalStageValue_eq_self_of_mem_sourceOpenExterior (i : ι)
 theorem continuous_totalStageValue (i : ι) :
     Continuous (D.totalStageValue i) := by
   have hsupport : ContinuousOn (D.totalStageValue i) (D.sourceSupport i) := by
-    rw [continuousOn_iff_continuous_restrict]
+    rw [continuousOn_iff_continuous_domRestrict]
     exact (D.continuous_localStageOnSupport i).congr fun x ↦
-      D.totalStageValue_eq_local i x.1 x.2
+      (D.totalStageValue_eq_local i x.1 x.2).symm
+  have hid : ContinuousOn
+      (fun x : transportedFinitePointComplement Phi
+        (finiteZeroWindingDiskCenters C hzero) ↦ (x : transportedTorus Phi))
+      (D.sourceOpenExterior i) := continuous_subtype_val.continuousOn
   have hexterior : ContinuousOn (D.totalStageValue i) (D.sourceOpenExterior i) :=
-    continuous_id.continuousOn.congr fun x hx ↦
-      (D.totalStageValue_eq_self_of_mem_sourceOpenExterior i x hx).symm
+    ContinuousOn.congr (f := fun x : transportedFinitePointComplement Phi
+      (finiteZeroWindingDiskCenters C hzero) ↦ (x : transportedTorus Phi))
+      (g := D.totalStageValue i) hid fun x hx ↦
+        D.totalStageValue_eq_self_of_mem_sourceOpenExterior i x hx
   rw [← continuousOn_univ, ← D.sourceSupport_union_sourceOpenExterior i]
   exact hsupport.union_of_isClosed hexterior
     (D.isClosed_sourceSupport i) (D.isClosed_sourceOpenExterior i)
@@ -440,7 +462,8 @@ theorem totalStageValue_ne_center (i j : ι)
       (finiteZeroWindingDiskCenters C hzero)) :
     D.totalStageValue i x ≠ transportedTorusHomeomorph Phi
       (finiteZeroWindingDiskCenters C hzero j) := by
-  rw [transported_zeroWindingDiskCenterCoordinates]
+  rw [finiteZeroWindingDiskCenters,
+    transported_zeroWindingDiskCenterCoordinates]
   by_cases hij : i = j
   · subst j
     intro heq
@@ -483,7 +506,8 @@ theorem localDeformationValue_ne_center (i j : ι) (u : Set.Icc (0 : ℝ) 1)
       (C i).zeroWindingProjectedSupport (hzero i) (D.radius i)) :
     D.localDeformationValue i u x hx ≠
       transportedTorusHomeomorph Phi (finiteZeroWindingDiskCenters C hzero j) := by
-  rw [transported_zeroWindingDiskCenterCoordinates]
+  rw [finiteZeroWindingDiskCenters,
+    transported_zeroWindingDiskCenterCoordinates]
   by_cases hij : i = j
   · subst j
     intro hprojection
@@ -494,14 +518,15 @@ theorem localDeformationValue_ne_center (i j : ι) (u : Set.Icc (0 : ℝ) 1)
       rw [(C i).mem_zeroWindingSchoenfliesSupport_iff,
         (C i).zeroWindingAmbientHomeomorph_planePunctureDeformation]
       apply RadialPuncture.planePunctureDeformation_mem_closedBall
+      change (C i).zeroWindingAmbientHomeomorph (hzero i)
+          (D.supportPunctureLift i x hx) ∈ closedBall 0 (D.radius i)
       rw [← (C i).mem_zeroWindingSchoenfliesSupport_iff]
       exact (D.supportLift i x hx).2
     have hcenterSupport := (C i).zeroWindingDiskCenter_mem_schoenfliesSupport
       (hzero i) (D.one_lt_radius i).le
     have hmovedCenter : (moved : TorusCoveringPlane) =
         (C i).zeroWindingDiskCenter (hzero i) :=
-      D.projection_injective i hmovedSupport hcenterSupport <| by
-        simpa only [localDeformationValue, moved] using hprojection
+      D.projection_injective i hmovedSupport hcenterSupport hprojection
     exact moved.2 hmovedCenter
   · intro heq
     have hout := D.localDeformationValue_mem_support i u x hx
@@ -590,7 +615,7 @@ theorem continuous_uncurry_totalDeformationValue (i : ι) :
     Continuous (Function.uncurry (D.totalDeformationValue i)) := by
   have hsupport : ContinuousOn (Function.uncurry (D.totalDeformationValue i))
       (D.deformationSupport i) := by
-    rw [continuousOn_iff_continuous_restrict]
+    rw [continuousOn_iff_continuous_domRestrict]
     let g : (D.deformationSupport i) → Set.Icc (0 : ℝ) 1 × D.sourceSupport i :=
       fun z ↦ (z.1.1, ⟨z.1.2, z.2⟩)
     have hg : Continuous g :=
@@ -598,12 +623,19 @@ theorem continuous_uncurry_totalDeformationValue (i : ι) :
         Continuous.subtype_mk
           (continuous_snd.comp continuous_subtype_val) _
     exact ((D.continuous_localDeformationOnSupport i).comp hg).congr fun z ↦
-      D.totalDeformationValue_eq_local i z.1.1 z.1.2 z.2
+      (D.totalDeformationValue_eq_local i z.1.1 z.1.2 z.2).symm
+  have hsnd : ContinuousOn
+      (fun z : Set.Icc (0 : ℝ) 1 × transportedFinitePointComplement Phi
+        (finiteZeroWindingDiskCenters C hzero) ↦ (z.2 : transportedTorus Phi))
+      (D.deformationOpenExterior i) :=
+    (continuous_subtype_val.comp continuous_snd).continuousOn
   have hexterior : ContinuousOn (Function.uncurry (D.totalDeformationValue i))
       (D.deformationOpenExterior i) :=
-    continuous_snd.continuousOn.congr fun z hz ↦
-      (D.totalDeformationValue_eq_self_of_mem_sourceOpenExterior
-        i z.1 z.2 hz).symm
+    ContinuousOn.congr (f := fun z : Set.Icc (0 : ℝ) 1 ×
+      transportedFinitePointComplement Phi (finiteZeroWindingDiskCenters C hzero) ↦
+        (z.2 : transportedTorus Phi))
+      (g := Function.uncurry (D.totalDeformationValue i)) hsnd fun z hz ↦
+        D.totalDeformationValue_eq_self_of_mem_sourceOpenExterior i z.1 z.2 hz
   have hsupportClosed : IsClosed (D.deformationSupport i) :=
     (D.isClosed_sourceSupport i).preimage continuous_snd
   have hexteriorClosed : IsClosed (D.deformationOpenExterior i) :=
@@ -728,7 +760,8 @@ theorem localPreimagePlane_projection_ne_center (i j : ι)
     torusCoveringProjectionToTorus Phi
         (D.localPreimagePlane i y hysupport hydisk) ≠
       transportedTorusHomeomorph Phi (finiteZeroWindingDiskCenters C hzero j) := by
-  rw [transported_zeroWindingDiskCenterCoordinates]
+  rw [finiteZeroWindingDiskCenters,
+    transported_zeroWindingDiskCenterCoordinates]
   by_cases hij : i = j
   · subst j
     intro hprojection
@@ -785,6 +818,7 @@ theorem stage_localPreimage (i : ι)
       (D.supportLift i (D.localPreimage i y hysupport hydisk) hpreimageSupport).2
       (D.localPreimagePlane_mem_support i y hysupport hydisk) <| by
         rw [D.projection_supportLift]
+        rfl
   rw [hlift, localPreimagePlane,
     ((C i).zeroWindingPlanePunctureToDiskComplement (hzero i)
       (D.radius i) (D.one_lt_radius i)).apply_symm_apply]
@@ -901,14 +935,19 @@ theorem composeStageList_mem_listComplement {X : Type*}
       stage i x ∉ removed j ↔ x ∉ removed j)
     (is : List ι) (his : is.Nodup) (x : X) :
     composeStageList stage is x ∈ listComplement removed is := by
-  induction is with
+  induction is generalizing x with
   | nil => exact fun _ hi ↦ nomatch hi
   | cons i is ih =>
       rw [List.nodup_cons] at his
       intro j hj
-      rcases List.mem_cons.mp hj with rfl | hj
-      · exact hown i _
-      · exact (hother (fun hij ↦ his.1 (hij ▸ hj)) _).2 (ih his.2 x j hj)
+      rcases List.mem_cons.mp hj with hji | hj
+      · subst j
+        exact hown i _
+      · have hij : i ≠ j := by
+          intro h
+          subst j
+          exact his.1 hj
+        exact (hother hij _).2 (ih his.2 x j hj)
 
 /-- Conversely, every point outside the listed removed sets has a preimage under the finite
 composition.  Notice that no commutativity of the stages is assumed: preservation of all other
@@ -921,14 +960,18 @@ theorem composeStageList_surjective_listComplement {X : Type*}
     (is : List ι) (his : is.Nodup) (y : X)
     (hy : y ∈ listComplement removed is) :
     ∃ x, composeStageList stage is x = y := by
-  induction is with
+  induction is generalizing y with
   | nil => exact ⟨y, rfl⟩
   | cons i is ih =>
       rw [List.nodup_cons] at his
       obtain ⟨z, hz⟩ := hsurjective i y (hy i List.mem_cons_self)
       have hzremoved : z ∈ listComplement removed is := by
         intro j hj
-        apply (hother (fun hij ↦ his.1 (hij ▸ hj)) z).1
+        have hij : i ≠ j := by
+          intro h
+          subst j
+          exact his.1 hj
+        apply (hother hij z).1
         rw [hz]
         exact hy j (List.mem_cons_of_mem i hj)
       obtain ⟨x, hx⟩ := ih his.2 z hzremoved
@@ -974,9 +1017,11 @@ structure FiniteSequentialPunctureStages [Fintype ι]
     deformation i ⟨1, Set.right_mem_Icc.mpr zero_le_one⟩ x = stage i x
   deformation_fixed : ∀ i u x, x ∉ support i → deformation i u x = x
   terminal_mem : ∀ x,
-    (composeStageList stage Finset.univ.toList x : transportedTorus Phi) ∈ target
+    ((composeStageList stage (Finset.univ : Finset ι).toList x :
+      transportedFinitePointComplement Phi centers) : transportedTorus Phi) ∈ target
   terminal_surjective : ∀ y : target, ∃ x,
-    (composeStageList stage Finset.univ.toList x : transportedTorus Phi) = y
+    ((composeStageList stage (Finset.univ : Finset ι).toList x :
+      transportedFinitePointComplement Phi centers) : transportedTorus Phi) = y
 
 /-- Support-aware local disk replacements.  Unlike `FiniteSequentialPunctureStages`, this
 structure has only one-disk hypotheses: the exact simultaneous range is proved below.  The
@@ -992,12 +1037,15 @@ structure FiniteSupportedDiskReplacements [Fintype ι]
   stage : ι → transportedFinitePointComplement Phi centers →
     transportedFinitePointComplement Phi centers
   continuous_stage : ∀ i, Continuous (stage i)
-  stage_fixed : ∀ i x, (x : transportedTorus Phi) ∉ support i → stage i x = x
-  stage_mem_support_iff : ∀ i x,
+  stage_fixed : ∀ i (x : transportedFinitePointComplement Phi centers),
+    (x : transportedTorus Phi) ∉ support i → stage i x = x
+  stage_mem_support_iff : ∀ i (x : transportedFinitePointComplement Phi centers),
     (stage i x : transportedTorus Phi) ∈ support i ↔
       (x : transportedTorus Phi) ∈ support i
-  stage_avoids_disk : ∀ i x, (stage i x : transportedTorus Phi) ∉ disk i
-  stage_surjective_disk_complement : ∀ i y,
+  stage_avoids_disk : ∀ i (x : transportedFinitePointComplement Phi centers),
+    (stage i x : transportedTorus Phi) ∉ disk i
+  stage_surjective_disk_complement : ∀ i
+      (y : transportedFinitePointComplement Phi centers),
     (y : transportedTorus Phi) ∉ disk i → ∃ x, stage i x = y
   deformation : ι → Set.Icc (0 : ℝ) 1 →
     transportedFinitePointComplement Phi centers →
@@ -1007,7 +1055,7 @@ structure FiniteSupportedDiskReplacements [Fintype ι]
     deformation i ⟨0, Set.left_mem_Icc.mpr zero_le_one⟩ x = x
   deformation_one : ∀ i x,
     deformation i ⟨1, Set.right_mem_Icc.mpr zero_le_one⟩ x = stage i x
-  deformation_fixed : ∀ i u x,
+  deformation_fixed : ∀ i u (x : transportedFinitePointComplement Phi centers),
     (x : transportedTorus Phi) ∉ support i → deformation i u x = x
 
 namespace EmbeddedTorusIntersectionCircle.SeparatedZeroWindingDiskSupports
@@ -1059,8 +1107,9 @@ variable [Fintype ι] {disk : ι → Set (transportedTorus Phi)}
 /-- A point in another removed disk is outside the support of the current stage. -/
 theorem not_mem_support_of_mem_disk {i j : ι} (hij : i ≠ j)
     {x : transportedTorus Phi} (hx : x ∈ disk j) : x ∉ D.support i := by
+  intro hxi
   exact (Set.disjoint_left.mp (D.pairwise_disjoint_support hij))
-    (D.disk_subset_support j hx)
+    hxi (D.disk_subset_support j hx)
 
 /-- Every local stage fixes every point of every other removed disk. -/
 theorem stage_eq_self_of_mem_other_disk {i j : ι} (hij : i ≠ j)
@@ -1085,22 +1134,25 @@ theorem stage_not_mem_other_disk_iff {i j : ι} (hij : i ≠ j)
   · rw [D.stage_fixed i x hx]
 
 /-- Pairwise disjoint disk supports force the chosen puncture centers to be pairwise distinct. -/
-theorem pairwise_ne_transported_centers : Pairwise fun i j ↦
+theorem pairwise_ne_transported_centers
+    (E : FiniteSupportedDiskReplacements Phi centers disk) : Pairwise fun i j ↦
     transportedTorusHomeomorph Phi (centers i) ≠
       transportedTorusHomeomorph Phi (centers j) := by
   intro i j hij hcenter
-  have hi : transportedTorusHomeomorph Phi (centers i) ∈ D.support i :=
-    D.disk_subset_support i (D.center_mem_disk i)
-  have hj : transportedTorusHomeomorph Phi (centers j) ∈ D.support j :=
-    D.disk_subset_support j (D.center_mem_disk j)
-  exact (Set.disjoint_left.mp (D.pairwise_disjoint_support hij)) hi (hcenter.symm ▸ hj)
+  have hi : transportedTorusHomeomorph Phi (centers i) ∈ E.support i :=
+    E.disk_subset_support i (E.center_mem_disk i)
+  have hj : transportedTorusHomeomorph Phi (centers j) ∈ E.support j :=
+    E.disk_subset_support j (E.center_mem_disk j)
+  exact (Set.disjoint_left.mp (E.pairwise_disjoint_support hij)) hi (hcenter.symm ▸ hj)
 
 /-- Regard the `i`-th ambient disk as a forbidden set in the finite-point source. -/
-def sourceDisk (i : ι) : Set (transportedFinitePointComplement Phi centers) :=
+def sourceDisk (_D : FiniteSupportedDiskReplacements Phi centers disk) (i : ι) :
+    Set (transportedFinitePointComplement Phi centers) :=
   Subtype.val ⁻¹' disk i
 
 /-- The exact simultaneous closed-disk complement in the transported torus. -/
-def diskComplement : Set (transportedTorus Phi) :=
+def diskComplement (_D : FiniteSupportedDiskReplacements Phi centers disk) :
+    Set (transportedTorus Phi) :=
   {x | ∀ i, x ∉ disk i}
 
 /-- The one-disk axioms imply the complete finite sequential pushout contract. -/
@@ -1120,7 +1172,7 @@ def toFiniteSequentialPunctureStages :
     have hx := composeStageList_mem_listComplement D.stage D.sourceDisk
       D.stage_avoids_disk
       (fun hij x ↦ D.stage_not_mem_other_disk_iff hij x)
-      Finset.univ.toList Finset.nodup_toList x
+      (Finset.univ : Finset ι).toList (Finset.univ : Finset ι).nodup_toList x
     exact fun i ↦ hx i (Finset.mem_toList.mpr (Finset.mem_univ i))
   terminal_surjective := by
     intro y
@@ -1132,7 +1184,8 @@ def toFiniteSequentialPunctureStages :
     obtain ⟨x, hx⟩ := composeStageList_surjective_listComplement
       D.stage D.sourceDisk D.stage_surjective_disk_complement
       (fun hij z ↦ D.stage_not_mem_other_disk_iff hij z)
-      Finset.univ.toList Finset.nodup_toList ysource hy
+      (Finset.univ : Finset ι).toList (Finset.univ : Finset ι).nodup_toList ysource hy
+    exact ⟨x, congrArg Subtype.val hx⟩
 
 end FiniteSupportedDiskReplacements
 
@@ -1143,7 +1196,8 @@ variable [Fintype ι]
 
 /-- The final finite composition, with its transported-torus codomain exposed. -/
 def push (x : transportedFinitePointComplement Phi centers) : transportedTorus Phi :=
-  composeStageList D.stage Finset.univ.toList x
+  ((composeStageList D.stage (Finset.univ : Finset ι).toList x :
+    transportedFinitePointComplement Phi centers) : transportedTorus Phi)
 
 theorem continuous_push : Continuous D.push :=
   continuous_subtype_val.comp <|
@@ -1152,7 +1206,8 @@ theorem continuous_push : Continuous D.push :=
 /-- The simultaneous unit-interval deformation of the finite composition. -/
 def unitIntervalDeformation (u : Set.Icc (0 : ℝ) 1)
     (x : transportedFinitePointComplement Phi centers) : transportedTorus Phi :=
-  composeDeformationList D.deformation u Finset.univ.toList x
+  ((composeDeformationList D.deformation u (Finset.univ : Finset ι).toList x :
+    transportedFinitePointComplement Phi centers) : transportedTorus Phi)
 
 theorem continuous_unitIntervalDeformation :
     Continuous (Function.uncurry D.unitIntervalDeformation) :=
@@ -1208,8 +1263,12 @@ theorem range_push : Set.range D.push = target := by
 /-- Membership in the target is equivalent to having a preimage under the finite push. -/
 theorem mem_target_iff_exists_preimage (y : transportedTorus Phi) :
     y ∈ target ↔ ∃ x, D.push x = y := by
-  rw [← D.range_push]
-  rfl
+  constructor
+  · intro hy
+    obtain ⟨x, hx⟩ := D.terminal_surjective ⟨y, hy⟩
+    exact ⟨x, hx⟩
+  · rintro ⟨x, rfl⟩
+    exact D.terminal_mem x
 
 end FiniteSequentialPunctureStages
 
@@ -1247,5 +1306,71 @@ theorem mem_diskComplement_iff_exists_preimage (y : transportedTorus Phi) :
   D.toFiniteSequentialPunctureStages.mem_target_iff_exists_preimage y
 
 end FiniteSupportedDiskReplacements
+
+namespace EmbeddedTorusIntersectionCircle.SeparatedZeroWindingDiskSupports
+
+variable [Fintype ι]
+  {C : ι → EmbeddedTorusIntersectionCircle Phi}
+  {hzero : ∀ i, (C i).windingLoop.windingPair = (0, 0)}
+  (D : EmbeddedTorusIntersectionCircle.SeparatedZeroWindingDiskSupports C hzero)
+
+/-- The concrete finite radial pushout from the complement of the canonical disk centers to the
+simultaneous complement of the projected closed Jordan disks. -/
+def toFinitePuncturePushoutData :
+    FinitePuncturePushoutData Phi
+      (EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskCenters C hzero)
+      (EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskComplement C hzero) := by
+  let F := D.toFiniteSupportedDiskReplacements
+  simpa only [EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskComplement,
+    FiniteSupportedDiskReplacements.diskComplement] using
+      F.toFiniteSequentialPunctureStages.toFinitePuncturePushoutData
+
+/-- The concrete finite push map, exposed independently of the bundled downstream contract. -/
+def finitePush (x : transportedFinitePointComplement Phi
+    (EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskCenters C hzero)) :
+    transportedTorus Phi :=
+  D.toFiniteSupportedDiskReplacements.push x
+
+/-- The concrete push is fixed at every point outside all selected support neighborhoods. -/
+theorem finitePush_eq_self_of_forall_not_mem
+    (x : transportedFinitePointComplement Phi
+      (EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskCenters C hzero))
+    (hx : ∀ i, (x : transportedTorus Phi) ∉
+      (C i).zeroWindingProjectedSupport (hzero i) (D.radius i)) :
+    D.finitePush x = x.1 :=
+  D.toFiniteSupportedDiskReplacements.push_eq_self_of_forall_not_mem x hx
+
+/-- The concrete push has exactly the simultaneous projected-disk complement as its range. -/
+theorem range_finitePush :
+    Set.range D.finitePush =
+      EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskComplement C hzero := by
+  change Set.range D.toFiniteSupportedDiskReplacements.push = _
+  simpa only [
+    EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskComplement,
+    FiniteSupportedDiskReplacements.diskComplement] using
+      D.toFiniteSupportedDiskReplacements.range_push
+
+/-- Exact preimage characterization for later component-localization arguments. -/
+theorem mem_finiteZeroWindingDiskComplement_iff_exists_preimage
+    (y : transportedTorus Phi) :
+    y ∈ EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskComplement C hzero ↔
+      ∃ x, D.finitePush x = y := by
+  rw [← D.range_finitePush]
+  rfl
+
+/-- The compact-interval deformation underlying the bundled pushout is fixed away from all
+supports, uniformly in time. -/
+theorem finiteUnitIntervalDeformation_eq_self_of_forall_not_mem
+    (u : Set.Icc (0 : ℝ) 1)
+    (x : transportedFinitePointComplement Phi
+      (EmbeddedTorusIntersectionCircle.finiteZeroWindingDiskCenters C hzero))
+    (hx : ∀ i, (x : transportedTorus Phi) ∉
+      (C i).zeroWindingProjectedSupport (hzero i) (D.radius i)) :
+    (D.toFiniteSupportedDiskReplacements.toFiniteSequentialPunctureStages
+      |>.unitIntervalDeformation u x) = x.1 :=
+  (D.toFiniteSupportedDiskReplacements
+    |>.unitIntervalDeformation_eq_self_of_forall_not_mem u x hx)
+
+end EmbeddedTorusIntersectionCircle.SeparatedZeroWindingDiskSupports
 
 end Submission.Topology

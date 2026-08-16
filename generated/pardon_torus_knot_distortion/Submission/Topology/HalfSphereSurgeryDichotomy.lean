@@ -59,6 +59,31 @@ theorem isClosed_carrier (S : EmbeddedTopologicalSphereInR3) :
 
 end EmbeddedTopologicalSphereInR3
 
+/-- A finite pairwise-disjoint family of embedded topological spheres.  Regular stages after a
+two-surgery need not be connected, so a single `EmbeddedTopologicalSphereInR3` is not an honest
+model of the moving boundary. -/
+structure FiniteEmbeddedTopologicalSphereFamilyInR3 where
+  count : ℕ
+  sphere : Fin count → EmbeddedTopologicalSphereInR3
+  pairwise_disjoint : Pairwise fun i j ↦ Disjoint (sphere i).carrier (sphere j).carrier
+
+namespace FiniteEmbeddedTopologicalSphereFamilyInR3
+
+/-- The ambient carrier of all sphere components. -/
+def carrier (S : FiniteEmbeddedTopologicalSphereFamilyInR3) : Set R3 :=
+  ⋃ i, (S.sphere i).carrier
+
+theorem isCompact_carrier (S : FiniteEmbeddedTopologicalSphereFamilyInR3) :
+    IsCompact S.carrier := by
+  unfold carrier
+  exact isCompact_iUnion fun i ↦ (S.sphere i).isCompact_carrier
+
+theorem isClosed_carrier (S : FiniteEmbeddedTopologicalSphereFamilyInR3) :
+    IsClosed S.carrier :=
+  S.isCompact_carrier.isClosed
+
+end FiniteEmbeddedTopologicalSphereFamilyInR3
+
 /-- Finite circle data at one regular time of the genuine sphere-surgery family.
 
 `insideCell` is the parity-selected side of the moving sphere.  The `eventRegion` contains every
@@ -66,16 +91,16 @@ intersection circle, so an essential compression retaining one of these parametr
 is automatically covered by the selected outer/cutting events. -/
 structure FiniteSphereSurgeryIntersectionSystem
     (Phi : AmbientIsotopy) (ι : Type*) [Fintype ι] where
-  sphere : EmbeddedTopologicalSphereInR3
+  sphereFamily : FiniteEmbeddedTopologicalSphereFamilyInR3
   insideCell : Set R3
-  sphere_is_boundary : sphere.carrier = frontier insideCell
+  sphereFamily_is_boundary : sphereFamily.carrier = frontier insideCell
   circle : ι → EmbeddedTorusIntersectionCircle Phi
   pairwise_disjoint : Pairwise fun i j ↦
     Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle)
-  intersection_exact : sphere.carrier ∩ transportedTorus Phi =
+  intersection_exact : sphereFamily.carrier ∩ transportedTorus Phi =
     ⋃ i, Set.range (circle i).circle
   sphereDisk : ι → BoundaryParametrizedEmbeddedDiskInR3
-  sphereDisk_mem : ∀ i, Set.range (sphereDisk i).disk ⊆ sphere.carrier
+  sphereDisk_mem : ∀ i, Set.range (sphereDisk i).disk ⊆ sphereFamily.carrier
   sphereDisk_boundary : ∀ i t,
     (sphereDisk i).disk (unitDiskBoundary t) = (circle i).windingLoop.curve t
   eventRegion : Set R3
@@ -92,8 +117,9 @@ def AllInessential (S : FiniteSphereSurgeryIntersectionSystem Phi ι) : Prop :=
 /-- The torus-side Schoenflies disk selected for an inessential stage circle. -/
 def torusDisk (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential) (i : ι) :
-    InessentialTorusCircleDisk Phi (S.circle i) :=
-  inessentialTorusCircleDisk (S.circle i) (hzero i)
+    EmbeddedTorusIntersectionCircle.InessentialTorusCircleDisk Phi (S.circle i) :=
+  EmbeddedTorusIntersectionCircle.inessentialTorusCircleDisk
+    (S.circle i) (hzero i)
 
 /-- The chosen torus-side disk as a map into the transported-torus subtype. -/
 def torusDiskMap (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
@@ -248,7 +274,7 @@ theorem complement_isConnected (M : MaximalInessentialTorusDiskFamily S hzero)
       (Set.univ : Set M.diskComplement) :=
     Set.range_eq_univ.mpr (surjective_targetPush M P)
   have htarget : IsConnected (Set.univ : Set M.diskComplement) := by
-    rw [← hrange]
+    rw [← hrange, ← Set.image_univ]
     exact (transportedFinitePointComplement_isConnected M.centers).image (targetPush M P)
       (continuous_targetPush M P).continuousOn
   simpa using htarget.image ((↑) : M.diskComplement → transportedTorus Phi)
@@ -325,9 +351,10 @@ private theorem IsPreconnected.subset_or_subset_closed
     (huv : Disjoint u v) (hsub : s ⊆ u ∪ v) :
     s ⊆ u ∨ s ⊆ v := by
   by_contra h
-  push_neg at h
-  obtain ⟨x, hxs, hxu⟩ := h.1
-  obtain ⟨y, hys, hyv⟩ := h.2
+  have hsu : ¬ s ⊆ u := fun hsu ↦ h (Or.inl hsu)
+  have hsv : ¬ s ⊆ v := fun hsv ↦ h (Or.inr hsv)
+  obtain ⟨x, hxs, hxu⟩ := Set.not_subset.mp hsu
+  obtain ⟨y, hys, hyv⟩ := Set.not_subset.mp hsv
   have hxv : x ∈ v := (hsub hxs).resolve_left hxu
   have hyu : y ∈ u := (hsub hys).resolve_right hyv
   obtain ⟨z, hzs, hzu, hzv⟩ :=
@@ -365,12 +392,13 @@ private theorem IsConnected.subset_one_of_subset_biUnion_pairwise_disjoint_close
             (Finset.mem_insert_of_mem hj) (Ne.symm <| fun hji ↦ hi (hji ▸ hj))) hxi hxj
       have hcover : s ⊆ u i ∪ rest := by
         simpa only [Finset.set_biUnion_insert] using hsub
-      rcases hs.isPreconnected.subset_or_subset_closed hiClosed hrestClosed hiRest hcover with
+      rcases IsPreconnected.subset_or_subset_closed hs.isPreconnected
+          hiClosed hrestClosed hiRest hcover with
         hsi | hsrest
       · exact ⟨i, Finset.mem_insert_self i I, hsi⟩
       · obtain ⟨j, hj, hsj⟩ := ih
           (fun j hj ↦ hclosed j (Finset.mem_insert_of_mem hj))
-          (fun hj hk hjk ↦ hdisjoint
+          (fun {j} hj {k} hk hjk ↦ hdisjoint
             (Finset.mem_insert_of_mem hj) (Finset.mem_insert_of_mem hk) hjk)
           hsrest
         exact ⟨j, Finset.mem_insert_of_mem hj, hsj⟩
@@ -444,14 +472,14 @@ def contractedDiskPoint {s : Set (transportedTorus Phi)}
     (i : ι) (L : TransportedWindingLoop Phi s)
     (hsub : Set.range L.curve ⊆ Set.range (S.torusDiskMap hzero i))
     (a t : ℝ) : ClosedUnitDisk := by
-  let r : ℝ := S.diskContractionParameter a
+  let r : ℝ := diskContractionParameter a
   let z : ℂ := (1 - r) • (S.torusDiskFactorCurve i L hsub t : ℂ)
   refine ⟨z, ?_⟩
   rw [Metric.mem_closedBall, dist_zero_right]
   have hr0 : 0 ≤ 1 - r := by
-    exact sub_nonneg.mpr (S.diskContractionParameter a).property.2
+    exact sub_nonneg.mpr (diskContractionParameter a).property.2
   have hr1 : 1 - r ≤ 1 := by
-    linarith [(S.diskContractionParameter a).property.1]
+    linarith [(diskContractionParameter a).property.1]
   have hz := (S.torusDiskFactorCurve i L hsub t).property
   rw [Metric.mem_closedBall, dist_zero_right] at hz
   change ‖(1 - r) • (S.torusDiskFactorCurve i L hsub t : ℂ)‖ ≤ 1
@@ -490,7 +518,7 @@ theorem periodic_contractedTorusDiskCurve {s : Set (transportedTorus Phi)}
   apply congrArg (S.torusDiskMap hzero i)
   apply Subtype.ext
   exact congrArg (fun z : ClosedUnitDisk ↦
-    (1 - (S.diskContractionParameter a : ℝ)) • (z : ℂ))
+    (1 - (diskContractionParameter a : ℝ)) • (z : ℂ))
     (S.periodic_torusDiskFactorCurve i L hsub t)
 
 theorem contractedTorusDiskCurve_zero {s : Set (transportedTorus Phi)}
@@ -498,10 +526,11 @@ theorem contractedTorusDiskCurve_zero {s : Set (transportedTorus Phi)}
     (hsub : Set.range L.curve ⊆ Set.range (S.torusDiskMap hzero i)) (t : ℝ) :
     S.contractedTorusDiskCurve i L hsub 0 t = L.curve t := by
   rw [contractedTorusDiskCurve]
-  have hparameter : S.diskContractionParameter 0 =
-      ⟨0, Set.left_mem_Icc.mpr zero_le_one⟩ := Set.projIcc_left
-  rw [contractedDiskPoint, hparameter]
-  simp only [Set.Icc.coe_zero, sub_zero, one_smul]
+  have hpoint : S.contractedDiskPoint i L hsub 0 t =
+      S.torusDiskFactorCurve i L hsub t := by
+    apply Subtype.ext
+    simp [contractedDiskPoint, diskContractionParameter]
+  rw [hpoint]
   exact S.torusDiskMap_factorCurve i L hsub t
 
 theorem contractedTorusDiskCurve_one {s : Set (transportedTorus Phi)}
@@ -509,10 +538,10 @@ theorem contractedTorusDiskCurve_one {s : Set (transportedTorus Phi)}
     (hsub : Set.range L.curve ⊆ Set.range (S.torusDiskMap hzero i)) (t : ℝ) :
     S.contractedTorusDiskCurve i L hsub 1 t = S.torusDiskMap hzero i 0 := by
   rw [contractedTorusDiskCurve]
-  have hparameter : S.diskContractionParameter 1 =
-      ⟨1, Set.right_mem_Icc.mpr zero_le_one⟩ := Set.projIcc_right
-  rw [contractedDiskPoint, hparameter]
-  simp
+  have hpoint : S.contractedDiskPoint i L hsub 1 t = 0 := by
+    apply Subtype.ext
+    simp [contractedDiskPoint, diskContractionParameter]
+  rw [hpoint]
 
 /-- The explicit zero-winding lift of a constant transported-torus loop. -/
 def constantTransportedTorusLoopLift (x : transportedTorus Phi) :
@@ -576,7 +605,7 @@ variable {Phi : AmbientIsotopy} {ι : Type*} [Fintype ι] [DecidableEq ι]
   {hzero : S.AllInessential}
 
 theorem isClosed_torusDiskMap_range
-    (M : MaximalInessentialTorusDiskFamily S hzero) (i : ι) :
+    (_M : MaximalInessentialTorusDiskFamily S hzero) (i : ι) :
     IsClosed (Set.range (S.torusDiskMap hzero i)) :=
   (isCompact_range (S.continuous_torusDiskMap hzero i)).isClosed
 
@@ -587,8 +616,8 @@ theorem connected_range_subset_one_maximalDisk
     (hsub : Set.range L.curve ⊆ M.diskUnion) :
     ∃ i ∈ M.maximal,
       Set.range L.curve ⊆ Set.range (S.torusDiskMap hzero i) := by
-  exact (isConnected_range L.continuous_curve)
-    .subset_one_of_subset_biUnion_pairwise_disjoint_closed
+  exact IsConnected.subset_one_of_subset_biUnion_pairwise_disjoint_closed
+      (isConnected_range L.continuous_curve)
       M.maximal (fun i ↦ Set.range (S.torusDiskMap hzero i))
       (fun i _ ↦ M.isClosed_torusDiskMap_range i)
       M.disks_pairwise_disjoint hsub
@@ -637,7 +666,8 @@ theorem diskComplement_subset_lower_or_upper_or_exterior
         M.diskComplement ⊆ E.exteriorPart := by
   have hfirst := hconnected.isPreconnected.subset_or_subset
     E.isOpen_lowerPart (E.isOpen_upperPart.union E.isOpen_exteriorPart)
-    E.lower_disjoint_upper_union_exterior (E.diskComplement_subset_cells M)
+    E.lower_disjoint_upper_union_exterior (by
+      simpa [Set.union_assoc] using E.diskComplement_subset_cells M)
   rcases hfirst with hlower | hrest
   · exact Or.inl hlower
   · exact Or.inr <| hconnected.isPreconnected.subset_or_subset
@@ -684,8 +714,8 @@ theorem not_diskComplement_subset_exterior_of_parent_carrier
     i W.first hfirstDisk
   have hsecondZero := S.windingPair_eq_zero_of_range_subset_torusDisk
     j W.second hsecondDisk
-  rw [hfirstZero, hsecondZero] at W.independent
-  exact W.independent (by simp [windingDet])
+  apply W.independent
+  simp [windingDet, hfirstZero, hsecondZero]
 
 /-- The all-inessential elementary sphere surgery propagates the incoming based carrier into one
 of the two parity-interior child cells.  This is the logical heart of the half-sphere argument. -/
@@ -700,7 +730,7 @@ theorem carries_lower_or_upper_of_allInessential
   have hcomplement : CarriesBasedLoopTorusGenus Phi M.diskComplement :=
     carriesBasedLoopTorusGenus_of_finitePuncturePushout P.pushout
   rcases E.diskComplement_subset_lower_or_upper_or_exterior M
-      (ConnectedPushoutData.complement_isConnected M P) with
+      (MaximalInessentialTorusDiskFamily.ConnectedPushoutData.complement_isConnected M P) with
       hlower | hupper | hexterior
   · exact Or.inl (hcomplement.mono hlower)
   · exact Or.inr (hcomplement.mono hupper)

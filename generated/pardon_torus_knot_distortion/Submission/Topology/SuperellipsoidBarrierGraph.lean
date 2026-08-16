@@ -17,7 +17,9 @@ open edges of a finite graph; their closures attach to the outer circles at the 
 seam.  A separate resolution structure records the genuinely geometric local surgery that turns
 this graph into regular embedded intersection circles.
 
-The last section gives the exact adapter from any essential resolved circle to the existing
+The local resolution is indexed by paired seam excursions, not by isolated vertices: an isolated
+`T` has three ends and admits no relative one-manifold smoothing.  The last section gives the
+exact adapter from any essential resolved circle to the existing
 finite innermost-circle surgery interface.  Thus no existence or embeddedness assertion about the
 local surgery is hidden in the finite argument.
 -/
@@ -39,20 +41,20 @@ open Submission.Torus
 section.  This common interface is used for both the regular outer level and the regular cutting
 plane. -/
 structure FiniteEmbeddedTorusCircleSection
-    (Phi : AmbientIsotopy) (section : Set R3) (ι : Type*) [Fintype ι] where
+    (Phi : AmbientIsotopy) (ambientSection : Set R3) (ι : Type*) [Fintype ι] where
   circle : ι → EmbeddedTorusIntersectionCircle Phi
-  circle_mem_section : ∀ i, Set.range (circle i).circle ⊆ section
+  circle_mem_section : ∀ i, Set.range (circle i).circle ⊆ ambientSection
   pairwise_disjoint : Pairwise fun i j ↦
     Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle)
-  section_exact : section = ⋃ i, Set.range (circle i).circle
+  section_exact : ambientSection = ⋃ i, Set.range (circle i).circle
 
 namespace FiniteEmbeddedTorusCircleSection
 
-variable {Phi : AmbientIsotopy} {section : Set R3} {ι : Type*} [Fintype ι]
+variable {Phi : AmbientIsotopy} {ambientSection : Set R3} {ι : Type*} [Fintype ι]
 
 theorem section_subset_transportedTorus
-    (F : FiniteEmbeddedTorusCircleSection Phi section ι) :
-    section ⊆ transportedTorus Phi := by
+    (F : FiniteEmbeddedTorusCircleSection Phi ambientSection ι) :
+    ambientSection ⊆ transportedTorus Phi := by
   rw [F.section_exact]
   intro x hx
   simp only [Set.mem_iUnion] at hx
@@ -174,12 +176,20 @@ theorem superellipsoidPolynomialLift_planeFundamentalRepresentative
     superellipsoidPolynomialLift Phi frame c (planeFundamentalRepresentative uv) =
       superellipsoidPolynomialLift Phi frame c uv := by
   let index := planeFundamentalDeckIndex uv
+  have hinvariant (z : Plane) (m n : ℤ) :
+      superellipsoidPolynomialLift Phi frame c (z + planeDeckVector m n) =
+        superellipsoidPolynomialLift Phi frame c z := by
+    unfold superellipsoidPolynomialLift
+    rw [show z + planeDeckVector m n =
+        (z.1 + (m : ℝ) * (2 * Real.pi),
+          z.2 + (n : ℝ) * (2 * Real.pi)) by
+      ext <;> rfl]
+    rw [transportedTorusPlaneMap_add_int_periods]
   calc
     superellipsoidPolynomialLift Phi frame c (planeFundamentalRepresentative uv) =
         superellipsoidPolynomialLift Phi frame c
           (planeFundamentalRepresentative uv + planeDeckVector index.1 index.2) :=
-      (superellipsoidPolynomialLift_add_planeDeckVector
-        Phi frame c index.1 index.2 _).symm
+      (hinvariant _ index.1 index.2).symm
     _ = superellipsoidPolynomialLift Phi frame c uv := by
       rw [planeFundamentalRepresentative_add_deck]
 
@@ -392,8 +402,15 @@ theorem carrier_eq_ambientBarrier
       x ∈ superellipsoidCutTorusSection Phi frame d ∧
         x ∈ superellipsoidBody frame c R := by
     simp only [cutInsideRange, Set.mem_iUnion, Set.mem_inter_iff]
-    rw [G.cut.section_exact]
-    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨i, hi, hbody⟩
+      refine ⟨?_, hbody⟩
+      rw [G.cut.section_exact]
+      exact Set.mem_iUnion.2 ⟨i, hi⟩
+    · rintro ⟨hcut, hbody⟩
+      rw [G.cut.section_exact] at hcut
+      obtain ⟨i, hi⟩ := Set.mem_iUnion.1 hcut
+      exact ⟨i, hi, hbody⟩
   rw [show x ∈ G.carrier ↔
       x ∈ (⋃ i, Set.range (G.outer.circle i).circle) ∨
         x ∈ (⋃ j, G.cutInsideRange j) by rfl, houter, hcut]
@@ -433,8 +450,15 @@ theorem closure_cutInside_union_meets_outer
         superellipsoidBody frame c R := by
     ext x
     simp only [cutInsideRange, Set.mem_iUnion, Set.mem_inter_iff]
-    rw [G.cut.section_exact]
-    simp only [Set.mem_iUnion]
+    constructor
+    · rintro ⟨i, hi, hbody⟩
+      refine ⟨?_, hbody⟩
+      rw [G.cut.section_exact]
+      exact Set.mem_iUnion.2 ⟨i, hi⟩
+    · rintro ⟨hcut, hbody⟩
+      rw [G.cut.section_exact] at hcut
+      obtain ⟨i, hi⟩ := Set.mem_iUnion.1 hcut
+      exact ⟨i, hi, hbody⟩
   rw [hcutUnion]
   exact G.cut_inside_closure_meets_outer
 
@@ -463,41 +487,63 @@ structure FiniteBarrierArcPresentation
   point : vertex → R3
   point_injective : Function.Injective point
   vertex_exact : Set.range point = superellipsoidTorusSeam Phi frame c R d
-  sourcePoint targetPoint : edge → R3
+  sourcePoint : edge → R3
+  targetPoint : edge → R3
   arc : ∀ e, Path (sourcePoint e) (targetPoint e)
   closed_or_endpoints_are_vertices : ∀ e,
     sourcePoint e = targetPoint e ∨
       sourcePoint e ∈ Set.range point ∧ targetPoint e ∈ Set.range point
   arc_in_graph : ∀ e, Set.range (arc e) ⊆ G.carrier
-  interior_avoids_vertices : ∀ e t,
+  interior_avoids_vertices : ∀ e (t : unitInterval),
     sourcePoint e ≠ targetPoint e → (t : ℝ) ≠ 0 → (t : ℝ) ≠ 1 →
       arc e t ∉ Set.range point
   graph_exact : G.carrier = ⋃ e, Set.range (arc e)
 
-/-- Local resolution data for the transverse `T`-vertices.
+/-- A perfect pairing of transverse seam vertices by cutting-plane excursion arcs, together with
+disjoint four-port support bands. -/
+structure FiniteBarrierExcursionPairing
+    {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
+    {outerIndex cutIndex vertex edge : Type*}
+    [Fintype outerIndex] [Fintype cutIndex] [Fintype vertex] [Fintype edge]
+    {G : FiniteSuperellipsoidBarrierGraph Phi frame c R d outerIndex cutIndex}
+    (A : FiniteBarrierArcPresentation G vertex edge) where
+  bandCount : ℕ
+  firstVertex : Fin bandCount → vertex
+  secondVertex : Fin bandCount → vertex
+  paired_vertices_ne : ∀ b, firstVertex b ≠ secondVertex b
+  excursionEdge : Fin bandCount → edge
+  excursion_source : ∀ b,
+    A.sourcePoint (excursionEdge b) = A.point (firstVertex b)
+  excursion_target : ∀ b,
+    A.targetPoint (excursionEdge b) = A.point (secondVertex b)
+  /-- Every seam vertex occurs in exactly one paired band. -/
+  every_vertex_in_unique_band : ∀ v,
+    ∃! b, v = firstVertex b ∨ v = secondVertex b
+  bandNeighborhood : Fin bandCount → Set R3
+  bandNeighborhood_open : ∀ b, IsOpen (bandNeighborhood b)
+  firstVertex_mem_band : ∀ b, A.point (firstVertex b) ∈ bandNeighborhood b
+  secondVertex_mem_band : ∀ b, A.point (secondVertex b) ∈ bandNeighborhood b
+  excursion_mem_band : ∀ b,
+    Set.range (A.arc (excursionEdge b)) ⊆ bandNeighborhood b
+  bandNeighborhood_pairwise : Pairwise fun b e ↦
+    Disjoint (bandNeighborhood b) (bandNeighborhood e)
+
+/-- Local resolution data for the paired transverse `T`-vertices.
 
 This is intentionally not derivable from the finite graph by combinatorics alone.  A resolution
-must specify an embedded moving sphere and prove that its regular torus intersection is the given
-pairwise-disjoint circle family.  `trace_mem_event` retains the whole moving-sphere trace consumed
-by the later charging contract. -/
+must pair seam vertices along cutting-plane excursions, specify the finite disjoint family of
+embedded spheres at a regular moving stage, and prove that its torus intersection is the given
+pairwise-disjoint circle family.
+`trace_mem_event` retains the whole moving-sphere trace consumed by the later charging contract. -/
 structure FiniteBarrierTwoSurgeryResolution
     {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
     {outerIndex cutIndex vertex edge : Type*}
     [Fintype outerIndex] [Fintype cutIndex] [Fintype vertex] [Fintype edge]
     {G : FiniteSuperellipsoidBarrierGraph Phi frame c R d outerIndex cutIndex}
     (A : FiniteBarrierArcPresentation G vertex edge)
-    (resolvedIndex : Type*) [Fintype resolvedIndex] where
+    (resolvedIndex : Type*) [Fintype resolvedIndex]
+    extends FiniteBarrierExcursionPairing A where
   stage : FiniteSphereSurgeryIntersectionSystem Phi resolvedIndex
-  vertexNeighborhood : vertex → Set R3
-  vertexNeighborhood_open : ∀ v, IsOpen (vertexNeighborhood v)
-  vertex_mem_neighborhood : ∀ v, A.point v ∈ vertexNeighborhood v
-  vertexNeighborhood_pairwise : Pairwise fun v w ↦
-    Disjoint (vertexNeighborhood v) (vertexNeighborhood w)
-  /-- Away from the selected disjoint seam charts, the resolution is literally unchanged. -/
-  fixed_off_vertexNeighborhoods :
-    G.carrier \ (⋃ v, vertexNeighborhood v) =
-      (stage.sphere.carrier ∩ transportedTorus Phi) \
-        (⋃ v, vertexNeighborhood v)
   /-- Every resolved boundary is traced by the local surgery through the moving-sphere event region.
   The event region here is the whole moving-sphere trace, not merely the singular endpoint
   barrier: a regular resolved circle generally lies slightly off that endpoint. -/

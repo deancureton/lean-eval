@@ -1,5 +1,6 @@
 import Submission.SuperellipsoidDoubleBubbleSelection
 import Mathlib.MeasureTheory.Function.Jacobian
+import Mathlib.MeasureTheory.Measure.Prod
 
 /-!
 # Seam-height nullity from Sard and Fubini
@@ -38,10 +39,15 @@ private lemma continuousLinearMap_plane_row
     (L : Plane →L[ℝ] ℝ) :
     L = L planeBasisFirst • ContinuousLinearMap.fst ℝ ℝ ℝ +
       L planeBasisSecond • ContinuousLinearMap.snd ℝ ℝ ℝ := by
-  ext z
-  rw [show z = z.1 • planeBasisFirst + z.2 • planeBasisSecond by
-    ext <;> simp [planeBasisFirst, planeBasisSecond]]
-  simp [map_add, map_smul, planeBasisFirst, planeBasisSecond, smul_eq_mul]
+  apply ContinuousLinearMap.ext
+  rintro ⟨x, y⟩
+  calc
+    L (x, y) = L (x • planeBasisFirst + y • planeBasisSecond) := by
+      congr 1
+      ext <;> simp [planeBasisFirst, planeBasisSecond]
+    _ = x • L planeBasisFirst + y • L planeBasisSecond := by rw [map_add, map_smul, map_smul]
+    _ = L planeBasisFirst * x + L planeBasisSecond * y := by
+      simp only [smul_eq_mul, mul_comm]
 
 /-- Matrix form of the derivative of the polynomial-height pair. -/
 lemma fderiv_superellipsoidSeamPairMap_eq_matrix
@@ -53,13 +59,26 @@ lemma fderiv_superellipsoidSeamPairMap_eq_matrix
           fderiv ℝ (orientedCoordinateLift Phi frame 2) uv planeBasisFirst,
             fderiv ℝ (orientedCoordinateLift Phi frame 2) uv planeBasisSecond]).toContinuousLinearMap := by
   have hf : DifferentiableAt ℝ (superellipsoidPolynomialLift Phi frame c) uv :=
-    (contDiff_superellipsoidPolynomialLift Phi frame c).differentiableAt
+    (contDiff_superellipsoidPolynomialLift Phi frame c).differentiable (by simp) uv
   have hg : DifferentiableAt ℝ (orientedCoordinateLift Phi frame 2) uv :=
-    (orientedCoordinateLift_contDiff Phi frame 2).differentiableAt
-  rw [superellipsoidSeamPairMap, hf.fderiv_prodMk hg,
-    continuousLinearMap_plane_row (fderiv ℝ (superellipsoidPolynomialLift Phi frame c) uv),
-    continuousLinearMap_plane_row (fderiv ℝ (orientedCoordinateLift Phi frame 2) uv)]
-  exact (Matrix.toLin_finTwoProd_toContinuousLinearMap _ _ _ _).symm
+    (orientedCoordinateLift_contDiff Phi frame 2).differentiable (by simp) uv
+  change fderiv ℝ (fun z ↦
+    (superellipsoidPolynomialLift Phi frame c z,
+      orientedCoordinateLift Phi frame 2 z)) uv = _
+  rw [hf.fderiv_prodMk hg]
+  let df := fderiv ℝ (superellipsoidPolynomialLift Phi frame c) uv
+  let dg := fderiv ℝ (orientedCoordinateLift Phi frame 2) uv
+  calc
+    df.prod dg =
+        (df planeBasisFirst • ContinuousLinearMap.fst ℝ ℝ ℝ +
+          df planeBasisSecond • ContinuousLinearMap.snd ℝ ℝ ℝ).prod
+        (dg planeBasisFirst • ContinuousLinearMap.fst ℝ ℝ ℝ +
+          dg planeBasisSecond • ContinuousLinearMap.snd ℝ ℝ ℝ) :=
+      congrArg₂ (fun A B : Plane →L[ℝ] ℝ ↦ A.prod B)
+        (continuousLinearMap_plane_row df) (continuousLinearMap_plane_row dg)
+    _ = _ := (Matrix.toLin_finTwoProd_toContinuousLinearMap
+      (df planeBasisFirst) (df planeBasisSecond)
+      (dg planeBasisFirst) (dg planeBasisSecond)).symm
 
 /-- The abstract Jacobian determinant is the explicit differential determinant used by the cut
 selector. -/
@@ -94,8 +113,8 @@ theorem volume_superellipsoidSeamPairCriticalValues_eq_zero
     (μ := volume)
     (f' := fun uv ↦ fderiv ℝ (superellipsoidSeamPairMap Phi frame c) uv)
   · intro uv _
-    exact ((contDiff_superellipsoidSeamPairMap Phi frame c).differentiableAt).hasFDerivAt
-      |>.hasFDerivWithinAt
+    exact ((contDiff_superellipsoidSeamPairMap Phi frame c).differentiable (by simp) uv)
+      |>.hasFDerivAt.hasFDerivWithinAt
   · intro uv huv
     rw [det_fderiv_superellipsoidSeamPairMap]
     exact huv
@@ -112,11 +131,12 @@ theorem volume_superellipsoidSeamSectionExceptionalPolynomialValues_eq_zero
     volume (superellipsoidSeamSectionExceptionalPolynomialValues Phi frame c) = 0 := by
   have hprod : (volume : Measure ℝ).prod volume
       (superellipsoidSeamPairCriticalValues Phi frame c) = 0 := by
-    simpa only [MeasureTheory.volume_eq_prod] using
-      volume_superellipsoidSeamPairCriticalValues_eq_zero Phi frame c
-  have hae := MeasureTheory.measure_ae_null_of_prod_null hprod
+    change volume (superellipsoidSeamPairCriticalValues Phi frame c) = 0
+    exact volume_superellipsoidSeamPairCriticalValues_eq_zero Phi frame c
+  have hae := Measure.measure_ae_null_of_prod_null hprod
   apply ae_iff.mp
-  simpa only [superellipsoidSeamSectionExceptionalPolynomialValues, not_ne_iff] using hae
+  filter_upwards [hae] with s hs
+  exact hs
 
 /-- A seam critical height at polynomial level `R^256` lies in the corresponding vertical
 section of the simultaneous critical-value image. -/
@@ -204,7 +224,13 @@ theorem exists_superellipsoidOuterSelection_with_seamCriticalValues_null
       (superellipsoidSurfaceBadScales Phi frame c ∩ Ioc lower upper) ∪
         (superellipsoidSeamSectionBadScales Phi frame c ∩ Ioc lower upper) by
       ext x
-      simp [bad, and_or_left]]
+      constructor
+      · rintro ⟨hx | hx, hI⟩
+        · exact Or.inl ⟨hx, hI⟩
+        · exact Or.inr ⟨hx, hI⟩
+      · rintro (⟨hx, hI⟩ | ⟨hx, hI⟩)
+        · exact ⟨Or.inl hx, hI⟩
+        · exact ⟨Or.inr hx, hI⟩]
     exact measure_union_null
       (volume_superellipsoidSurfaceBadScales_inter_Ioc_eq_zero
         Phi frame c hlower hlu.le)

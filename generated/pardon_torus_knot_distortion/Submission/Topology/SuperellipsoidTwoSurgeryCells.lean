@@ -13,6 +13,7 @@ elementary half-sphere surgery event.
 
 open LeanEval.KnotTheory.PardonDistortion
 open Set Topology
+open scoped ENNReal
 
 noncomputable section
 
@@ -50,33 +51,40 @@ def superellipsoidOuterCutBarrierPart (Phi : AmbientIsotopy)
     (superellipsoidBoundary frame c R ∪
       (superellipsoidBody frame c R ∩ coordinateCuttingPlane frame d))
 
+private theorem continuous_superellipsoidGauge'
+    (frame : Equiv.Perm (Fin 3)) (c : R3) :
+    Continuous (superellipsoidGauge frame c) := by
+  let _ : Fact (1 ≤ (256 : ℝ≥0∞)) := ⟨by norm_num⟩
+  have hcoordinates : Continuous (superellipsoidCoordinates frame c) := by
+    change Continuous (fun x ↦ WithLp.toLp 256 (normalizedOrientedBoxCoordinates frame c x))
+    apply (PiLp.continuous_toLp 256 (fun _ : Fin 3 ↦ ℝ)).comp
+    exact continuous_pi fun i ↦
+      (((coordinateCLM (frame i)).continuous.comp
+        (continuous_id.sub continuous_const)).div_const (axisWeight i))
+  exact (continuous_norm.comp hcoordinates).congr fun _ ↦ rfl
+
 theorem isOpen_superellipsoidBody
     (frame : Equiv.Perm (Fin 3)) (c : R3) (R : ℝ) :
     IsOpen (superellipsoidBody frame c R) :=
-  isOpen_Iio.preimage (continuous_superellipsoidGauge frame c)
+  isOpen_Iio.preimage (continuous_superellipsoidGauge' frame c)
 
 theorem isOpen_superellipsoidStrictLowerPart
     (Phi : AmbientIsotopy) (frame : Equiv.Perm (Fin 3)) (c : R3) (R d : ℝ) :
     IsOpen (superellipsoidStrictLowerPart Phi frame c R d) := by
-  apply IsOpen.preimage
-  exact (isOpen_superellipsoidBody frame c R).inter <|
-    isOpen_Iio.preimage (coordinateCLM (frame 2)).continuous
-  exact continuous_subtype_val
+  exact ((isOpen_superellipsoidBody frame c R).inter <|
+    isOpen_Iio.preimage (coordinateCLM (frame 2)).continuous).preimage continuous_subtype_val
 
 theorem isOpen_superellipsoidStrictUpperPart
     (Phi : AmbientIsotopy) (frame : Equiv.Perm (Fin 3)) (c : R3) (R d : ℝ) :
     IsOpen (superellipsoidStrictUpperPart Phi frame c R d) := by
-  apply IsOpen.preimage
-  exact (isOpen_superellipsoidBody frame c R).inter <|
-    isOpen_Ioi.preimage (coordinateCLM (frame 2)).continuous
-  exact continuous_subtype_val
+  exact ((isOpen_superellipsoidBody frame c R).inter <|
+    isOpen_Ioi.preimage (coordinateCLM (frame 2)).continuous).preimage continuous_subtype_val
 
 theorem isOpen_superellipsoidStrictExteriorPart
     (Phi : AmbientIsotopy) (frame : Equiv.Perm (Fin 3)) (c : R3) (R : ℝ) :
     IsOpen (superellipsoidStrictExteriorPart Phi frame c R) := by
-  apply IsOpen.preimage
-  exact isOpen_Ioi.preimage (continuous_superellipsoidGauge frame c)
-  exact continuous_subtype_val
+  exact (isOpen_Ioi.preimage (continuous_superellipsoidGauge' frame c)).preimage
+    continuous_subtype_val
 
 theorem superellipsoidStrictLowerPart_disjoint_upperPart
     (Phi : AmbientIsotopy) (frame : Equiv.Perm (Fin 3)) (c : R3) (R d : ℝ) :
@@ -84,6 +92,8 @@ theorem superellipsoidStrictLowerPart_disjoint_upperPart
       (superellipsoidStrictUpperPart Phi frame c R d) := by
   rw [Set.disjoint_left]
   intro x hxLower hxUpper
+  change superellipsoidGauge frame c x < R ∧ x.1.ofLp (frame 2) < d at hxLower
+  change superellipsoidGauge frame c x < R ∧ d < x.1.ofLp (frame 2) at hxUpper
   exact (not_lt_of_ge hxUpper.2.le) hxLower.2
 
 theorem superellipsoidStrictLowerPart_disjoint_exteriorPart
@@ -92,6 +102,8 @@ theorem superellipsoidStrictLowerPart_disjoint_exteriorPart
       (superellipsoidStrictExteriorPart Phi frame c R) := by
   rw [Set.disjoint_left]
   intro x hxLower hxExterior
+  change superellipsoidGauge frame c x < R ∧ x.1.ofLp (frame 2) < d at hxLower
+  change R < superellipsoidGauge frame c x at hxExterior
   exact (not_lt_of_ge hxExterior.le) hxLower.1
 
 theorem superellipsoidStrictUpperPart_disjoint_exteriorPart
@@ -100,6 +112,8 @@ theorem superellipsoidStrictUpperPart_disjoint_exteriorPart
       (superellipsoidStrictExteriorPart Phi frame c R) := by
   rw [Set.disjoint_left]
   intro x hxUpper hxExterior
+  change superellipsoidGauge frame c x < R ∧ d < x.1.ofLp (frame 2) at hxUpper
+  change R < superellipsoidGauge frame c x at hxExterior
   exact (not_lt_of_ge hxExterior.le) hxUpper.1
 
 theorem superellipsoidStrictLowerPart_subset_parent
@@ -120,6 +134,8 @@ theorem superellipsoidParentPart_disjoint_exteriorPart
       (superellipsoidStrictExteriorPart Phi frame c R) := by
   rw [Set.disjoint_left]
   intro x hxParent hxExterior
+  change superellipsoidGauge frame c x < R at hxParent
+  change R < superellipsoidGauge frame c x at hxExterior
   exact (not_lt_of_ge hxExterior.le) hxParent
 
 /-- Every transported-torus point lies in one strict cell or on the complete outer/cut
@@ -136,7 +152,7 @@ theorem superellipsoid_surface_partition
     superellipsoidStrictUpperPart, superellipsoidStrictExteriorPart,
     superellipsoidOuterCutBarrierPart, superellipsoidBody,
     superellipsoidBoundary, coordinateCuttingPlane, Set.mem_inter_iff,
-    Set.mem_setOf_eq]
+    Set.mem_ofPred_eq]
   rcases lt_trichotomy (superellipsoidGauge frame c x) R with hinside | hboundary | hexterior
   · rcases lt_trichotomy (x.1.ofLp (frame 2)) d with hlower | hcut | hupper
     · exact Or.inl (Or.inl (Or.inl ⟨hinside, hlower⟩))
@@ -181,6 +197,8 @@ theorem superellipsoidStrictLowerPart_subset_closedLowerBody
     superellipsoidStrictLowerPart Phi frame c R d ⊆ transportedTorusPart Phi
       (superellipsoidBody frame c R ∩ {x | x.ofLp (frame 2) ≤ d}) := by
   intro x hx
+  change superellipsoidGauge frame c x < R ∧ x.1.ofLp (frame 2) < d at hx
+  change superellipsoidGauge frame c x < R ∧ x.1.ofLp (frame 2) ≤ d
   exact ⟨hx.1, hx.2.le⟩
 
 /-- Strict upper cells lie in the closed upper half-body used by the successor-box theorem. -/
@@ -189,6 +207,8 @@ theorem superellipsoidStrictUpperPart_subset_closedUpperBody
     superellipsoidStrictUpperPart Phi frame c R d ⊆ transportedTorusPart Phi
       (superellipsoidBody frame c R ∩ {x | d ≤ x.ofLp (frame 2)}) := by
   intro x hx
+  change superellipsoidGauge frame c x < R ∧ d < x.1.ofLp (frame 2) at hx
+  change superellipsoidGauge frame c x < R ∧ d ≤ x.1.ofLp (frame 2)
   exact ⟨hx.1, hx.2.le⟩
 
 end Submission.Topology

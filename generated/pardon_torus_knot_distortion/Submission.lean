@@ -22,6 +22,7 @@ import Submission.Coarea.SurfaceRegularBasedDoubleBubbleSelection
 import Submission.Coarea.SuperellipsoidCriticalScales
 import Submission.Coarea.SuperellipsoidCutSelection
 import Submission.Coarea.SuperellipsoidOuterSelection
+import Submission.Coarea.SuperellipsoidSeamFubini
 import Submission.Coarea.SuperellipsoidSeamSard
 import Submission.CompressionExclusion
 import Submission.Distortion
