@@ -98,6 +98,7 @@ import Submission.Topology.TransverseContinuation
 import Submission.Topology.TransverseBranchIFT
 import Submission.Topology.WindingSafeSplice
 import Submission.Topology.WindingDecompositionCut
+import Submission.Topology.SuperellipsoidResolvedStepsAssembly
 import Submission.Torus.AmbientTransfer
 import Submission.Torus.Standard
 

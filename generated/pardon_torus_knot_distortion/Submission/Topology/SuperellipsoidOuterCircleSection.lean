@@ -179,20 +179,21 @@ def ofRegularValue
     (hR : 0 ≤ R)
     (hregular : IsRegularValue (superellipsoidPolynomialLift Phi frame c) (R ^ 256)) :
     FiniteSuperellipsoidOuterTorusCircleFamily Phi frame c R := by
-  have hf : ContDiff ℝ 2 (superellipsoidPolynomialLift Phi frame c) :=
-    (contDiff_superellipsoidPolynomialLift Phi frame c).of_le
-      (WithTop.coe_le_coe.mpr le_top)
+  have hf : ContDiff ℝ (⊤ : ℕ∞) (superellipsoidPolynomialLift Phi frame c) :=
+    contDiff_superellipsoidPolynomialLift Phi frame c
   have hlocal : IsLocallyLineModeled
       (superellipsoidTorusPolynomialLevelSet Phi frame c R) := by
-    simpa only [periodicQuotientLevelSet, superellipsoidTorusPolynomialLevelSet] using
-      isLocallyLineModeled_periodicQuotientLevel_of_regularValue hf
-        (superellipsoidPolynomialLift_eq_torusPolynomial_expPair Phi frame c) hregular
+    change IsLocallyLineModeled
+      (periodicQuotientLevelSet (superellipsoidTorusPolynomial Phi frame c) (R ^ 256))
+    exact isLocallyLineModeled_periodicQuotientLevel_of_regularValue hf
+      (superellipsoidPolynomialLift_eq_torusPolynomial_expPair Phi frame c) hregular
   have hclassification : ComponentCircleClassification
       (superellipsoidTorusPolynomialLevelSet Phi frame c R) := by
-    simpa only [periodicQuotientLevelSet, superellipsoidTorusPolynomialLevelSet] using
-      componentCircleClassification_periodicRegularLevel hf
-        (continuous_superellipsoidTorusPolynomial Phi frame c)
-        (superellipsoidPolynomialLift_eq_torusPolynomial_expPair Phi frame c) hregular
+    change ComponentCircleClassification
+      (periodicQuotientLevelSet (superellipsoidTorusPolynomial Phi frame c) (R ^ 256))
+    exact componentCircleClassification_periodicRegularLevel hf
+      (continuous_superellipsoidTorusPolynomial Phi frame c)
+      (superellipsoidPolynomialLift_eq_torusPolynomial_expPair Phi frame c) hregular
   exact ofClassification hR hlocal hclassification
 
 /-- Forget the internal finite-index packaging and expose the common barrier-section interface. -/

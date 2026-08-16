@@ -1,4 +1,4 @@
-import Submission.Topology.FiniteSequentialTorusPushout
+import Submission.Topology.MaximalInessentialDiskFamilyExistence
 import Submission.Topology.SuperellipsoidBarrierGraph
 
 /-!
@@ -6,8 +6,9 @@ import Submission.Topology.SuperellipsoidBarrierGraph
 
 This module connects two already proved pieces of the regular-stage argument.  First, the
 essential-circle surgery data recorded by a resolved barrier is repackaged in the interface used
-by the surgery dichotomy.  Second, separated canonical Schoenflies supports give the connected
-pushout required for a maximal family of inessential torus disks.
+by the surgery dichotomy.  Second, the finite laminar family of canonical inessential disks is
+reduced to its maximal members; their automatically separated Schoenflies supports give the
+connected pushout required by the inessential branch.
 
 No moving-sphere or cell geometry is assumed or constructed here.
 -/
@@ -94,9 +95,16 @@ theorem finiteZeroWindingDiskCenters_eq_centers
         (fun i : M.maximal ↦ S.circle i.1) (fun i ↦ hzero i.1) =
       M.centers := by
   funext i
-  apply (transportedTorusHomeomorph Phi).injective
-  rw [EmbeddedTorusIntersectionCircle.transported_zeroWindingDiskCenterCoordinates,
-    (transportedTorusHomeomorph Phi).apply_symm_apply]
+  change (S.circle i.1).zeroWindingDiskCenterCoordinates (hzero i.1) =
+    (transportedTorusHomeomorph Phi).symm
+      ((S.circle i.1).zeroWindingTorusDiskCenter (hzero i.1))
+  calc
+    _ = (transportedTorusHomeomorph Phi).symm
+        (transportedTorusHomeomorph Phi
+          ((S.circle i.1).zeroWindingDiskCenterCoordinates (hzero i.1))) :=
+      ((transportedTorusHomeomorph Phi).symm_apply_apply _).symm
+    _ = _ := congrArg (transportedTorusHomeomorph Phi).symm
+      ((S.circle i.1).transported_zeroWindingDiskCenterCoordinates (hzero i.1))
 
 /-- Removing the canonical disks of the selected maximal circles gives precisely the complement
 of the maximal disk union. -/
@@ -122,6 +130,21 @@ theorem finiteZeroWindingDiskComplement_eq_diskComplement
     rw [S.range_torusDiskMap_eq_zeroWindingProjectedClosedJordanDisk hzero i.1]
     exact hxi
 
+/-- Transport a concrete finite pushout and its surjectivity proof across the two extensional
+identifications used by a maximal disk family. -/
+private def connectedPushoutData_of_eq
+    (M : MaximalInessentialTorusDiskFamily S hzero)
+    {centers : M.maximal → Circle × Circle}
+    {target : Set (transportedTorus Phi)}
+    (hcenters : centers = M.centers)
+    (htarget : target = M.diskComplement)
+    (P : FinitePuncturePushoutData Phi centers target)
+    (hsurjective : ∀ y : target, ∃ x, P.push x = y.1) :
+    M.ConnectedPushoutData := by
+  subst centers
+  subst target
+  exact ⟨P, hsurjective⟩
+
 /-- Pairwise-separated canonical supports supply the connected finite pushout for a maximal
 inessential disk family.  The target and center identifications are derived above rather than
 being assumed as additional compatibility data. -/
@@ -137,9 +160,18 @@ def connectedPushoutData_of_separatedSupports
         ∃ x, P.push x = y.1 := by
     intro y
     exact (D.mem_finiteZeroWindingDiskComplement_iff_exists_preimage y.1).mp y.2
-  rw [M.finiteZeroWindingDiskCenters_eq_centers,
-    M.finiteZeroWindingDiskComplement_eq_diskComplement] at P hsurjective
-  exact ⟨P, hsurjective⟩
+  have hcenters := M.finiteZeroWindingDiskCenters_eq_centers
+  have htarget := M.finiteZeroWindingDiskComplement_eq_diskComplement
+  exact connectedPushoutData_of_eq M hcenters htarget P hsurjective
+
+/-- The inclusion-maximal canonical disk family has its connected pushout without any
+additional choice of supports. -/
+def canonicalConnectedPushoutData
+    (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
+    (hzero : S.AllInessential) :
+    (S.canonicalMaximalInessentialTorusDiskFamily hzero).ConnectedPushoutData :=
+  let M := S.canonicalMaximalInessentialTorusDiskFamily hzero
+  M.connectedPushoutData_of_separatedSupports M.separatedZeroWindingDiskSupports
 
 end MaximalInessentialTorusDiskFamily
 
@@ -162,6 +194,37 @@ theorem inessentialData_of_maximalSeparatedSupports
   obtain ⟨M, ⟨D⟩⟩ := hdata hzero
   exact ⟨M, ⟨M.connectedPushoutData_of_separatedSupports D⟩⟩
 
+/-- Every all-inessential finite stage has a canonical maximal disk family and connected
+pushout; no separation or maximal-family witness remains as an input. -/
+theorem inessentialData
+    (S : FiniteSphereSurgeryIntersectionSystem Phi ι) :
+    ∀ hzero : S.AllInessential,
+      ∃ M : MaximalInessentialTorusDiskFamily S hzero,
+        Nonempty M.ConnectedPushoutData := by
+  intro hzero
+  let M := S.canonicalMaximalInessentialTorusDiskFamily hzero
+  exact ⟨M, ⟨MaximalInessentialTorusDiskFamily.canonicalConnectedPushoutData S hzero⟩⟩
+
 end FiniteSphereSurgeryIntersectionSystem
+
+namespace FiniteBarrierTwoSurgeryResolution
+
+variable {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
+  {outerIndex cutIndex vertex edge resolvedIndex : Type*}
+  [Fintype outerIndex] [Fintype cutIndex] [Fintype vertex] [Fintype edge]
+  [Fintype resolvedIndex] [DecidableEq resolvedIndex]
+  {G : FiniteSuperellipsoidBarrierGraph Phi frame c R d outerIndex cutIndex}
+  {A : FiniteBarrierArcPresentation G vertex edge}
+
+/-- The all-inessential branch of every resolved barrier has its maximal disk family and
+connected finite pushout unconditionally. -/
+theorem inessentialSurgery
+    (Q : FiniteBarrierTwoSurgeryResolution A resolvedIndex) :
+    ∀ hzero : Q.stage.AllInessential,
+      ∃ M : MaximalInessentialTorusDiskFamily Q.stage hzero,
+        Nonempty M.ConnectedPushoutData :=
+  Q.stage.inessentialData
+
+end FiniteBarrierTwoSurgeryResolution
 
 end Submission.Topology

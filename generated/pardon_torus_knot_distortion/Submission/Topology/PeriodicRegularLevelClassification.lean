@@ -30,7 +30,10 @@ theorem isCompact_periodicQuotientLevelSet {g : Circle × Circle → ℝ}
 def periodicPlaneFiberToQuotientLevel {f : Plane → ℝ} {g : Circle × Circle → ℝ}
     (hdesc : ∀ uv, f uv = g (planeExpPair uv)) (y : ℝ) :
     (f ⁻¹' {y}) → periodicQuotientLevelSet g y :=
-  fun uv ↦ ⟨planeExpPair uv, by rw [← hdesc]; exact uv.property⟩
+  fun uv ↦ ⟨planeExpPair uv, by
+    change g (planeExpPair uv) = y
+    rw [← hdesc]
+    exact uv.property⟩
 
 theorem periodicPlaneFiberToQuotientLevel_surjective
     {f : Plane → ℝ} {g : Circle × Circle → ℝ}
@@ -72,7 +75,7 @@ theorem periodicPlaneFiberToQuotientLevel_isLocalHomeomorph
 
 theorem isLocallyLineModeled_periodicQuotientLevel_of_regularValue
     {f : Plane → ℝ} {g : Circle × Circle → ℝ}
-    (hf : ContDiff ℝ 2 f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
     {y : ℝ} (hy : IsRegularValue f y) :
     IsLocallyLineModeled (periodicQuotientLevelSet g y) := by
   apply isLocallyLineModeled_of_surjective_localHomeomorph
@@ -216,16 +219,17 @@ theorem CompleteRegularLevelIntegralCurve.continuous_projectedPeriodicOrbit
 
 theorem CompleteRegularLevelIntegralCurve.isLocalHomeomorph_projectedPeriodicOrbit
     {f : Plane → ℝ} {g : Circle × Circle → ℝ} {y : ℝ}
-    (hf : ContDiff ℝ 2 f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
     (hy : IsRegularValue f y) {x : f ⁻¹' {y}}
     (O : CompleteRegularLevelIntegralCurve f y x) :
     IsLocalHomeomorph (O.projectedPeriodicOrbit hdesc) := by
   let liftCurve : ℝ → (f ⁻¹' {y}) := fun t ↦ ⟨O.curve t, O.stays_in_level t⟩
+  have hfTwo : ContDiff ℝ 2 f := hf.of_le (WithTop.coe_le_coe.mpr le_top)
   have hliftContinuous : Continuous liftCurve := Continuous.subtype_mk
     (continuous_iff_continuousAt.mpr fun t ↦ (O.integral t).continuousAt) _
   have hliftInjective : IsLocallyInjective liftCurve := by
     intro t
-    obtain ⟨U, hUopen, htU, hUinj⟩ := O.isLocallyInjective hf hy t
+    obtain ⟨U, hUopen, htU, hUinj⟩ := O.isLocallyInjective hfTwo hy t
     exact ⟨U, hUopen, htU, fun a ha b hb hab ↦
       hUinj ha hb (congrArg Subtype.val hab)⟩
   have hcoverInjective : IsLocallyInjective
@@ -256,21 +260,22 @@ theorem CompleteRegularLevelIntegralCurve.projectedPeriodicOrbit_mem_componentPi
 /-- Every component of a regular descended quotient level is one homogeneous complete orbit. -/
 theorem exists_homogeneousLocalOrbit_periodicRegularLevel
     {f : Plane → ℝ} {g : Circle × Circle → ℝ}
-    (hf : ContDiff ℝ 2 f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
     {y : ℝ} (hy : IsRegularValue f y)
     (c : ConnectedComponents (periodicQuotientLevelSet g y)) :
     Nonempty (HomogeneousLocalOrbit (componentPiece c)) := by
   let Level := periodicQuotientLevelSet g y
   let _ : LocallyConnectedSpace Level := locallyConnectedSpace_of_isLocallyLineModeled
     (isLocallyLineModeled_periodicQuotientLevel_of_regularValue hf hdesc hy)
+  have hfTwo : ContDiff ℝ 2 f := hf.of_le (WithTop.coe_le_coe.mpr le_top)
   let uniform := Classical.choice
-    (exists_uniformPlaneIntegralCurves_of_periodicQuotient hf hdesc)
+    (exists_uniformPlaneIntegralCurves_of_periodicQuotient hfTwo hdesc)
   obtain ⟨baseValue, hbaseValue⟩ := componentPiece_nonempty c
   let basepoint : componentPiece c := ⟨baseValue, hbaseValue⟩
   obtain ⟨baseLift, hbaseLift⟩ :=
     periodicPlaneFiberToQuotientLevel_surjective hdesc y basepoint.1
   let lifted := Classical.choice
-    (exists_completeRegularLevelIntegralCurve_of_uniformPlane hf uniform baseLift)
+    (exists_completeRegularLevelIntegralCurve_of_uniformPlane hfTwo uniform baseLift)
   let levelCurve := lifted.projectedPeriodicOrbit hdesc
   have hlevelZero : levelCurve 0 = basepoint.1 := by
     rw [show levelCurve 0 = periodicPlaneFiberToQuotientLevel hdesc y baseLift by
@@ -294,7 +299,7 @@ theorem exists_homogeneousLocalOrbit_periodicRegularLevel
     intro z
     obtain ⟨zLift, hzLift⟩ := periodicPlaneFiberToQuotientLevel_surjective hdesc y z
     let Oz := Classical.choice
-      (exists_completeRegularLevelIntegralCurve_of_uniformPlane hf uniform zLift)
+      (exists_completeRegularLevelIntegralCurve_of_uniformPlane hfTwo uniform zLift)
     refine ⟨zLift, Oz, ?_⟩
     rw [show Oz.projectedPeriodicOrbit hdesc 0 =
       periodicPlaneFiberToQuotientLevel hdesc y zLift by
@@ -327,7 +332,7 @@ theorem exists_homogeneousLocalOrbit_periodicRegularLevel
             CompleteRegularLevelIntegralCurve.projectedPeriodicOrbit,
             periodicPlaneFiberToQuotientLevel] using hw
         have htranslate := completePeriodicRegularLevelIntegralCurves_expPair_translate_eq
-          hf hdesc lifted Oz hmeet (-tw)
+          hfTwo hdesc lifted Oz hmeet (-tw)
         apply hz
         refine ⟨s - tw, ?_⟩
         apply Subtype.ext
@@ -361,13 +366,13 @@ theorem exists_homogeneousLocalOrbit_periodicRegularLevel
   have hmeet : planeExpPair (lifted.curve s) = planeExpPair (lifted.curve t) :=
     congrArg (fun p : componentPiece c ↦ (p.1 : Circle × Circle)) hst
   exact completePeriodicRegularLevelIntegralCurves_expPair_translate_eq
-    hf hdesc lifted lifted hmeet u
+    hfTwo hdesc lifted lifted hmeet u
 
 /-- A regular value of a smooth planar function descended through the product exponential has a
 componentwise circle classification on the quotient torus. -/
 def componentCircleClassification_periodicRegularLevel
     {f : Plane → ℝ} {g : Circle × Circle → ℝ}
-    (hf : ContDiff ℝ 2 f) (hg : Continuous g)
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hg : Continuous g)
     (hdesc : ∀ uv, f uv = g (planeExpPair uv))
     {y : ℝ} (hy : IsRegularValue f y) :
     ComponentCircleClassification (periodicQuotientLevelSet g y) := by

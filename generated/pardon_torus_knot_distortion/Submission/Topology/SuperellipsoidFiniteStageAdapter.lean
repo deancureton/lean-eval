@@ -18,11 +18,13 @@ noncomputable section
 namespace Submission.PardonDistortion
 
 open Submission.Topology
+open Submission.Topology.PairedBandMovingSphereCollarData
+open Submission.Torus
 
 /-- A finite sequence of honest regular sphere-family stages gives the exact resolved
 superellipsoid step once its initial side, terminal children, and common event region have been
 identified with the selected geometry. -/
-def SuperellipsoidResolvedDoubleBubbleStep.ofFiniteRegularSphereSurgery
+theorem SuperellipsoidResolvedDoubleBubbleStep.ofFiniteRegularSphereSurgery
     (p q : ℕ) (K : Knot) (Phi : AmbientIsotopy)
     (frame : Equiv.Perm (Fin 3)) (c : R3) {r : ℝ} (hr : 0 < r)
     (WB : SmoothBasedLoopCarrierWitness Phi (orientedBox frame c r))
@@ -49,8 +51,10 @@ def SuperellipsoidResolvedDoubleBubbleStep.ofFiniteRegularSphereSurgery
   cutAlternative := by
     have hInitial : CarriesBasedLoopTorusGenus Phi (F.parityStage 0).inside := by
       rw [initialInside_eq]
-      exact (⟨WB.toBasedLoopCarrierWitness⟩ : CarriesTransportedBasedLoopGenus Phi
-        (orientedBox frame c r)).mono (selection.originalBox_subset_outerBody hr)
+      exact CarriesTransportedBasedLoopGenus.mono
+        (selection.originalBox_subset_outerBody hr)
+        (⟨WB.toBasedLoopCarrierWitness⟩ : CarriesTransportedBasedLoopGenus Phi
+          (orientedBox frame c r))
     rcases F.eventCoveredCompression_or_carries_terminalChild lower upper
         essentialSurgery inessentialResolution hInitial with hcompression | hlower | hupper
     · obtain ⟨D⟩ := hcompression

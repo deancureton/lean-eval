@@ -149,6 +149,27 @@ moving sphere realizes the two possible pairings before and after surgery while 
 original intersection outside the band.  Ordering the finitely many seam points gives finitely
 many such paired bands.
 
+The band chart can be constructed without assuming a tubular-neighborhood theorem for arbitrary
+surface arcs.  Lift one closed excursion to the angle covering plane.  Enlarge its parameter
+interval slightly on both ends; the strict gap between consecutive crossings and embeddedness of
+the cutting circle make this an extendible injective planar path.  Complete that path to a Jordan
+circle by joining the two short access tails through the connected complement of the original
+arc, resolving the connector to an injective polygonal arc.  Complete the standard horizontal
+seam segment in the same way.  `TwoArcJordan` parametrizes both first arcs by the same half of the
+circle, while the proved Moise regional extensions straighten each completed Jordan circle with
+that exact parametrization.  Their composite is therefore an ambient plane homeomorphism taking
+the standard seam segment to the lifted excursion pointwise, not merely setwise.
+
+The product-circle covering is injective on some open neighborhood of the compact lifted arc:
+this follows from local injectivity of the covering and the compact `InjOn` neighborhood lemma.
+Pull that neighborhood back through the straightening homeomorphism and choose a thin rectangle
+around the standard segment.  Explicit one-dimensional order homeomorphisms identify all of
+`Plane` with the rectangle while fixing `[-1,1] × {0}` pointwise.  Restricting the covering to
+the resulting strip gives a homeomorphism onto a transported-torus surface patch, remains inside
+the automatically separated ambient band, and has exactly the required seam-core formula.  This
+is the planned construction of `GlobalBandTubularChartData`; it reduces the remaining topology
+to an extendible-planar-arc strip lemma built entirely from the vendored Schoenflies APIs.
+
 After a generic perturbation, the sphere is transverse to the transported torus except at finitely
 many elementary surgery times.  At every regular time its knot intersections inject into the
 disjoint event set consisting of one outer copy and two tagged cut copies, hence number at most
@@ -249,9 +270,11 @@ and compression exclusion are in `ReparamCharging.lean`, `Topology/ShiftedCompre
 ## Remaining kernel-level integration boundary
 
 The numerical, coarea, compactness, winding, solid-torus, regular-level, one-dimensional degree,
-and finite-surgery layers above are implemented and axiom-audited.  The remaining kernel-level
-integration constructs the paired-band resolution from the regular outer and cutting sections,
-validates the finite sequential disk pushout, and proves the one-event rank-two-carrier invariance
-or charged-essential-circle alternative.  Finite induction then yields the one-step shrinking
-alternative.  The benchmark capstone finally chooses the supplied ambient isotopy and
-reparametrization and invokes the already formalized nested-box contradiction.
+finite sequential disk-pushout, canonical maximal-disk, and finite-surgery layers above are
+implemented and axiom-audited.  The finite heterogeneous parity induction and the direct
+raw-regular essential-circle charging route are also implemented.  The remaining kernel-level
+integration constructs the covering-plane tubular strips and local four-port equations, realizes
+the resulting finite sequence by moving sphere collars, and supplies the stagewise essential-disk
+surgery data.  The existing finite-stage adapter then yields the one-step shrinking alternative.
+The benchmark capstone finally chooses the supplied ambient isotopy and reparametrization and
+invokes the already formalized nested-box contradiction.

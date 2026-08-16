@@ -1,5 +1,5 @@
+import Mathlib.Order.Preorder.Finite
 import Submission.Topology.MaximalDiskSeparatedSupports
-import Submission.Topology.ResolvedStageLogicalAdapters
 
 /-!
 # Existence of maximal inessential torus disk families
@@ -197,6 +197,7 @@ def projectedClosedJordanDisk (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential) (i : ι) : Set (transportedTorus Phi) :=
   (S.circle i).zeroWindingProjectedClosedJordanDisk (hzero i)
 
+omit [DecidableEq ι] in
 /-- The geometric disjoint-or-nested alternative for two distinct stage disks. -/
 theorem projectedClosedJordanDisks_disjoint_or_nested
     (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
@@ -216,15 +217,18 @@ def projectedClosedJordanDiskFinset (S : FiniteSphereSurgeryIntersectionSystem P
 /-- One representative index for a disk image occurring in the finite family. -/
 def projectedClosedJordanDiskIndex (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential)
-    (D : {D // D ∈ S.projectedClosedJordanDiskFinset hzero}) : ι :=
-  Classical.choose (Finset.mem_image.mp D.2)
+    (D : {D // D ∈ S.projectedClosedJordanDiskFinset hzero}) : ι := by
+  classical
+  exact Classical.choose (Finset.mem_image.mp D.2)
 
+omit [DecidableEq ι] in
 theorem projectedClosedJordanDiskIndex_spec
     (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential)
     (D : {D // D ∈ S.projectedClosedJordanDiskFinset hzero}) :
-    S.projectedClosedJordanDisk hzero (S.projectedClosedJordanDiskIndex hzero D) = D.1 :=
-  (Finset.mem_image.mp D.2).choose_spec.2
+    S.projectedClosedJordanDisk hzero (S.projectedClosedJordanDiskIndex hzero D) = D.1 := by
+  classical
+  exact (Finset.mem_image.mp D.2).choose_spec.2
 
 /-- Inclusion-maximal disk images in the finite canonical family. -/
 def inclusionMaximalProjectedDiskSets (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
@@ -236,17 +240,21 @@ def inclusionMaximalProjectedDiskSets (S : FiniteSphereSurgeryIntersectionSystem
 /-- A representative circle index for each maximal disk image. -/
 def inclusionMaximalProjectedDiskIndex (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential)
-    (D : {D // D ∈ S.inclusionMaximalProjectedDiskSets hzero}) : ι :=
-  S.projectedClosedJordanDiskIndex hzero
+    (D : {D // D ∈ S.inclusionMaximalProjectedDiskSets hzero}) : ι := by
+  classical
+  exact S.projectedClosedJordanDiskIndex hzero
     ⟨D.1, (Finset.mem_filter.mp D.2).1⟩
 
+omit [DecidableEq ι] in
 theorem inclusionMaximalProjectedDiskIndex_spec
     (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
     (hzero : S.AllInessential)
     (D : {D // D ∈ S.inclusionMaximalProjectedDiskSets hzero}) :
     S.projectedClosedJordanDisk hzero
-        (S.inclusionMaximalProjectedDiskIndex hzero D) = D.1 :=
-  S.projectedClosedJordanDiskIndex_spec hzero ⟨D.1, (Finset.mem_filter.mp D.2).1⟩
+        (S.inclusionMaximalProjectedDiskIndex hzero D) = D.1 := by
+  classical
+  exact S.projectedClosedJordanDiskIndex_spec hzero
+    ⟨D.1, (Finset.mem_filter.mp D.2).1⟩
 
 /-- One index for each distinct inclusion-maximal canonical disk image. -/
 def inclusionMaximalDiskIndices (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
@@ -302,29 +310,22 @@ theorem inclusionMaximalDiskIndices_pairwise_disjoint
     intro heq
     apply hij
     exact congrArg (S.inclusionMaximalProjectedDiskIndex hzero) (Subtype.ext heq)
-  rcases S.projectedClosedJordanDisks_disjoint_or_nested hzero hij with
-      hdisjoint | hsub | hsub
+  have hDi := S.inclusionMaximalProjectedDiskIndex_spec hzero Di
+  have hDj := S.inclusionMaximalProjectedDiskIndex_spec hzero Dj
+  have hcases := S.projectedClosedJordanDisks_disjoint_or_nested hzero hij
+  rw [hDi, hDj] at hcases ⊢
+  rcases hcases with hdisjoint | hsub | hsub
   · exact hdisjoint
   · exfalso
     apply hDiDj
     apply Set.Subset.antisymm
-    · simpa only [projectedClosedJordanDisk,
-        S.inclusionMaximalProjectedDiskIndex_spec hzero Di,
-        S.inclusionMaximalProjectedDiskIndex_spec hzero Dj] using hsub
-    · exact (Finset.mem_filter.mp Di.2).2 Dj.1 (Finset.mem_filter.mp Dj.2).1 <| by
-        simpa only [projectedClosedJordanDisk,
-          S.inclusionMaximalProjectedDiskIndex_spec hzero Di,
-          S.inclusionMaximalProjectedDiskIndex_spec hzero Dj] using hsub
+    · exact hsub
+    · exact (Finset.mem_filter.mp Di.2).2 Dj.1 (Finset.mem_filter.mp Dj.2).1 hsub
   · exfalso
     apply hDiDj
     apply Set.Subset.antisymm
-    · exact (Finset.mem_filter.mp Dj.2).2 Di.1 (Finset.mem_filter.mp Di.2).1 <| by
-        simpa only [projectedClosedJordanDisk,
-          S.inclusionMaximalProjectedDiskIndex_spec hzero Di,
-          S.inclusionMaximalProjectedDiskIndex_spec hzero Dj] using hsub
-    · simpa only [projectedClosedJordanDisk,
-        S.inclusionMaximalProjectedDiskIndex_spec hzero Di,
-        S.inclusionMaximalProjectedDiskIndex_spec hzero Dj] using hsub
+    · exact (Finset.mem_filter.mp Dj.2).2 Di.1 (Finset.mem_filter.mp Di.2).1 hsub
+    · exact hsub
 
 /-- The inclusion-maximal canonical disks form the maximal family required by surgery. -/
 def canonicalMaximalInessentialTorusDiskFamily
@@ -345,20 +346,5 @@ def canonicalMaximalInessentialTorusDiskFamily
     exact hij
 
 end FiniteSphereSurgeryIntersectionSystem
-
-namespace MaximalInessentialTorusDiskFamily
-
-variable [Fintype ι] [DecidableEq ι]
-  {S : FiniteSphereSurgeryIntersectionSystem Phi ι}
-
-/-- The canonical maximal family has an unconditional connected radial pushout. -/
-def canonicalConnectedPushoutData
-    (S : FiniteSphereSurgeryIntersectionSystem Phi ι)
-    (hzero : S.AllInessential) :
-    (S.canonicalMaximalInessentialTorusDiskFamily hzero).ConnectedPushoutData :=
-  let M := S.canonicalMaximalInessentialTorusDiskFamily hzero
-  M.connectedPushoutData_of_separatedSupports M.separatedZeroWindingDiskSupports
-
-end MaximalInessentialTorusDiskFamily
 
 end Submission.Topology
