@@ -257,13 +257,54 @@ theorem CompleteRegularLevelIntegralCurve.projectedPeriodicOrbit_mem_componentPi
   · exact ⟨0, rfl⟩
   · exact ⟨t, rfl⟩
 
-/-- Every component of a regular descended quotient level is one homogeneous complete orbit. -/
-theorem exists_homogeneousLocalOrbit_periodicRegularLevel
+/-- A complete lifted rotated-gradient orbit together with its exact quotient-component
+parametrization.  Unlike `HomogeneousLocalOrbit`, this structure retains the smooth planar lift
+which produced the topological orbit. -/
+structure PeriodicRegularComponentCompleteOrbit
+    (f : Plane → ℝ) (g : Circle × Circle → ℝ) (y : ℝ)
+    (c : ConnectedComponents (periodicQuotientLevelSet g y)) where
+  basepointLift : f ⁻¹' {y}
+  liftedIntegral : CompleteRegularLevelIntegralCurve f y basepointLift
+  curve : ℝ → componentPiece c
+  curve_eq_expPair : ∀ t,
+    (curve t : periodicQuotientLevelSet g y).1 =
+      planeExpPair (liftedIntegral.curve t)
+  localHomeomorph_curve : IsLocalHomeomorph curve
+  surjective_curve : Function.Surjective curve
+  translate_eq_of_eq : ∀ {s t : ℝ}, curve s = curve t →
+    ∀ u : ℝ, curve (s + u) = curve (t + u)
+
+namespace PeriodicRegularComponentCompleteOrbit
+
+variable {f : Plane → ℝ} {g : Circle × Circle → ℝ} {y : ℝ}
+  {c : ConnectedComponents (periodicQuotientLevelSet g y)}
+
+/-- Forget the retained smooth lift and expose the homogeneous orbit used by the existing circle
+classification. -/
+def toHomogeneousLocalOrbit (O : PeriodicRegularComponentCompleteOrbit f g y c) :
+    HomogeneousLocalOrbit (componentPiece c) where
+  curve := O.curve
+  localHomeomorph_curve := O.localHomeomorph_curve
+  surjective_curve := O.surjective_curve
+  translate_eq_of_eq := O.translate_eq_of_eq
+
+/-- The retained complete orbit has the same canonical cyclic parametrization as the existing
+topological classification route. -/
+def cyclicLineParametrization (O : PeriodicRegularComponentCompleteOrbit f g y c)
+    [CompactSpace (componentPiece c)] :
+    CyclicLineParametrization (componentPiece c) :=
+  O.toHomogeneousLocalOrbit.cyclicLineParametrization
+
+end PeriodicRegularComponentCompleteOrbit
+
+/-- Every component of a regular descended quotient level is one complete projected
+rotated-gradient orbit, retaining its smooth planar lift. -/
+theorem exists_periodicRegularComponentCompleteOrbit
     {f : Plane → ℝ} {g : Circle × Circle → ℝ}
     (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
     {y : ℝ} (hy : IsRegularValue f y)
     (c : ConnectedComponents (periodicQuotientLevelSet g y)) :
-    Nonempty (HomogeneousLocalOrbit (componentPiece c)) := by
+    Nonempty (PeriodicRegularComponentCompleteOrbit f g y c) := by
   let Level := periodicQuotientLevelSet g y
   let _ : LocallyConnectedSpace Level := locallyConnectedSpace_of_isLocallyLineModeled
     (isLocallyLineModeled_periodicQuotientLevel_of_regularValue hf hdesc hy)
@@ -356,7 +397,10 @@ theorem exists_homogeneousLocalOrbit_periodicRegularLevel
     have hzRange : z ∈ rangeCurve := hrangeUniv.symm ▸ mem_univ z
     exact hzRange
   refine ⟨{
+    basepointLift := baseLift
+    liftedIntegral := lifted
     curve := curve
+    curve_eq_expPair := fun _ ↦ rfl
     localHomeomorph_curve := hcurveLocal
     surjective_curve := hcurveSurjective
     translate_eq_of_eq := ?_ }⟩
@@ -367,6 +411,17 @@ theorem exists_homogeneousLocalOrbit_periodicRegularLevel
     congrArg (fun p : componentPiece c ↦ (p.1 : Circle × Circle)) hst
   exact completePeriodicRegularLevelIntegralCurves_expPair_translate_eq
     hfTwo hdesc lifted lifted hmeet u
+
+/-- Every component of a regular descended quotient level is one homogeneous complete orbit. -/
+theorem exists_homogeneousLocalOrbit_periodicRegularLevel
+    {f : Plane → ℝ} {g : Circle × Circle → ℝ}
+    (hf : ContDiff ℝ (⊤ : ℕ∞) f) (hdesc : ∀ uv, f uv = g (planeExpPair uv))
+    {y : ℝ} (hy : IsRegularValue f y)
+    (c : ConnectedComponents (periodicQuotientLevelSet g y)) :
+    Nonempty (HomogeneousLocalOrbit (componentPiece c)) := by
+  let O := Classical.choice
+    (exists_periodicRegularComponentCompleteOrbit hf hdesc hy c)
+  exact ⟨O.toHomogeneousLocalOrbit⟩
 
 /-- A regular value of a smooth planar function descended through the product exponential has a
 componentwise circle classification on the quotient torus. -/

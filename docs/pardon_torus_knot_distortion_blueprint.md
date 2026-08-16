@@ -190,8 +190,9 @@ disjoint event set consisting of one outer copy and two tagged cut copies, hence
 There are two cases.
 
 1. Some regular sphere in the surgery family contains an essential torus circle.  Choose an
-   innermost essential circle on that sphere.  It bounds a sphere-side disk whose other torus intersections
-   are all inessential.  A zero-winding embedded torus circle lifts to a planar Jordan curve; the
+   innermost essential circle on that sphere.  It bounds a sphere-side disk whose other torus
+   intersections are all inessential.  A zero-winding embedded torus circle lifts to a planar
+   Jordan curve; the
    planar Schoenflies theorem fills it, and disjointness from every nonzero lattice translate
    makes the projected filling an embedded disk on the torus.  Repeated innermost-circle surgery
    replaces the sphere-side disk across these torus disks.  The finite number of intersection
@@ -212,6 +213,42 @@ There are two cases.
    therefore constant through the family.  Initially the carrier is inside the outer sphere;
    finally it is inside one of the two terminal spheres.  Thus one successor half carries the full
    rank-two winding witness.
+
+There is also a useful regular-band route for the all-inessential branch.  Compactness separates
+the selected regular cut height `d` from the critical values of the transported-torus height
+function, giving a closed regular band around `d`.  Shrink its half-width `ε` below one quarter of
+the incoming box scale and truncate the convex outer superellipsoid at the two levels `d-ε` and
+`d+ε`.  The resulting lower and upper closed convex bodies are disjoint, have nonempty interior,
+and have embedded-sphere frontiers.
+
+The regularized normalized gradient
+
+```text
+grad(h) / |grad(h)|^2
+```
+
+is made globally smooth and deck-periodic with a compactly supported height cutoff.  Its complete
+flow has height derivative one throughout the band.  Grönwall control gives joint continuity in
+time and initial point, deck equivariance descends the flow to the torus, and flowing each point
+for time `d-h(x)` retracts every band component onto one central regular circle.  Hence every loop
+in one middle component has winding equal to an integral multiple of that circle's winding; two
+independent winding classes cannot lie there.  Consequently, whenever an honest sphere/collar
+construction supplies a four-cell partition into lower, middle, upper, and exterior pieces, the
+incoming carrier rules out exterior and the regular-band theorem rules out middle; connected
+maximal-disk localization leaves only a child.
+
+The two literal separated truncation spheres do *not* alone supply that four-cell partition.  Their
+common outside connects the height band to the ambient exterior through the omitted strip of the
+old outer frontier.  Thus an additional disjoint outer/collar barrier, or an equivalent relative
+parity transition, is necessary; endpoint regularity by itself cannot hide this gap.  The
+regular-band selection, cyclic-winding consequence, explicit separated endpoint spheres, and
+conditional pure localization theorem are formalized in
+`OrientedCoordinateRegularBand.lean`, `RegularBandCentralCircle.lean`,
+`RegularBandNormalizedGradientFlow.lean`, `RegularBandCyclicWinding.lean`,
+`SuperellipsoidGlobalNeckPinchRounding.lean`, `SuperellipsoidTwoLevelRegularBand.lean`, and
+`RegularBandTwoLevelDichotomy.lean`.  The purely logical essential-or-child adapter is in
+`SuperellipsoidTwoLevelResolution.lean`; it keeps the global four-cell partition as an explicit
+geometric input.
 
 Regular planar charts descend through the product-circle covering in
 `Topology/RegularLevelQuotientCharts.lean`; compact connected one-manifold classification and its
@@ -288,13 +325,21 @@ extendible-arc tubular strips, the transported-torus band charts, the quadratic 
 graphs, and charging transported from the original outer/cut barrier loops to smoothed stage
 loops through transverse continuation.
 
-The remaining kernel-level integration is global rather than local: attach the frontier-fixed
-four-port patches to an embedded outer sphere and obtain two separated terminal child spheres,
-package the resulting regular sphere-family stages and parity partitions, and supply the
-stagewise essential sphere-disk surgery and transverse continuation data.  The analytic
-superellipsoid and its two closed convex truncations already have exact topological-sphere
-parametrizations; the attachment must still perform the global neck pinch around the full cut
-disk instead of pretending that disjoint local torus bands alone change the number of sphere
-components.  The existing finite-stage adapter then yields the one-step shrinking alternative.
+The remaining kernel-level integration has two coupled parts.  First, the endpoint frontiers must
+be included in an honest global outer/collar construction which separates the middle band from the
+ambient exterior; the two literal truncations alone do not do so.  Second, the endpoint torus
+sections must be decomposed into circles.
+
+Their frontiers are exactly an outer half-page joined to a cutting-disk page.  Regularity and seam
+transversality identify the torus intersection locally as a degree-two `V`, and the outer and cut
+pages already have finite exact circle decompositions.  The seam parameters have now been sorted
+on both families, their lower/upper gap paths have exact endpoint equivalences, and the finite
+alternating degree-two cycle indices have been constructed.  Seam-free outer and cut components
+are classified separately by their constant strict side sign.  What remains here is the generic
+realization of each finite alternating embedded-arc cycle as an embedded `Circle`, followed by the
+set-theoretic coverage assembly into the exact sphere-intersection systems.  In the essential case,
+the existing innermost sphere-disk surgery and transverse charging continuation then produce the
+charged compression.  In the all-inessential case, the normalized-gradient retraction and
+four-cell theorem place the carrier in one child once the global barrier supplies the partition.
 The benchmark capstone finally chooses the supplied ambient isotopy and reparametrization and
 invokes the already formalized nested-box contradiction.

@@ -34,7 +34,7 @@ theorem continuous_superellipsoidTorusPolynomial (Phi : AmbientIsotopy)
 /-- The genuine quotient-torus polynomial level underlying an outer superellipsoid section. -/
 def superellipsoidTorusPolynomialLevelSet (Phi : AmbientIsotopy)
     (frame : Equiv.Perm (Fin 3)) (c : R3) (R : ℝ) : Set (Circle × Circle) :=
-  (superellipsoidTorusPolynomial Phi frame c) ⁻¹' {R ^ 256}
+  periodicQuotientLevelSet (superellipsoidTorusPolynomial Phi frame c) (R ^ 256)
 
 theorem isClosed_superellipsoidTorusPolynomialLevelSet (Phi : AmbientIsotopy)
     (frame : Equiv.Perm (Fin 3)) (c : R3) (R : ℝ) :
