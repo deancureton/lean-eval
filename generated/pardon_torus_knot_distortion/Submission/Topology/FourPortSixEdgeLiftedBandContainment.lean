@@ -228,12 +228,36 @@ private theorem chartRectangleLiftParametrization_injective :
   exact JordanCurve.Arcs.spherePlaneHomeoCircle.injective <|
     P.graph.localRectangleCircle_injective P.graph.localRectangleData hprojection
 
-private def chartRectangleLiftJordanCircle : Schoenflies.JordanCircle where
+/-- The lift through the retained global chart of the coherent local rectangle circle. -/
+noncomputable def chartRectangleLiftJordanCircle : Schoenflies.JordanCircle where
   parametrization := P.chartRectangleLiftParametrization T
   continuous := P.continuous_chartRectangleLiftParametrization T
   injective := P.chartRectangleLiftParametrization_injective T
 
-private theorem chartRectangleLiftJordanCircle_carrier_subset_liftedPatch :
+/-- Projecting the retained-chart lift recovers the original coherent rectangle
+parametrization. -/
+theorem projection_chartRectangleLiftJordanCircle_parametrization
+    (z : Metric.sphere (0 : Schoenflies.Plane) 1) :
+    torusCoveringProjectionToTorus Phi
+        ((P.chartRectangleLiftJordanCircle T).parametrization z) =
+      torusCoveringProjectionToTorus Phi
+        ((P.planePathSystem.localRectangleJordanCircle
+          P.planePathSystem.localRectangleData).parametrization z) :=
+  P.projection_chartRectangleLiftParametrization T z
+
+/-- In transported-torus coordinates the lifted rectangle is the canonical local rectangle
+circle of the six-edge graph. -/
+theorem projection_chartRectangleLiftJordanCircle_parametrization_eq_graph
+    (z : Metric.sphere (0 : Schoenflies.Plane) 1) :
+    torusCoveringProjectionToTorus Phi
+        ((P.chartRectangleLiftJordanCircle T).parametrization z) =
+      P.graph.localRectangleCircle P.graph.localRectangleData
+        (JordanCurve.Arcs.spherePlaneHomeoCircle z) := by
+  rw [P.projection_chartRectangleLiftJordanCircle_parametrization T,
+    P.projection_plane_localRectangleParametrization T]
+
+/-- The lifted chart rectangle is contained in the retained covering sheet. -/
+theorem chartRectangleLiftJordanCircle_carrier_subset_liftedPatch :
     (P.chartRectangleLiftJordanCircle T).carrier ⊆ T.liftedPatch := by
   rintro _ ⟨z, rfl⟩
   exact (T.liftedStrip (T.strip.symm
@@ -259,7 +283,8 @@ private theorem continuous_chartRectangleCircleLift :
   (P.chartRectangleLiftJordanCircle T).continuous.comp
     JordanCurve.Arcs.spherePlaneHomeoCircle.symm.continuous
 
-private theorem exists_rectangleParametrization_eq_chart_add_lattice :
+/-- The coherent planar rectangle and its retained-chart lift differ by one deck translation. -/
+theorem exists_rectangleParametrization_eq_chart_add_lattice :
     ∃ k : Fin 2 → ℤ, ∀ z,
       (P.planePathSystem.localRectangleJordanCircle
         P.planePathSystem.localRectangleData).parametrization z =
@@ -277,7 +302,8 @@ private theorem exists_rectangleParametrization_eq_chart_add_lattice :
     Homeomorph.symm_apply_apply] using
       hk (JordanCurve.Arcs.spherePlaneHomeoCircle z)
 
-private theorem planeRectangle_carrier_eq_chart_translate
+/-- The preceding pointwise deck translation identifies the two Jordan carriers. -/
+theorem planeRectangle_carrier_eq_chart_translate
     (k : Fin 2 → ℤ)
     (hk : ∀ z,
       (P.planePathSystem.localRectangleJordanCircle
