@@ -361,7 +361,9 @@ two-arc and three-piece coordinates gives the six coherent lifted edge paths and
 common lifted port vertices.  Every lifted edge projects pointwise to its named torus edge, all
 six paths are injective, and the three exact two-arc data packages assemble back into an honest
 `FourPortSixEdgePathSystem` in the covering plane.  This path-level construction is formalized in
-`FourPortSixEdgePlanePaths.lean`.
+`FourPortSixEdgePlanePaths.lean`.  `FourPortSixEdgeRawPresentation.lean` isolates the remaining
+attachment to the raw parity data as carrier equalities, transfers zero winding without assuming
+equality of parametrizations, and records the exact vertical/horizontal local carrier alignment.
 
 The raw argument now needs the corresponding planar face theorem for this four-vertex, six-edge
 graph.  The local band chart fixes the cyclic order of the three incident branches at every port;
