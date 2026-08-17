@@ -19,7 +19,7 @@ variable {X : Type*} [TopologicalSpace X]
 
 namespace FourPortSixEdgePathSystem
 
-private theorem range_left_inter_right :
+theorem range_left_inter_right :
     Set.range G.left ∩ Set.range G.right = ∅ := by
   ext x
   constructor
@@ -42,7 +42,7 @@ private theorem range_left_inter_right :
   · intro hx
     exact hx.elim
 
-private theorem range_left_inter_top :
+theorem range_left_inter_top :
     Set.range G.left ∩ Set.range G.top = {G.leftTop} := by
   apply Set.Subset.antisymm
   · rintro x ⟨hxLeft, hxTop⟩
@@ -88,7 +88,7 @@ private theorem range_left_inter_top :
     subst x
     exact ⟨⟨1, G.left.target⟩, ⟨0, G.top.source⟩⟩
 
-private theorem range_top_inter_right :
+theorem range_top_inter_right :
     Set.range G.top ∩ Set.range G.right = {G.rightTop} := by
   apply Set.Subset.antisymm
   · rintro x ⟨hxTop, hxRight⟩
@@ -230,7 +230,7 @@ private theorem range_right_inter_bottom :
     subst x
     exact ⟨⟨0, G.right.source⟩, ⟨1, G.bottom.target⟩⟩
 
-private theorem range_top_inter_bottom :
+theorem range_top_inter_bottom :
     Set.range G.top ∩ Set.range G.bottom = ∅ := by
   apply Set.disjoint_iff_inter_eq_empty.mp
   exact G.bottom_disjoint_top.symm.mono Set.subset_union_left Set.subset_union_left
@@ -266,7 +266,7 @@ theorem localRectangleData : G.LocalRectangleData where
       simp only [Set.mem_union, Set.mem_singleton_iff, Set.mem_insert_iff]
   }
 
-private theorem range_left_inter_topOutside :
+theorem range_left_inter_topOutside :
     Set.range G.left ∩ Set.range G.topOutside = {G.leftTop} := by
   apply Set.Subset.antisymm
   · rintro x ⟨⟨s, hs⟩, ⟨t, ht⟩⟩
@@ -295,7 +295,7 @@ private theorem range_left_inter_topOutside :
     subst x
     exact ⟨⟨1, G.left.target⟩, ⟨1, G.topOutside.target⟩⟩
 
-private theorem range_topOutside_inter_right :
+theorem range_topOutside_inter_right :
     Set.range G.topOutside ∩ Set.range G.right = {G.rightTop} := by
   apply Set.Subset.antisymm
   · rintro x ⟨⟨s, hs⟩, ⟨t, ht⟩⟩

@@ -442,6 +442,214 @@ noncomputable def of_carrier_eq
 
 end CommonLocalStraighteningData
 
+/-! ## Canonical topological theta data for three paths -/
+
+/-- Three injective paths with common endpoints and no other pairwise intersections. -/
+structure ThreePathSystem {a b : Plane} (path : Fin 3 → Path a b) : Prop where
+  injective : ∀ i, Function.Injective (path i)
+  range_inter : ∀ {i j}, i ≠ j →
+    Set.range (path i) ∩ Set.range (path j) = {a, b}
+
+namespace ThreePathSystem
+
+variable {a b : Plane} {path : Fin 3 → Path a b} (G : ThreePathSystem path)
+
+include G in
+private theorem symm_injective (i : Fin 3) :
+    Function.Injective (path i).symm := by
+  intro s t hst
+  apply unitInterval.symm_bijective.injective
+  apply ThreePathSystem.injective G i
+  simpa only [Path.symm_apply, Function.comp_apply] using hst
+
+include G in
+private theorem pairData (i j : Fin 3) (hij : i ≠ j) :
+    TwoArcCircle.Data (path i) (path j).symm where
+  first_injective := ThreePathSystem.injective G i
+  second_injective := G.symm_injective j
+  range_inter := by
+    rw [Path.symm_range]
+    exact ThreePathSystem.range_inter G hij
+
+include G in
+/-- The circle carried by paths zero and one. -/
+def circle01 : JordanCircle :=
+  twoArcJordanCircle (path 0) (path 1).symm
+    (ThreePathSystem.injective G 0) (G.symm_injective 1) (by
+      rw [Path.symm_range]
+      exact ThreePathSystem.range_inter G (by decide))
+
+include G in
+/-- The circle carried by paths zero and two. -/
+def circle02 : JordanCircle :=
+  twoArcJordanCircle (path 0) (path 2).symm
+    (ThreePathSystem.injective G 0) (G.symm_injective 2) (by
+      rw [Path.symm_range]
+      exact ThreePathSystem.range_inter G (by decide))
+
+include G in
+/-- The circle carried by paths one and two. -/
+def circle12 : JordanCircle :=
+  twoArcJordanCircle (path 1) (path 2).symm
+    (ThreePathSystem.injective G 1) (G.symm_injective 2) (by
+      rw [Path.symm_range]
+      exact ThreePathSystem.range_inter G (by decide))
+
+@[simp] theorem carrier_circle01 : G.circle01.carrier =
+    Set.range (path 0) ∪ Set.range (path 1) := by
+  rw [circle01, carrier_twoArcJordanCircle, Path.symm_range]
+
+@[simp] theorem carrier_circle02 : G.circle02.carrier =
+    Set.range (path 0) ∪ Set.range (path 2) := by
+  rw [circle02, carrier_twoArcJordanCircle, Path.symm_range]
+
+@[simp] theorem carrier_circle12 : G.circle12.carrier =
+    Set.range (path 1) ∪ Set.range (path 2) := by
+  rw [circle12, carrier_twoArcJordanCircle, Path.symm_range]
+
+private theorem parameter_mem_Ioo (i : Fin 3) (t : unitInterval)
+    (ht : path i t ∉ ({a, b} : Set Plane)) :
+    t ∈ Ioo (0 : unitInterval) 1 := by
+  have ht0 : t ≠ 0 := by
+    intro h
+    apply ht
+    subst t
+    exact Or.inl (path i).source
+  have ht1 : t ≠ 1 := by
+    intro h
+    apply ht
+    subst t
+    exact Or.inr (path i).target
+  exact ⟨lt_of_le_of_ne t.2.1 ht0.symm, lt_of_le_of_ne t.2.2 ht1⟩
+
+include G in
+private noncomputable def localAlong
+    (i j k : Fin 3) (hij : i ≠ j) (hik : i ≠ k)
+    (K₀ K₁ : JordanCircle)
+    (hK₀ : K₀.carrier = Set.range (path i) ∪ Set.range (path j))
+    (hK₁ : K₁.carrier = Set.range (path i) ∪ Set.range (path k)) :
+    ∀ x ∈ Set.range (path i) \ ({a, b} : Set Plane),
+      CommonLocalStraighteningData K₀ K₁ x := by
+  intro x hx
+  let t := Classical.choose hx.1
+  have htValue : path i t = x := Classical.choose_spec hx.1
+  have htPrivate : path i t ∉ ({a, b} : Set Plane) := by
+    simpa only [htValue] using hx.2
+  let D₀ := G.pairData i j hij
+  let D₁ := G.pairData i k hik
+  let raw := TwoArcCommonLocalStraightening.commonLocalStraighteningData
+    (path i) (path j).symm (path k).symm D₀ D₁ t
+      (parameter_mem_Ioo i t htPrivate)
+  have result : CommonLocalStraighteningData K₀ K₁ (path i t) :=
+    CommonLocalStraighteningData.of_carrier_eq raw
+      (by rw [hK₀, carrier_twoArcJordanCircle, Path.symm_range])
+      (by rw [hK₁, carrier_twoArcJordanCircle, Path.symm_range])
+  simpa only [htValue] using result
+
+include G in
+private theorem range_diff_endpoints_eq_image_Ioo (i : Fin 3) :
+    Set.range (path i) \ ({a, b} : Set Plane) =
+      path i '' Ioo (0 : unitInterval) 1 := by
+  ext x
+  constructor
+  · rintro ⟨⟨t, rfl⟩, ht⟩
+    exact ⟨t, parameter_mem_Ioo i t ht, rfl⟩
+  · rintro ⟨t, ht, rfl⟩
+    refine ⟨⟨t, rfl⟩, ?_⟩
+    rintro (ha | hb)
+    · exact ht.1.ne <|
+        (ThreePathSystem.injective G i <| ha.trans (path i).source.symm).symm
+    · exact ht.2.ne <|
+        ThreePathSystem.injective G i <| hb.trans (path i).target.symm
+
+include G in
+private theorem private_preconnected (i : Fin 3) :
+    IsPreconnected (Set.range (path i) \ ({a, b} : Set Plane)) := by
+  rw [G.range_diff_endpoints_eq_image_Ioo i]
+  exact isPreconnected_Ioo.image (path i) (path i).continuous.continuousOn
+
+private def middle : unitInterval := ⟨1 / 2, by constructor <;> norm_num⟩
+
+include G in
+private theorem middle_not_mem_other {i j : Fin 3} (hij : i ≠ j) :
+    path i middle ∉ Set.range (path j) := by
+  rintro ⟨t, ht⟩
+  have hends : path i middle ∈ ({a, b} : Set Plane) := by
+    rw [← ThreePathSystem.range_inter G hij]
+    exact ⟨⟨middle, rfl⟩, ⟨t, ht⟩⟩
+  rcases hends with ha | hb
+  · have hm : middle = 0 :=
+      ThreePathSystem.injective G i (ha.trans (path i).source.symm)
+    have hval := congrArg Subtype.val hm
+    norm_num [middle] at hval
+  · have hm : middle = 1 :=
+      ThreePathSystem.injective G i (hb.trans (path i).target.symm)
+    have hval := congrArg Subtype.val hm
+    norm_num [middle] at hval
+
+include G in
+private theorem private_nonempty {i j k : Fin 3} (hij : i ≠ j) (hik : i ≠ k) :
+    (Set.range (path i) \ (Set.range (path j) ∪ Set.range (path k))).Nonempty := by
+  refine ⟨path i middle, ⟨middle, rfl⟩, ?_⟩
+  rintro (hj | hk)
+  · exact G.middle_not_mem_other hij hj
+  · exact G.middle_not_mem_other hik hk
+
+include G in
+/-- The canonical invariant theta package carried by three pairwise endpoint-intersecting paths. -/
+noncomputable def toTopologicalPlanarJordanThetaData : TopologicalPlanarJordanThetaData where
+  source := a
+  target := b
+  edge0 := Set.range (path 0)
+  edge1 := Set.range (path 1)
+  edge2 := Set.range (path 2)
+  circle01 := G.circle01
+  circle02 := G.circle02
+  circle12 := G.circle12
+  endpoints_subset_edge0 := by
+    rintro x (rfl | rfl)
+    · exact ⟨0, (path 0).source⟩
+    · exact ⟨1, (path 0).target⟩
+  endpoints_subset_edge1 := by
+    rintro x (rfl | rfl)
+    · exact ⟨0, (path 1).source⟩
+    · exact ⟨1, (path 1).target⟩
+  endpoints_subset_edge2 := by
+    rintro x (rfl | rfl)
+    · exact ⟨0, (path 2).source⟩
+    · exact ⟨1, (path 2).target⟩
+  edge0_inter_edge1 := ThreePathSystem.range_inter G (by decide)
+  edge0_inter_edge2 := ThreePathSystem.range_inter G (by decide)
+  edge1_inter_edge2 := ThreePathSystem.range_inter G (by decide)
+  carrier01 := G.carrier_circle01
+  carrier02 := G.carrier_circle02
+  carrier12 := G.carrier_circle12
+  private0_preconnected := G.private_preconnected 0
+  private1_preconnected := G.private_preconnected 1
+  private2_preconnected := G.private_preconnected 2
+  private0_nonempty := G.private_nonempty (by decide) (by decide)
+  private1_nonempty := G.private_nonempty (by decide) (by decide)
+  private2_nonempty := G.private_nonempty (by decide) (by decide)
+  exceptional := {a, b}
+  exceptional_finite := Set.Finite.insert _ (Set.finite_singleton _)
+  local0 := G.localAlong 0 1 2 (by decide) (by decide)
+    G.circle01 G.circle02 G.carrier_circle01 G.carrier_circle02
+  local1 := G.localAlong 1 0 2 (by decide) (by decide)
+    G.circle01 G.circle12 (by rw [G.carrier_circle01, Set.union_comm])
+      G.carrier_circle12
+  local2 := G.localAlong 2 0 1 (by decide) (by decide)
+    G.circle02 G.circle12 (by rw [G.carrier_circle02, Set.union_comm])
+      (by rw [G.carrier_circle12, Set.union_comm])
+
+/-- One of the three canonical cycles is outer. -/
+theorem exists_outer_cycle_decomposition :
+    closure G.circle01.inside = closure G.circle02.inside ∪ closure G.circle12.inside ∨
+      closure G.circle02.inside = closure G.circle01.inside ∪ closure G.circle12.inside ∨
+      closure G.circle12.inside = closure G.circle01.inside ∪ closure G.circle02.inside :=
+  G.toTopologicalPlanarJordanThetaData.exists_outer_cycle_decomposition
+
+end ThreePathSystem
+
 namespace TorusThetaPathSystem.CoherentPlaneLiftData
 
 open LeanEval.KnotTheory.PardonDistortion

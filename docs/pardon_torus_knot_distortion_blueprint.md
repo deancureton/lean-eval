@@ -370,18 +370,31 @@ of an outside arc is reduced to endpoint-only incidence plus a single local exte
 the private part of an injective arc is connected, so it cannot change Jordan side without
 crossing the rectangle carrier.  No outer raw cycle is selected by this local datum.
 
-The raw argument now needs the corresponding planar face theorem for this four-vertex, six-edge
-graph.  The local band chart fixes the cyclic order of the three incident branches at every port;
-that rotation data must rule out the non-endpoint mixed cycles as the unbounded face.  The theorem
-must then select an outer raw boundary cycle, show that the bounded faces and the lifted
-parity-change lens lie in its closed disk, and project this containment to the torus.  The
-selected outer cycle may belong to either endpoint, so the validated heterogeneous transition
-still supplies the required forward-or-reverse disk-sided move.
+The local-flatness input to the invariant theta theorem has now been eliminated.  Any injective
+arc in a two-arc Jordan presentation is extended canonically by the first and last quarters of
+the return arc; the exact ambient core straightener sends it pointwise to the standard horizontal
+seam.  Compact separation from both return arcs then supplies a common straight germ at every
+relative-interior point.  Consequently any three injective planar paths meeting only at their
+common endpoints canonically form a `TopologicalPlanarJordanThetaData`, with the endpoints as the
+only exceptional set.  This is formalized in `TwoArcCommonLocalStraightening.lean`.
 
-Thus the remaining local inputs are sharply limited: identify the abstract six-edge paths with
-the global outside arcs and four standard band arcs, prove their vertex-rotation/outer-face
-decomposition, and prove that the explicit quadratic parity-change lens lifts into the bounded
-faces.  One must then assemble these
+Applied twice to the honest four-port graph, this gives two exact closed-region trichotomies in
+`FourPortSixEdgeThetaDecompositions.lean`.  The lower theta consists of the lower child, the local
+rectangle, and the auxiliary cycle formed by the lower outside arc plus the upper rectangle
+route.  The upper theta consists of that same auxiliary cycle, the upper child, and the central
+raw circle.  Combining the two trichotomies now gives the exact four-face theorem.  The rectangle
+cannot be outer because a private lower-outside point is simultaneously in its closed disk and
+its exterior.  The auxiliary cycle cannot be outer in both decompositions: the upper outside
+arc would then lie in the lower-child closed disk on its whole open parameter interval, hence so
+would its endpoint by density and closedness, contradicting Jordan-side separation at the upper
+port.  In the remaining cases, laminarity of the disjoint lower and upper child Jordan disks
+reduces the result to set algebra.  Therefore one of the three raw cycles bounds exactly the
+union of the rectangle and the other two raw closed disks.  The theorem is implemented as
+`FourPortSixEdgePathSystem.rawFace_exists_outer_cycle_decomposition` and is axiom-audited.
+
+Thus the remaining local inputs are sharply limited: transport that selected planar raw disk to
+the corresponding endpoint maximal disk, and prove that the explicit quadratic parity-change
+lens lifts into its three bounded faces.  One must then assemble these
 elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
 filling disks and transverse charging data for the essential branch, and identify the terminal
 lower/upper cells.  After those geometric attachments, the validated finite transition,
