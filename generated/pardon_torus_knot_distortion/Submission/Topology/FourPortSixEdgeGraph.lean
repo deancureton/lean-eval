@@ -95,6 +95,59 @@ theorem bottomCircle_injective : Function.Injective G.bottomCircle :=
 theorem topCircle_injective : Function.Injective G.topCircle :=
   G.topData.injective
 
+theorem left_injective : Function.Injective G.left := by
+  intro s t hst
+  have hroute :
+      fourPortCentralUpperPath G.left G.topOutside G.right
+          (Schoenflies.ThreePiecePath.firstCoordinate s) =
+        fourPortCentralUpperPath G.left G.topOutside G.right
+          (Schoenflies.ThreePiecePath.firstCoordinate t) := by
+    simpa only [fourPortCentralUpperPath,
+      Schoenflies.ThreePiecePath.trans_trans_firstCoordinate] using hst
+  have hcoordinate := G.centralData.first_injective hroute
+  apply Subtype.ext
+  have hvalue := congrArg Subtype.val hcoordinate
+  simpa only [Schoenflies.ThreePiecePath.firstCoordinate,
+    Subtype.coe_mk, div_left_inj' (by norm_num : (4 : ℝ) ≠ 0)] using hvalue
+
+theorem right_injective : Function.Injective G.right := by
+  intro s t hst
+  have hroute :
+      fourPortCentralUpperPath G.left G.topOutside G.right
+          (Schoenflies.ThreePiecePath.thirdCoordinate (unitInterval.symm s)) =
+        fourPortCentralUpperPath G.left G.topOutside G.right
+          (Schoenflies.ThreePiecePath.thirdCoordinate (unitInterval.symm t)) := by
+    calc
+      _ = G.right s := by
+        rw [fourPortCentralUpperPath,
+          Schoenflies.ThreePiecePath.trans_trans_thirdCoordinate]
+        simp only [Path.symm_apply, Function.comp_apply,
+          unitInterval.symm_symm]
+      _ = G.right t := hst
+      _ = _ := by
+        rw [fourPortCentralUpperPath,
+          Schoenflies.ThreePiecePath.trans_trans_thirdCoordinate]
+        simp only [Path.symm_apply, Function.comp_apply,
+          unitInterval.symm_symm]
+  have hcoordinate := G.centralData.first_injective hroute
+  apply Subtype.ext
+  have hvalue := congrArg Subtype.val hcoordinate
+  dsimp only [Schoenflies.ThreePiecePath.thirdCoordinate,
+    unitInterval.symm] at hvalue
+  linarith
+
+theorem bottom_injective : Function.Injective G.bottom :=
+  G.bottomData.first_injective
+
+theorem top_injective : Function.Injective G.top :=
+  G.topData.first_injective
+
+theorem bottomOutside_injective : Function.Injective G.bottomOutside :=
+  G.bottomData.second_injective
+
+theorem topOutside_injective : Function.Injective G.topOutside :=
+  G.topData.second_injective
+
 @[simp] theorem range_centralCircle : Set.range G.centralCircle =
     Set.range (fourPortCentralUpperPath G.left G.topOutside G.right) ∪
       Set.range G.bottomOutside :=

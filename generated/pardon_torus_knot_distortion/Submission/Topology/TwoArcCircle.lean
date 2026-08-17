@@ -102,6 +102,13 @@ def firstCoordinate (t : unitInterval) : AddCircle (2 : ℝ) :=
   (AddCircle.equivIco (2 : ℝ) (0 : ℝ)).symm
     ⟨t, ⟨t.2.1, by norm_num; linarith [t.2.2]⟩⟩
 
+theorem firstCoordinate_eq_coe (t : unitInterval) :
+    firstCoordinate t = ((t : ℝ) : AddCircle (2 : ℝ)) := by
+  apply (AddCircle.equivIco (2 : ℝ) (0 : ℝ)).injective
+  rw [firstCoordinate, Equiv.apply_symm_apply,
+    AddCircle.equivIco_coe_eq]
+  constructor <;> norm_num <;> linarith [t.2.1, t.2.2]
+
 theorem addCircleMap_firstCoordinate (p : Path a b) (q : Path b a)
     (t : unitInterval) :
     addCircleMap p q (firstCoordinate t) = p t := by
@@ -297,6 +304,35 @@ def firstCircleCoordinate (t : unitInterval) : Circle :=
 /-- Standard-circle coordinate of a point on the second constituent path. -/
 def secondCircleCoordinate (t : unitInterval) : Circle :=
   circleHomeomorph (secondCoordinate t)
+
+theorem firstCircleCoordinate_eq_exp (t : unitInterval) :
+    firstCircleCoordinate t = Circle.exp (Real.pi * (t : ℝ)) := by
+  rw [firstCircleCoordinate, circleHomeomorph, firstCoordinate_eq_coe,
+    AddCircle.homeomorphCircle_apply, AddCircle.toCircle_apply_mk]
+  ring_nf
+
+theorem secondCircleCoordinate_eq_exp (t : unitInterval) :
+    secondCircleCoordinate t = Circle.exp (Real.pi * ((t : ℝ) + 1)) := by
+  rw [secondCircleCoordinate, secondCoordinate, circleHomeomorph,
+    AddCircle.homeomorphCircle_apply, AddCircle.toCircle_apply_mk]
+  ring_nf
+
+@[simp] theorem firstCircleCoordinate_zero_eq_secondCircleCoordinate_one :
+    firstCircleCoordinate 0 = secondCircleCoordinate 1 := by
+  rw [firstCircleCoordinate_eq_exp, secondCircleCoordinate_eq_exp]
+  calc
+    Circle.exp (Real.pi * ((0 : unitInterval) : ℝ)) = Circle.exp 0 := by
+      norm_num
+    _ = Circle.exp (0 + 2 * Real.pi) := (Circle.exp_add_two_pi 0).symm
+    _ = Circle.exp (Real.pi * (((1 : unitInterval) : ℝ) + 1)) := by
+      congr 1
+      norm_num
+      ring
+
+@[simp] theorem firstCircleCoordinate_one_eq_secondCircleCoordinate_zero :
+    firstCircleCoordinate 1 = secondCircleCoordinate 0 := by
+  rw [firstCircleCoordinate_eq_exp, secondCircleCoordinate_eq_exp]
+  norm_num
 
 /-- Parametrize the union of the two paths by the standard circle. -/
 def circleMap (p : Path a b) (q : Path b a) : Circle → X :=

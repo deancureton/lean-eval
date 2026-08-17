@@ -356,7 +356,12 @@ cycle maps canonically produce `EmbeddedTorusIntersectionCircle`s.  When all thr
 winding, `FourPortSixEdgeCircleLiftAlignment.lean` deck-translates the two child plane lifts so
 that both shared outside arcs agree pointwise with the central lift.  The resulting planar Jordan
 circles have the exact central--child intersections and disjoint child carriers proved in
-`FourPortSixEdgePlaneCircles.lean`.
+`FourPortSixEdgePlaneCircles.lean`.  Restricting those aligned plane circles to the standard
+two-arc and three-piece coordinates gives the six coherent lifted edge paths and their four
+common lifted port vertices.  Every lifted edge projects pointwise to its named torus edge, all
+six paths are injective, and the three exact two-arc data packages assemble back into an honest
+`FourPortSixEdgePathSystem` in the covering plane.  This path-level construction is formalized in
+`FourPortSixEdgePlanePaths.lean`.
 
 The raw argument now needs the corresponding planar face theorem for this four-vertex, six-edge
 graph.  The local band chart fixes the cyclic order of the three incident branches at every port;
