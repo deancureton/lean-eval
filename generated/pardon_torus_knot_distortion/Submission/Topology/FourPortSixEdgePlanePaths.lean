@@ -347,7 +347,7 @@ private theorem range_topOutsidePlanePath_subset_centralPlaneCircle :
   rintro _ ⟨t, rfl⟩
   exact ⟨centralTopOutsideParameter t, rfl⟩
 
-private theorem centralPlaneCarrier_subset_centralPlaneCircle :
+theorem centralPlaneCarrier_subset_centralPlaneCircle :
     Set.range (fourPortCentralUpperPath Z.leftPlanePath Z.topOutsidePlanePath
         Z.rightPlanePath) ∪ Set.range Z.bottomOutsidePlanePath ⊆
       Set.range Z.centralPlaneCircle := by
@@ -358,7 +358,7 @@ private theorem centralPlaneCarrier_subset_centralPlaneCircle :
   · exact Z.range_rightPlanePath_subset_centralPlaneCircle hx
   · exact Z.range_bottomOutsidePlanePath_subset_centralPlaneCircle hx
 
-private theorem bottomPlaneCarrier_subset_alignedBottomPlaneCircle :
+theorem bottomPlaneCarrier_subset_alignedBottomPlaneCircle :
     Set.range Z.bottomPlanePath ∪ Set.range Z.bottomOutsidePlanePath ⊆
       Set.range Z.alignedBottomPlaneCircle := by
   rintro x (hx | hx)
@@ -368,7 +368,7 @@ private theorem bottomPlaneCarrier_subset_alignedBottomPlaneCircle :
     refine ⟨TwoArcCircle.secondCircleCoordinate t, ?_⟩
     exact Z.alignedBottomOutside_eq_central t
 
-private theorem topPlaneCarrier_subset_alignedTopPlaneCircle :
+theorem topPlaneCarrier_subset_alignedTopPlaneCircle :
     Set.range Z.topPlanePath ∪ Set.range Z.topOutsidePlanePath ⊆
       Set.range Z.alignedTopPlaneCircle := by
   rintro x (hx | hx)

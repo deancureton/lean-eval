@@ -392,10 +392,29 @@ reduces the result to set algebra.  Therefore one of the three raw cycles bounds
 union of the rectangle and the other two raw closed disks.  The theorem is implemented as
 `FourPortSixEdgePathSystem.rawFace_exists_outer_cycle_decomposition` and is axiom-audited.
 
-Thus the remaining local inputs are sharply limited: transport that selected planar raw disk to
-the corresponding endpoint maximal disk, and prove that the explicit quadratic parity-change
-lens lifts into its three bounded faces.  One must then assemble these
-elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
-filling disks and transverse charging data for the essential branch, and identify the terminal
-lower/upper cells.  After those geometric attachments, the validated finite transition,
+The planar-to-torus disk transport is now formalized in
+`FourPortSixEdgeOuterFaceSelection.lean`.  Each child lift was aligned by a possibly different
+deck translation, so equality of the three planar disk parametrizations would be false.  The
+correct invariant is their projected image.  The carrier of every raw planar Jordan circle is
+proved equal to the appropriate deck translate of its canonical zero-winding lift.  Translation
+carries the bounded Jordan component to the translated bounded component, while projection to
+the torus erases the lattice vector.  Consequently the selected planar raw closed disk projects
+*exactly* to the canonical projected disk of the corresponding graph circle, and all three raw
+endpoint carriers lie in that selected disk.
+
+`FourPortSixEdgeDiskSide.lean` performs the next logical attachment.  A lift of the actual
+parity-change locus into the rectangle and the two bounded child faces places the entire lens in
+the selected projected disk.  If the selected graph circle is identified with an ordinary circle
+of either endpoint intersection system, canonical laminar maximality enlarges its disk to a
+maximal stage disk.  The module then constructs, without further carrier assumptions, either the
+forward or the reverse `FiniteElementaryDiskSideCover`; a canonical choice removes all outer-face
+case bookkeeping.
+
+Thus the remaining local inputs are sharply limited to geometric constructions rather than a
+disk-side conclusion: establish the rectangle rotation side from the genuine transported-torus
+strip, lift the explicit quadratic parity-change lens into its bounded planar faces, and identify
+the selected raw graph circle with the corresponding pre- or post-stage circle.  One must then
+assemble these elementary moves into the separated rounded terminal sphere sequence, provide the
+sphere-side filling disks and transverse charging data for the essential branch, and identify the
+terminal lower/upper cells.  After those geometric attachments, the validated finite transition,
 charging, nested-box, and capstone layers close the benchmark theorem.
