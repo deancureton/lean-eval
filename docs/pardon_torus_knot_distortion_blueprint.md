@@ -325,21 +325,34 @@ extendible-arc tubular strips, the transported-torus band charts, the quadratic 
 graphs, and charging transported from the original outer/cut barrier loops to smoothed stage
 loops through transverse continuation.
 
-The remaining kernel-level integration has two coupled parts.  First, the endpoint frontiers must
-be included in an honest global outer/collar construction which separates the middle band from the
-ambient exterior; the two literal truncations alone do not do so.  Second, the endpoint torus
-sections must be decomposed into circles.
+The endpoint torus sections are now decomposed into circles.  The lower and upper outer gaps and
+the inward cut gaps have exact closed carrier formulas, including cyclic wraparound and seam
+endpoints.  Finite alternating endpoint systems are split into quotient cycles; their genuine
+nonempty path concatenations are embedded circles, distinct quotient cycles have disjoint ranges,
+and finite closed-arc isolation upgrades the exact carrier formulas to the required ambient local
+`V` germs.  Seam-free outer and cut circles are separately classified by their constant strict
+side sign.  Thus the remaining set-theoretic completion into the exact lower and upper truncated
+sphere sections is bookkeeping rather than a new geometric hypothesis.
 
-Their frontiers are exactly an outer half-page joined to a cutting-disk page.  Regularity and seam
-transversality identify the torus intersection locally as a degree-two `V`, and the outer and cut
-pages already have finite exact circle decompositions.  The seam parameters have now been sorted
-on both families, their lower/upper gap paths have exact endpoint equivalences, and the finite
-alternating degree-two cycle indices have been constructed.  Seam-free outer and cut components
-are classified separately by their constant strict side sign.  What remains here is the generic
-realization of each finite alternating embedded-arc cycle as an embedded `Circle`, followed by the
-set-theoretic coverage assembly into the exact sphere-intersection systems.  In the essential case,
-the existing innermost sphere-disk surgery and transverse charging continuation then produce the
-charged compression.  In the all-inessential case, the normalized-gradient retraction and
-four-cell theorem place the carrier in one child once the global barrier supplies the partition.
-The benchmark capstone finally chooses the supplied ambient isotopy and reparametrization and
-invokes the already formalized nested-box contradiction.
+The unresolved geometric input lies one level later, in the all-inessential four-port transition.
+The literal pre- and post-resolution circles agree on their outside arcs, so they cannot
+simultaneously be the three disjoint boundary components of a pair of pants.  They must first be
+separated by small *tangential* self-isotopies of the transported torus.  The already constructed
+ambient normal tube cannot provide these: a base-fixed normal-fiber map which returns the zero
+slice to the torus is pointwise the identity on that slice.  What is needed is a relative regular
+neighborhood theorem for the labeled global four-port theta graph, compatible with its prescribed
+vertex charts.  It must produce two supported torus isotopies, three disjoint parallel endpoint
+circles, their annular sweeps, and a connected regular-closed pair-of-pants trace whose frontier is
+exactly those circles.
+
+Canonical Schoenflies disks for the three zero-winding boundary circles are already proved
+laminar.  Their open sides, closures, and frontiers give the required local side alternative, and
+finite-puncture connectivity derives the all-exterior complement theorem.  The remaining global
+surface fact is the standard pair-of-pants first-homology statement: every loop winding in the
+trace is an integer combination of the three boundary windings.  Since all three boundary
+windings vanish, one canonical disk contains the entire trace and hence the actual label-change
+locus.  The transition may be pre-sided or post-sided; the finite heterogeneous parity sequence
+has been generalized to allow that choice at every elementary move.  The essential branch already
+feeds the innermost sphere-disk surgery and transverse charging continuation.  Once the relative
+theta-graph neighborhood and pair-of-pants winding-generation lemmas are supplied, the existing
+finite transition, charging, nested-box, and capstone layers close the benchmark theorem.
