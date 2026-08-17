@@ -342,20 +342,27 @@ translation, and covering-lift uniqueness forces agreement along their common ed
 other endpoint.  The covering projection is injective on the compact lifted theta graph and on a
 slightly larger open neighborhood.
 
-For a locally straight planar theta graph, one of its three two-edge Jordan cycles bounds the
-outer disk.  Jordan separation identifies that disk with the union of the two bounded child-face
-closures.  Consequently all three raw boundary cycles and any lifted label-change lens contained
-in those child faces lie in one canonical torus disk.  The outer cycle may belong to either the
-pre- or post-resolution, so the finite heterogeneous parity sequence permits a forward or reverse
-disk-sided transition at each move.  Once the raw outer circle is identified with an ordinary
-circle of the corresponding endpoint system, finite laminarity enlarges its canonical disk to a
-selected maximal disk automatically.
+For a topological planar theta graph, one of its three two-edge Jordan cycles bounds the outer
+disk.  The invariant local hypothesis is not that a curved edge is literally a Euclidean line:
+away from finitely many exceptional vertices, one ambient homeomorphism must carry both incident
+circle-carrier germs to the same straight germ.  In the contradiction and child-face branches,
+the proof first establishes that the relevant open Jordan interiors are disjoint; only then does
+common straightening imply that their two closed disks fill a neighborhood.  Jordan separation
+identifies the selected outer disk with the union of the two bounded child-face closures.  Thus all
+three raw boundary cycles and any lifted label-change lens contained in those child faces lie in
+one canonical torus disk.  The outer cycle may belong to either the pre- or post-resolution, so
+the finite heterogeneous parity sequence permits a forward or reverse disk-sided transition at
+each move.  Once the raw outer circle is identified with an ordinary circle of the corresponding
+endpoint system, finite laminarity enlarges its canonical disk to a selected maximal disk
+automatically.
 
-The remaining local inputs are therefore sharply limited: instantiate the three global raw
-circles as the coherent theta cycles, verify the finite/local-straight hypotheses selecting the
-outer planar cycle, and prove that the explicit quadratic parity-change lens lifts into the two
-bounded theta faces.  One must then assemble these elementary moves into the separated rounded
-terminal sphere sequence, provide the sphere-side filling disks and transverse charging data for
-the essential branch, and identify the terminal lower/upper cells.  After those geometric
-attachments, the validated finite transition, charging, nested-box, and capstone layers close the
-benchmark theorem.
+The coherent-lift adapter now derives injectivity of all three plane edges, their exact
+endpoint-only intersections, preconnected open edge interiors, and nonempty private arcs.  Thus
+the remaining local inputs are sharply limited: identify the three lifted two-edge carriers with
+the global raw Jordan circles, prove the invariant common-straightening condition (for example
+from compatible extendible-arc straightenings), and prove that the explicit quadratic
+parity-change lens lifts into the two bounded theta faces.  One must then assemble these
+elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
+filling disks and transverse charging data for the essential branch, and identify the terminal
+lower/upper cells.  After those geometric attachments, the validated finite transition,
+charging, nested-box, and capstone layers close the benchmark theorem.
