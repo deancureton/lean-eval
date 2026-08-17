@@ -331,28 +331,31 @@ endpoints.  Finite alternating endpoint systems are split into quotient cycles; 
 nonempty path concatenations are embedded circles, distinct quotient cycles have disjoint ranges,
 and finite closed-arc isolation upgrades the exact carrier formulas to the required ambient local
 `V` germs.  Seam-free outer and cut circles are separately classified by their constant strict
-side sign.  Thus the remaining set-theoretic completion into the exact lower and upper truncated
-sphere sections is bookkeeping rather than a new geometric hypothesis.
+side sign.  The exact lower and upper finite truncated-sphere sections are therefore constructed
+unconditionally from the outer and cut cyclic-order packages.
 
-The unresolved geometric input lies one level later, in the all-inessential four-port transition.
-The literal pre- and post-resolution circles agree on their outside arcs, so they cannot
-simultaneously be the three disjoint boundary components of a pair of pants.  They must first be
-separated by small *tangential* self-isotopies of the transported torus.  The already constructed
-ambient normal tube cannot provide these: a base-fixed normal-fiber map which returns the zero
-slice to the torus is pointwise the identity on that slice.  What is needed is a relative regular
-neighborhood theorem for the labeled global four-port theta graph, compatible with its prescribed
-vertex charts.  It must produce two supported torus isotopies, three disjoint parallel endpoint
-circles, their annular sweeps, and a connected regular-closed pair-of-pants trace whose frontier is
-exactly those circles.
+The critical all-inessential route now works directly with the three raw affected circles of one
+four-port move.  Their shared outside arcs form a theta graph, so no artificial tangential
+separation or pair-of-pants homology computation is needed.  Zero winding gives coherent plane
+lifts of all three theta edges: two reference-circle lifts are aligned at one endpoint by a deck
+translation, and covering-lift uniqueness forces agreement along their common edge and at the
+other endpoint.  The covering projection is injective on the compact lifted theta graph and on a
+slightly larger open neighborhood.
 
-Canonical Schoenflies disks for the three zero-winding boundary circles are already proved
-laminar.  Their open sides, closures, and frontiers give the required local side alternative, and
-finite-puncture connectivity derives the all-exterior complement theorem.  The remaining global
-surface fact is the standard pair-of-pants first-homology statement: every loop winding in the
-trace is an integer combination of the three boundary windings.  Since all three boundary
-windings vanish, one canonical disk contains the entire trace and hence the actual label-change
-locus.  The transition may be pre-sided or post-sided; the finite heterogeneous parity sequence
-has been generalized to allow that choice at every elementary move.  The essential branch already
-feeds the innermost sphere-disk surgery and transverse charging continuation.  Once the relative
-theta-graph neighborhood and pair-of-pants winding-generation lemmas are supplied, the existing
-finite transition, charging, nested-box, and capstone layers close the benchmark theorem.
+For a locally straight planar theta graph, one of its three two-edge Jordan cycles bounds the
+outer disk.  Jordan separation identifies that disk with the union of the two bounded child-face
+closures.  Consequently all three raw boundary cycles and any lifted label-change lens contained
+in those child faces lie in one canonical torus disk.  The outer cycle may belong to either the
+pre- or post-resolution, so the finite heterogeneous parity sequence permits a forward or reverse
+disk-sided transition at each move.  Once the raw outer circle is identified with an ordinary
+circle of the corresponding endpoint system, finite laminarity enlarges its canonical disk to a
+selected maximal disk automatically.
+
+The remaining local inputs are therefore sharply limited: instantiate the three global raw
+circles as the coherent theta cycles, verify the finite/local-straight hypotheses selecting the
+outer planar cycle, and prove that the explicit quadratic parity-change lens lifts into the two
+bounded theta faces.  One must then assemble these elementary moves into the separated rounded
+terminal sphere sequence, provide the sphere-side filling disks and transverse charging data for
+the essential branch, and identify the terminal lower/upper cells.  After those geometric
+attachments, the validated finite transition, charging, nested-box, and capstone layers close the
+benchmark theorem.
