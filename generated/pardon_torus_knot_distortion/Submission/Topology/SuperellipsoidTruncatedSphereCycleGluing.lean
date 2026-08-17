@@ -529,9 +529,8 @@ noncomputable def lowerOuterEndpointPaths :
     FiniteAlternatingEndpointSystem.EndpointPathFamily
     (lowerOuterPairing outerOrder)
     (fun v : SuperellipsoidSeamVertex Phi frame c R d ↦ (v : R3)) where
-  path g := by
-    change outerOrder.GlobalLowerOuterGap at g
-    exact ((outerOrder.globalLowerOuterPath g).map continuous_subtype_val).cast (by
+  path := fun g : outerOrder.GlobalLowerOuterGap ↦
+    ((outerOrder.globalLowerOuterPath g).map continuous_subtype_val).cast (by
       change (outerOrder.globalLowerEndpointEquiv (g, 0)).1 = _
       rw [outerOrder.globalLowerEndpointEquiv_zero_val]
       exact congrArg (fun x : transportedTorus Phi ↦ (x : R3))
@@ -541,14 +540,20 @@ noncomputable def lowerOuterEndpointPaths :
       exact congrArg (fun x : transportedTorus Phi ↦ (x : R3))
         (Path.target (outerOrder.globalLowerOuterPath g)))
 
+@[simp]
+theorem lowerOuterEndpointPaths_path_apply
+    (g : outerOrder.GlobalLowerOuterGap) (t : unitInterval) :
+    (lowerOuterEndpointPaths outerOrder).path g t =
+      (outerOrder.globalLowerOuterPath g t : R3) := by
+  rfl
+
 /-- Upper outer arcs with endpoints expressed through the derived seam pairing. -/
 noncomputable def upperOuterEndpointPaths :
     FiniteAlternatingEndpointSystem.EndpointPathFamily
     (upperOuterPairing outerOrder)
     (fun v : SuperellipsoidSeamVertex Phi frame c R d ↦ (v : R3)) where
-  path g := by
-    change outerOrder.GlobalUpperOuterGap at g
-    exact ((outerOrder.globalUpperOuterPath g).map continuous_subtype_val).cast (by
+  path := fun g : outerOrder.GlobalUpperOuterGap ↦
+    ((outerOrder.globalUpperOuterPath g).map continuous_subtype_val).cast (by
       change (outerOrder.globalUpperEndpointEquiv (g, 0)).1 = _
       rw [outerOrder.globalUpperEndpointEquiv_zero_val]
       exact congrArg (fun x : transportedTorus Phi ↦ (x : R3))
@@ -558,18 +563,31 @@ noncomputable def upperOuterEndpointPaths :
       exact congrArg (fun x : transportedTorus Phi ↦ (x : R3))
         (Path.target (outerOrder.globalUpperOuterPath g)))
 
+@[simp]
+theorem upperOuterEndpointPaths_path_apply
+    (g : outerOrder.GlobalUpperOuterGap) (t : unitInterval) :
+    (upperOuterEndpointPaths outerOrder).path g t =
+      (outerOrder.globalUpperOuterPath g t : R3) := by
+  rfl
+
 /-- Inward cutting arcs with endpoints expressed through their derived seam pairing. -/
 noncomputable def inwardCutEndpointPaths :
     FiniteAlternatingEndpointSystem.EndpointPathFamily
     (inwardCutPairing cutOrder)
     (fun v : SuperellipsoidSeamVertex Phi frame c R d ↦ (v : R3)) where
-  path g := by
-    change cutOrder.GlobalInwardGap at g
-    exact ((cutOrder.globalInwardExcursionPath g).map continuous_subtype_val).cast (by
+  path := fun g : cutOrder.GlobalInwardGap ↦
+    ((cutOrder.globalInwardExcursionPath g).map continuous_subtype_val).cast (by
       change (cutOrder.globalEndpointEquiv (g, 0)).1 = _
       rw [cutOrder.globalEndpointEquiv_zero_val]) (by
       change (cutOrder.globalEndpointEquiv (g, 1)).1 = _
       rw [cutOrder.globalEndpointEquiv_one_val])
+
+@[simp]
+theorem inwardCutEndpointPaths_path_apply
+    (g : cutOrder.GlobalInwardGap) (t : unitInterval) :
+    (inwardCutEndpointPaths cutOrder).path g t =
+      (cutOrder.globalInwardExcursionPath g t : R3) := by
+  rfl
 
 /-- The canonical lower alternating arcs, oriented by the successor permutation. -/
 noncomputable def lowerOrientedArcs :
