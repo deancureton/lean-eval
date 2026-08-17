@@ -304,6 +304,30 @@ theorem range_circleMap (p : Path a b) (q : Path b a) :
   rw [circleHomeomorph.symm.surjective.range_eq, image_univ]
   exact range_addCircleMap p q
 
+/-- The canonical two-arc circle construction commutes pointwise with a continuous map. -/
+theorem map_circleMap {Y : Type*} [TopologicalSpace Y]
+    (f : X → Y) (hf : Continuous f)
+    (p : Path a b) (q : Path b a) (z : Circle) :
+    f (circleMap p q z) = circleMap (p.map hf) (q.map hf) z := by
+  rw [circleMap, circleMap, Function.comp_apply, Function.comp_apply,
+    addCircleMap_eq_loop_representative, addCircleMap_eq_loop_representative]
+  unfold loop
+  split_ifs <;> rfl
+
+/-- Pointwise path compatibility is enough for naturality, even when endpoint types are not
+definitionally identical. -/
+theorem map_circleMap_of_pointwise {Y : Type*} [TopologicalSpace Y]
+    {c d : Y} (f : X → Y)
+    (p : Path a b) (q : Path b a) (p' : Path c d) (q' : Path d c)
+    (hp : ∀ t, f (p t) = p' t) (hq : ∀ t, f (q t) = q' t) (z : Circle) :
+    f (circleMap p q z) = circleMap p' q' z := by
+  rw [circleMap, circleMap, Function.comp_apply, Function.comp_apply,
+    addCircleMap_eq_loop_representative, addCircleMap_eq_loop_representative]
+  unfold loop
+  split_ifs
+  · exact hp _
+  · exact hq _
+
 theorem circleMap_injective (p : Path a b) (q : Path b a)
     (hp : Injective p) (hq : Injective q)
     (hinter : range p ∩ range q = {a, b}) :

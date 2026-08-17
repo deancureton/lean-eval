@@ -357,10 +357,17 @@ endpoint system, finite laminarity enlarges its canonical disk to a selected max
 automatically.
 
 The coherent-lift adapter now derives injectivity of all three plane edges, their exact
-endpoint-only intersections, preconnected open edge interiors, and nonempty private arcs.  Thus
-the remaining local inputs are sharply limited: identify the three lifted two-edge carriers with
-the global raw Jordan circles, prove the invariant common-straightening condition (for example
-from compatible extendible-arc straightenings), and prove that the explicit quadratic
+endpoint-only intersections, preconnected open edge interiors, and nonempty private arcs.  An
+exact raw theta path presentation identifies the three endpoint circles with the three two-edge
+cycles.  Zero winding then constructs the coherent lifts, and covering uniqueness proves that
+each canonical lifted Jordan carrier is a lattice translate of the corresponding raw canonical
+lift.  Since the covering projection is deck invariant, the selected planar outer face projects
+to the correct raw canonical torus disk without imposing literal equality between differently
+based plane lifts.
+
+Thus the remaining local inputs are sharply limited: construct the raw theta path presentation
+from the four global outside arcs, prove the invariant common-straightening condition (for
+example from compatible extendible-arc straightenings), and prove that the explicit quadratic
 parity-change lens lifts into the two bounded theta faces.  One must then assemble these
 elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
 filling disks and transverse charging data for the essential branch, and identify the terminal
