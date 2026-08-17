@@ -364,6 +364,11 @@ six paths are injective, and the three exact two-arc data packages assemble back
 `FourPortSixEdgePlanePaths.lean`.  `FourPortSixEdgeRawPresentation.lean` isolates the remaining
 attachment to the raw parity data as carrier equalities, transfers zero winding without assuming
 equality of parametrizations, and records the exact vertical/horizontal local carrier alignment.
+The fourth candidate facial cycle is the local band rectangle.  It and the exact union of all
+six edges are packaged in `FourPortSixEdgeFaces.lean`.  There, global exterior-side containment
+of an outside arc is reduced to endpoint-only incidence plus a single local exterior witness:
+the private part of an injective arc is connected, so it cannot change Jordan side without
+crossing the rectangle carrier.  No outer raw cycle is selected by this local datum.
 
 The raw argument now needs the corresponding planar face theorem for this four-vertex, six-edge
 graph.  The local band chart fixes the cyclic order of the three incident branches at every port;
