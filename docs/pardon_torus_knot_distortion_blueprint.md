@@ -332,43 +332,34 @@ nonempty path concatenations are embedded circles, distinct quotient cycles have
 and finite closed-arc isolation upgrades the exact carrier formulas to the required ambient local
 `V` germs.  Seam-free outer and cut circles are separately classified by their constant strict
 side sign.  The exact lower and upper finite truncated-sphere sections are therefore constructed
-unconditionally from the outer and cut cyclic-order packages.
+unconditionally from the outer and cut cyclic-order packages.  Applying those constructions
+separately at `d-ε` and `d+ε` and taking their disjoint sum gives the exact finite section of the
+honest separated two-sphere terminal family.  Its sphere family, open lower/upper parity cells,
+boundary equation, and circle intersection equation are canonical; only sphere-side filling
+disks and a stage-local event decoration remain before it is a finite surgery system.
 
-The critical all-inessential route now works directly with the three raw affected circles of one
-four-port move.  Their shared outside arcs form a theta graph, so no artificial tangential
-separation or pair-of-pants homology computation is needed.  Zero winding gives coherent plane
-lifts of all three theta edges: two reference-circle lifts are aligned at one endpoint by a deck
-translation, and covering-lift uniqueness forces agreement along their common edge and at the
-other endpoint.  The covering projection is injective on the compact lifted theta graph and on a
-slightly larger open neighborhood.
+The critical all-inessential route works directly with the three raw affected circles of one
+four-port move, but their union is not a theta graph.  In a split, the two post-resolution child
+circles are disjoint, while every pair of cycles in a theta graph shares an edge.  The honest raw
+union has four trivalent port vertices and six edges: two local vertical edges, two local
+horizontal edges, and two outside arcs.  Its cycle rank is three.  Consequently the tempting
+theta reduction, and the associated claim that one closed cycle disk is the union of the other
+two, cannot model the endpoint geometry.
 
-For a topological planar theta graph, one of its three two-edge Jordan cycles bounds the outer
-disk.  The invariant local hypothesis is not that a curved edge is literally a Euclidean line:
-away from finitely many exceptional vertices, one ambient homeomorphism must carry both incident
-circle-carrier germs to the same straight germ.  In the contradiction and child-face branches,
-the proof first establishes that the relevant open Jordan interiors are disjoint; only then does
-common straightening imply that their two closed disks fill a neighborhood.  Jordan separation
-identifies the selected outer disk with the union of the two bounded child-face closures.  Thus all
-three raw boundary cycles and any lifted label-change lens contained in those child faces lie in
-one canonical torus disk.  The outer cycle may belong to either the pre- or post-resolution, so
-the finite heterogeneous parity sequence permits a forward or reverse disk-sided transition at
-each move.  Once the raw outer circle is identified with an ordinary circle of the corresponding
-endpoint system, finite laminarity enlarges its canonical disk to a selected maximal disk
-automatically.
+The generic coherent-theta development remains useful independently: zero winding constructs
+coherent plane lifts, covering uniqueness aligns alternative lifted parametrizations by deck
+translations, and the topological theta theorem selects the outer cycle under invariant common
+straightening.  It is not used as a substitute for the four-port endpoint graph.  The raw
+four-port argument instead needs the corresponding planar face theorem for the four-vertex,
+six-edge graph.  That theorem must select an outer raw boundary cycle, show that the bounded
+faces and the lifted parity-change lens lie in its closed disk, and then project this containment
+to the torus.  The selected outer cycle may belong to either endpoint, so the validated
+heterogeneous transition still supplies the required forward-or-reverse disk-sided move.
 
-The coherent-lift adapter now derives injectivity of all three plane edges, their exact
-endpoint-only intersections, preconnected open edge interiors, and nonempty private arcs.  An
-exact raw theta path presentation identifies the three endpoint circles with the three two-edge
-cycles.  Zero winding then constructs the coherent lifts, and covering uniqueness proves that
-each canonical lifted Jordan carrier is a lattice translate of the corresponding raw canonical
-lift.  Since the covering projection is deck invariant, the selected planar outer face projects
-to the correct raw canonical torus disk without imposing literal equality between differently
-based plane lifts.
-
-Thus the remaining local inputs are sharply limited: construct the raw theta path presentation
-from the four global outside arcs, prove the invariant common-straightening condition (for
-example from compatible extendible-arc straightenings), and prove that the explicit quadratic
-parity-change lens lifts into the two bounded theta faces.  One must then assemble these
+Thus the remaining local inputs are sharply limited: construct the exact six-edge raw graph from
+the global outside arcs and four standard band arcs, prove its planar outer-face decomposition,
+and prove that the explicit quadratic parity-change lens lifts into its bounded faces.  One must
+then assemble these
 elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
 filling disks and transverse charging data for the essential branch, and identify the terminal
 lower/upper cells.  After those geometric attachments, the validated finite transition,
