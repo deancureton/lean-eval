@@ -192,7 +192,7 @@ private theorem exp_apply_eq_of_projection_eq
   · exact congrArg Prod.snd hprod
 
 /-- Two continuous plane lifts of the same torus path agree once they agree at the source. -/
-private theorem planeLift_eq_of_projection_eq
+theorem planePathLift_eq_of_projection_eq
     (p q : unitInterval → TorusCoveringPlane)
     (hp : Continuous p) (hq : Continuous q)
     (hprojection : ∀ t,
@@ -284,7 +284,7 @@ theorem projection_alignedSecondReferencePlanePath (t : unitInterval) :
 /-- Uniqueness of coordinate lifts aligns the complete reference edge, not only its source. -/
 theorem alignedSecondReferencePlanePath_eq (t : unitInterval) :
     Z.alignedSecondReferencePlanePath t = Z.referencePlanePath 0 t := by
-  have heq := planeLift_eq_of_projection_eq
+  have heq := planePathLift_eq_of_projection_eq
     Z.alignedSecondReferencePlanePath (Z.referencePlanePath 0)
     Z.alignedSecondReferencePlanePath.continuous
     (Z.referencePlanePath 0).continuous

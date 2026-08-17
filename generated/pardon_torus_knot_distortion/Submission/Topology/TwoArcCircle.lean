@@ -290,9 +290,31 @@ theorem range_addCircleMap (p : Path a b) (q : Path b a) :
 def circleHomeomorph : AddCircle (2 : ℝ) ≃ₜ Circle :=
   AddCircle.homeomorphCircle (by norm_num)
 
+/-- Standard-circle coordinate of a point on the first constituent path. -/
+def firstCircleCoordinate (t : unitInterval) : Circle :=
+  circleHomeomorph (firstCoordinate t)
+
+/-- Standard-circle coordinate of a point on the second constituent path. -/
+def secondCircleCoordinate (t : unitInterval) : Circle :=
+  circleHomeomorph (secondCoordinate t)
+
 /-- Parametrize the union of the two paths by the standard circle. -/
 def circleMap (p : Path a b) (q : Path b a) : Circle → X :=
   addCircleMap p q ∘ circleHomeomorph.symm
+
+@[simp] theorem circleMap_firstCircleCoordinate
+    (p : Path a b) (q : Path b a) (t : unitInterval) :
+    circleMap p q (firstCircleCoordinate t) = p t := by
+  rw [circleMap, Function.comp_apply, firstCircleCoordinate,
+    circleHomeomorph.symm_apply_apply]
+  exact addCircleMap_firstCoordinate p q t
+
+@[simp] theorem circleMap_secondCircleCoordinate
+    (p : Path a b) (q : Path b a) (t : unitInterval) :
+    circleMap p q (secondCircleCoordinate t) = q t := by
+  rw [circleMap, Function.comp_apply, secondCircleCoordinate,
+    circleHomeomorph.symm_apply_apply]
+  exact addCircleMap_secondCoordinate p q t
 
 theorem continuous_circleMap (p : Path a b) (q : Path b a) :
     Continuous (circleMap p q) :=

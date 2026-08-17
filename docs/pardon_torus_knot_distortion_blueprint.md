@@ -350,16 +350,26 @@ The generic coherent-theta development remains useful independently: zero windin
 coherent plane lifts, covering uniqueness aligns alternative lifted parametrizations by deck
 translations, and the topological theta theorem selects the outer cycle under invariant common
 straightening.  It is not used as a substitute for the four-port endpoint graph.  The raw
-four-port argument instead needs the corresponding planar face theorem for the four-vertex,
-six-edge graph.  That theorem must select an outer raw boundary cycle, show that the bounded
-faces and the lifted parity-change lens lie in its closed disk, and then project this containment
-to the torus.  The selected outer cycle may belong to either endpoint, so the validated
-heterogeneous transition still supplies the required forward-or-reverse disk-sided move.
+four-port graph is now packaged directly by `FourPortSixEdgeGraph.lean`.  Its central cycle shares
+exactly one outside arc with each child, while the two child carriers are disjoint.  The three
+cycle maps canonically produce `EmbeddedTorusIntersectionCircle`s.  When all three have zero
+winding, `FourPortSixEdgeCircleLiftAlignment.lean` deck-translates the two child plane lifts so
+that both shared outside arcs agree pointwise with the central lift.  The resulting planar Jordan
+circles have the exact central--child intersections and disjoint child carriers proved in
+`FourPortSixEdgePlaneCircles.lean`.
 
-Thus the remaining local inputs are sharply limited: construct the exact six-edge raw graph from
-the global outside arcs and four standard band arcs, prove its planar outer-face decomposition,
-and prove that the explicit quadratic parity-change lens lifts into its bounded faces.  One must
-then assemble these
+The raw argument now needs the corresponding planar face theorem for this four-vertex, six-edge
+graph.  The local band chart fixes the cyclic order of the three incident branches at every port;
+that rotation data must rule out the non-endpoint mixed cycles as the unbounded face.  The theorem
+must then select an outer raw boundary cycle, show that the bounded faces and the lifted
+parity-change lens lie in its closed disk, and project this containment to the torus.  The
+selected outer cycle may belong to either endpoint, so the validated heterogeneous transition
+still supplies the required forward-or-reverse disk-sided move.
+
+Thus the remaining local inputs are sharply limited: identify the abstract six-edge paths with
+the global outside arcs and four standard band arcs, prove their vertex-rotation/outer-face
+decomposition, and prove that the explicit quadratic parity-change lens lifts into the bounded
+faces.  One must then assemble these
 elementary moves into the separated rounded terminal sphere sequence, provide the sphere-side
 filling disks and transverse charging data for the essential branch, and identify the terminal
 lower/upper cells.  After those geometric attachments, the validated finite transition,
