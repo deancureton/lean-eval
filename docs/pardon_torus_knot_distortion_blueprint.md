@@ -411,9 +411,19 @@ forward or the reverse `FiniteElementaryDiskSideCover`; a canonical choice remov
 case bookkeeping.
 
 Thus the remaining local inputs are sharply limited to geometric constructions rather than a
-disk-side conclusion: establish the rectangle rotation side from the genuine transported-torus
-strip, lift the explicit quadratic parity-change lens into its bounded planar faces, and identify
-the selected raw graph circle with the corresponding pre- or post-stage circle.  One must then
+disk-side conclusion.  `FourPortSixEdgeBandRotation.lean` now proves unconditionally that the
+private portions of both global outside arcs avoid the genuine four-port band.  Indeed, each arc
+belongs to the pre-stage boundary; if a private point re-entered the band, exactness of the
+pre-stage local patch would put it on a vertical edge, contradicting the six-edge endpoint-only
+incidence theorem.  It follows that rectangle rotation needs only one honest chart statement:
+the projection of the lifted rectangle's closed bounded disk lies in the band.  Under precisely
+that containment the two private lifted outside arcs lie in the rectangle exterior, and the full
+`RectangleRotationData` is derived.  The tubular-chart constructor originally has a
+covering-plane sheet from which this containment should follow, but the current
+`GlobalBandTubularChartData` interface retains only its projected strip and erases that sheet.
+Thus the next local task is to retain or reconstruct this lifted-sheet containment, lift the
+explicit quadratic parity-change lens into the bounded planar faces, and identify the selected
+raw graph circle with the corresponding pre- or post-stage circle.  One must then
 assemble these elementary moves into the separated rounded terminal sphere sequence, provide the
 sphere-side filling disks and transverse charging data for the essential branch, and identify the
 terminal lower/upper cells.  After those geometric attachments, the validated finite transition,

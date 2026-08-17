@@ -479,6 +479,31 @@ theorem topOutside_private_side :
         simpa only [Set.pair_comm] using hxInter)
   simpa only [Set.pair_comm] using hside
 
+/-- One exterior witness on each private outside arc determines the full rectangle rotation.
+
+All endpoint incidence is already forced by the honest six-edge graph, so callers need only
+locate one private point of each outside arc on the unbounded side of the local rectangle. -/
+theorem rectangleRotationData_of_private_outside
+    (hbottom :
+      ((Set.range P.bottomOutside \ {P.leftBottom, P.rightBottom}) ∩
+        (P.localRectangleJordanCircle P.localRectangleData).outside).Nonempty)
+    (htop :
+      ((Set.range P.topOutside \ {P.leftTop, P.rightTop}) ∩
+        (P.localRectangleJordanCircle P.localRectangleData).outside).Nonempty) :
+    P.RectangleRotationData := by
+  let W : P.RectangleRotationWitnessData := {
+    rectangle := P.localRectangleData
+    bottomOutside_inter_rectangle := by
+      rw [P.carrier_localRectangleJordanCircle]
+      exact P.bottomOutside_inter_localRectangleCarrier
+    topOutside_inter_rectangle := by
+      rw [P.carrier_localRectangleJordanCircle]
+      exact P.topOutside_inter_localRectangleCarrier
+    bottomOutside_private_point := hbottom
+    topOutside_private_point := htop
+  }
+  exact W.toRectangleRotationData
+
 end FourPortSixEdgePathSystem
 
 open LeanEval.KnotTheory.PardonDistortion
