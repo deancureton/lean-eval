@@ -117,8 +117,9 @@ structure SuperellipsoidFiniteStageAxisResolutionData where
   stageSequence : FiniteRegularSphereSurgeryStageSequence Phi
   lower : Set (transportedTorus Phi)
   upper : Set (transportedTorus Phi)
-  initialInside_eq : (stageSequence.parityStage 0).inside = transportedTorusPart Phi
-    (orientedBox frame c r)
+  initialBody_subset : transportedTorusPart Phi
+    (superellipsoidBody frame c selection.outer.scale) ⊆
+      (stageSequence.parityStage 0).inside
   lower_subset : lower ⊆ transportedTorusPart Phi
     (superellipsoidBody frame c selection.outer.scale ∩
       {x | x.ofLp (frame 2) ≤ selection.cut.height})
@@ -144,6 +145,7 @@ theorem carries_lower_or_upper
     (D : SuperellipsoidFiniteStageAxisResolutionData
       (p := p) (q := q) (K := K) (Phi := Phi) (frame := frame) (c := c) (r := r)
       (WB := WB) (selection := selection))
+    (hr : 0 < r)
     (hcontra : 160 * (distortion K).toReal < ((Nat.min p q : ℕ) : ℝ)) :
     CarriesTransportedBasedLoopGenus Phi
         (superellipsoidBody frame c selection.outer.scale ∩
@@ -153,8 +155,13 @@ theorem carries_lower_or_upper
           {x | selection.cut.height ≤ x.ofLp (frame 2)}) := by
   have hparent : CarriesBasedLoopTorusGenus Phi
       (D.stageSequence.parityStage 0).inside := by
-    rw [D.initialInside_eq]
-    exact ⟨WB.toBasedLoopCarrierWitness⟩
+    have hbody : CarriesTransportedBasedLoopGenus Phi
+        (superellipsoidBody frame c selection.outer.scale) :=
+      CarriesTransportedBasedLoopGenus.mono
+      (selection.originalBox_subset_outerBody hr)
+      (⟨WB.toBasedLoopCarrierWitness⟩ : CarriesTransportedBasedLoopGenus Phi
+        (orientedBox frame c r))
+    exact CarriesBasedLoopTorusGenus.mono D.initialBody_subset hbody
   rcases D.stageSequence.carries_terminalChild_of_axisCharging
       p q K Phi frame c selection D.lower D.upper
       D.axisCircle D.chargingTransport D.inessentialResolution hparent hcontra with
@@ -200,7 +207,7 @@ theorem pardonTarget_of_superellipsoidFiniteStageAxisResolutions
   obtain ⟨S⟩ := exists_superellipsoidDoubleBubbleSelection_unconditional
     K Phi frame c hr hfinite WB.toSmoothLoopCarrierWitness
   obtain ⟨D⟩ := hresolved frame c r hr hcarrier WB S
-  have hsides := D.carries_lower_or_upper hcontra
+  have hsides := D.carries_lower_or_upper hr hcontra
   have hRle : S.outer.scale ≤ (1 + shellEpsilon) * r := by
     have hfactor : (superellipsoidOuterFactor : ℝ) = 1 + shellEpsilon := by
       norm_num [superellipsoidOuterFactor, shellEpsilon]

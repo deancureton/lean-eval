@@ -84,7 +84,8 @@ theorem closure_inside_translate (J : JordanCircle) (v : Plane) :
     closure (J.translate v).inside = (fun x ↦ x + v) '' closure J.inside := by
   exact (J.image_closure_inside_imageHomeomorph (Homeomorph.addRight v)).symm
 
-private theorem carrier_subset_inside_or_outside_of_disjoint
+/-- A connected Jordan carrier disjoint from another Jordan carrier lies wholly on one side. -/
+theorem carrier_subset_inside_or_outside_of_disjoint
     (J K : JordanCircle) (hdisjoint : Disjoint J.carrier K.carrier) :
     K.carrier ⊆ J.inside ∨ K.carrier ⊆ J.outside := by
   have hcomplement : K.carrier ⊆ J.carrierᶜ := by
@@ -96,7 +97,8 @@ private theorem carrier_subset_inside_or_outside_of_disjoint
   exact K.isConnected_carrier.isPreconnected.subset_or_subset
     J.inside_isOpen J.outside_isOpen J.inside_disjoint_outside hsides
 
-private theorem closure_inside_subset_inside_of_carrier_subset_inside
+/-- If a Jordan carrier lies strictly inside another, then its whole closed disk does too. -/
+theorem closure_inside_subset_inside_of_carrier_subset_inside
     (J K : JordanCircle) (hcarrier : K.carrier ⊆ J.inside) :
     closure K.inside ⊆ J.inside := by
   have hinterior : K.inside ⊆ J.inside :=

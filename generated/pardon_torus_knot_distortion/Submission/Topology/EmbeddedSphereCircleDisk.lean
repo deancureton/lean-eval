@@ -119,6 +119,28 @@ theorem isEmbedding_planeDisk (D : EmbeddedSphereCirclePoleData S C) :
     D.regionalExtension.insideHomeomorph.symm.isEmbedding.comp
       EmbeddedTorusIntersectionCircle.complexDiskPlaneBall.isEmbedding
 
+/-- The planar filling has exactly the closed bounded Jordan region as its range. -/
+theorem range_planeDisk (D : EmbeddedSphereCirclePoleData S C) :
+    Set.range D.planeDisk = closure D.planeJordanCircle.inside := by
+  apply Set.Subset.antisymm
+  · rintro _ ⟨z, rfl⟩
+    exact (D.regionalExtension.insideHomeomorph.symm
+      (EmbeddedTorusIntersectionCircle.complexDiskPlaneBall z)).property
+  · intro x hx
+    let xb : closure D.planeJordanCircle.inside := ⟨x, hx⟩
+    let y : closedBall (0 : JordanCurve.Arcs.Plane) 1 :=
+      D.regionalExtension.insideHomeomorph xb
+    let z : ClosedUnitDisk :=
+      EmbeddedTorusIntersectionCircle.complexDiskPlaneBall.symm y
+    refine ⟨z, ?_⟩
+    change (D.regionalExtension.insideHomeomorph.symm
+      (EmbeddedTorusIntersectionCircle.complexDiskPlaneBall z) :
+        JordanCurve.Arcs.Plane) = x
+    rw [show EmbeddedTorusIntersectionCircle.complexDiskPlaneBall z = y by
+      exact EmbeddedTorusIntersectionCircle.complexDiskPlaneBall.apply_symm_apply y]
+    exact congrArg Subtype.val <|
+      D.regionalExtension.insideHomeomorph.symm_apply_apply xb
+
 theorem planeDisk_boundary (D : EmbeddedSphereCirclePoleData S C) (t : ℝ) :
     D.planeDisk (unitDiskBoundary t) = D.planeCircle (Circle.exp t) := by
   let E := D.regionalExtension
