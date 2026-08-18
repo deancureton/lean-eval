@@ -1,4 +1,5 @@
 import Submission.Topology.SuperellipsoidCanonicalFiniteStageIntegration
+import Submission.Topology.FiniteSphereCircleSystem
 import Submission.Topology.SuperellipsoidSeparatedTerminalSection
 import Submission.Topology.SphereCircleProper
 
@@ -244,6 +245,34 @@ noncomputable def canonicalSeparatedTerminalSphereSurgerySystem :
   (canonicalSeparatedTerminalComponentDecoration lowerOuterOrder lowerCutOrder
     upperOuterOrder upperCutOrder hR hε hlower hupper)
     |>.toFiniteSphereSurgeryIntersectionSystem
+
+/-- Number of circles in the canonical separated terminal stage. -/
+abbrev canonicalSeparatedTerminalCircleCount :=
+  Fintype.card (SeparatedTerminalComponentIndex lowerOuterOrder lowerCutOrder
+    upperOuterOrder upperCutOrder)
+
+/-- The canonical terminal system reindexed by `Fin` for finite stage sequences. -/
+noncomputable def canonicalSeparatedTerminalFinSphereSurgerySystem :
+    FiniteSphereSurgeryIntersectionSystem Phi
+      (Fin (canonicalSeparatedTerminalCircleCount lowerOuterOrder lowerCutOrder
+        upperOuterOrder upperCutOrder)) :=
+  (canonicalSeparatedTerminalSphereSurgerySystem lowerOuterOrder lowerCutOrder
+    upperOuterOrder upperCutOrder hR hε hlower hupper).reindex
+      (Fintype.equivFin (SeparatedTerminalComponentIndex lowerOuterOrder lowerCutOrder
+        upperOuterOrder upperCutOrder)).symm
+
+@[simp] theorem canonicalSeparatedTerminalFinSphereSurgerySystem_sphereFamily :
+    (canonicalSeparatedTerminalFinSphereSurgerySystem lowerOuterOrder lowerCutOrder
+      upperOuterOrder upperCutOrder hR hε hlower hupper).sphereFamily =
+      (canonicalSeparatedTerminalParityStage (Phi := Phi) hR hε hlower hupper).sphereFamily :=
+  rfl
+
+@[simp] theorem canonicalSeparatedTerminalFinSphereSurgerySystem_insideCell :
+    (canonicalSeparatedTerminalFinSphereSurgerySystem lowerOuterOrder lowerCutOrder
+      upperOuterOrder upperCutOrder hR hε hlower hupper).insideCell =
+      (canonicalSeparatedTerminalRoundingData hR hε hlower hupper).lowerInside ∪
+        (canonicalSeparatedTerminalRoundingData hR hε hlower hupper).upperInside :=
+  rfl
 
 end TruncatedSphereAlternatingCycles
 end FiniteSuperellipsoidBarrierGraph

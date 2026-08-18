@@ -213,6 +213,79 @@ theorem nonempty_embeddedSphereCirclePoleData
 
 universe u
 
+private theorem IsPreconnected.subset_or_subset_closed
+    {X : Type*} [TopologicalSpace X] {s u v : Set X}
+    (hs : IsPreconnected s) (hu : IsClosed u) (hv : IsClosed v)
+    (huv : Disjoint u v) (hsub : s ⊆ u ∪ v) :
+    s ⊆ u ∨ s ⊆ v := by
+  by_contra h
+  have hsu : ¬ s ⊆ u := fun hsu ↦ h (Or.inl hsu)
+  have hsv : ¬ s ⊆ v := fun hsv ↦ h (Or.inr hsv)
+  obtain ⟨x, hxs, hxu⟩ := Set.not_subset.mp hsu
+  obtain ⟨y, hys, hyv⟩ := Set.not_subset.mp hsv
+  have hxv : x ∈ v := (hsub hxs).resolve_left hxu
+  have hyu : y ∈ u := (hsub hys).resolve_right hyv
+  obtain ⟨z, _, hzu, hzv⟩ :=
+    isPreconnected_closed_iff.mp hs u v hu hv hsub
+      ⟨y, hys, hyu⟩ ⟨x, hxs, hxv⟩
+  exact Set.disjoint_left.mp huv hzu hzv
+
+private theorem IsConnected.subset_one_of_finite_disjoint_closed
+    {X κ : Type*} [TopologicalSpace X] [DecidableEq κ]
+    {s : Set X} (hs : IsConnected s) (I : Finset κ) (u : κ → Set X)
+    (hclosed : ∀ i ∈ I, IsClosed (u i))
+    (hdisjoint : ∀ {i}, i ∈ I → ∀ {j}, j ∈ I → i ≠ j →
+      Disjoint (u i) (u j))
+    (hsub : s ⊆ ⋃ i ∈ I, u i) :
+    ∃ i ∈ I, s ⊆ u i := by
+  induction I using Finset.induction_on with
+  | empty =>
+      obtain ⟨x, hx⟩ := hs.nonempty
+      simpa using hsub hx
+  | @insert i I hi ih =>
+      let rest : Set X := ⋃ j ∈ I, u j
+      have hrestClosed : IsClosed rest :=
+        isClosed_biUnion_finset fun j hj ↦ hclosed j (Finset.mem_insert_of_mem hj)
+      have hiClosed : IsClosed (u i) := hclosed i (Finset.mem_insert_self i I)
+      have hiRest : Disjoint (u i) rest := by
+        rw [Set.disjoint_left]
+        intro x hxi hxrest
+        simp only [rest, Set.mem_iUnion] at hxrest
+        obtain ⟨j, hj, hxj⟩ := hxrest
+        exact Set.disjoint_left.mp
+          (hdisjoint (Finset.mem_insert_self i I)
+            (Finset.mem_insert_of_mem hj) (Ne.symm <| fun hji ↦ hi (hji ▸ hj))) hxi hxj
+      have hcover : s ⊆ u i ∪ rest := by
+        simpa only [Finset.set_biUnion_insert] using hsub
+      rcases IsPreconnected.subset_or_subset_closed hs.isPreconnected
+          hiClosed hrestClosed hiRest hcover with hsi | hsrest
+      · exact ⟨i, Finset.mem_insert_self i I, hsi⟩
+      · obtain ⟨j, hj, hsj⟩ := ih
+          (fun j hj ↦ hclosed j (Finset.mem_insert_of_mem hj))
+          (fun {j} hj {k} hk hjk ↦ hdisjoint
+            (Finset.mem_insert_of_mem hj) (Finset.mem_insert_of_mem hk) hjk)
+          hsrest
+        exact ⟨j, Finset.mem_insert_of_mem hj, hsj⟩
+
+namespace FiniteEmbeddedTopologicalSphereFamilyInR3
+
+/-- A connected nonempty subset of a finite disjoint sphere family lies on one component. -/
+theorem exists_component_of_isConnected
+    (F : FiniteEmbeddedTopologicalSphereFamilyInR3) {s : Set R3}
+    (hs : IsConnected s) (hsub : s ⊆ F.carrier) :
+    ∃ i : Fin F.count, s ⊆ (F.sphere i).carrier := by
+  classical
+  have hsub' : s ⊆ ⋃ i ∈ (Finset.univ : Finset (Fin F.count)),
+      (F.sphere i).carrier := by
+    simpa [FiniteEmbeddedTopologicalSphereFamilyInR3.carrier] using hsub
+  obtain ⟨i, _, hi⟩ := IsConnected.subset_one_of_finite_disjoint_closed
+    hs Finset.univ (fun i ↦ (F.sphere i).carrier)
+    (fun i _ ↦ (F.sphere i).isClosed_carrier)
+    (fun {i} _ {j} _ hij ↦ F.pairwise_disjoint hij) hsub'
+  exact ⟨i, hi⟩
+
+end FiniteEmbeddedTopologicalSphereFamilyInR3
+
 /-- Component assignments for circles on a finite family of embedded spheres. -/
 structure FiniteEmbeddedSphereCircleComponentData
     {ι : Type u} (F : FiniteEmbeddedTopologicalSphereFamilyInR3)
