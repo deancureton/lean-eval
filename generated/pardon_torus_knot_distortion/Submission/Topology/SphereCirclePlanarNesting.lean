@@ -319,6 +319,46 @@ theorem closedPlaneDisks_disjoint_or_nested
   · exact Or.inr (Or.inl <| h.trans subset_closure)
   · exact Or.inr (Or.inr <| h.trans subset_closure)
 
+/-- The strict form of planar nesting: distinct disjoint circle disks are disjoint, or one
+closed disk lies in the other's open inside. -/
+theorem closedPlaneDisks_disjoint_or_strictly_nested
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    {i j : ι} (hij : i ≠ j) :
+    Disjoint (D.closedPlaneDisk i) (D.closedPlaneDisk j) ∨
+      D.closedPlaneDisk i ⊆ (D.circleData j).planeJordanCircle.inside ∨
+      D.closedPlaneDisk j ⊆ (D.circleData i).planeJordanCircle.inside := by
+  let J := (D.circleData i).planeJordanCircle
+  let K := (D.circleData j).planeJordanCircle
+  have hdisjoint : Disjoint J.carrier K.carrier :=
+    D.planeJordanCircles_disjoint (hpairwise hij)
+  exact J.disjoint_or_nested_closure_inside K hdisjoint
+
+/-- If another circle carrier reaches the chosen circle's open inside, its whole closed disk is
+strictly inside the chosen circle. -/
+theorem closedPlaneDisk_subset_inside_of_carrier_meets_inside
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    {outer j : ι} (hjo : j ≠ outer) {x : JordanCurve.Arcs.Plane}
+    (hxOuter : x ∈ (D.circleData outer).planeJordanCircle.inside)
+    (hxCarrier : x ∈ (D.circleData j).planeJordanCircle.carrier) :
+    D.closedPlaneDisk j ⊆ (D.circleData outer).planeJordanCircle.inside := by
+  have hxOuterDisk : x ∈ D.closedPlaneDisk outer := subset_closure hxOuter
+  have hxJDisk : x ∈ D.closedPlaneDisk j := by
+    rw [show D.closedPlaneDisk j =
+      closure (D.circleData j).planeJordanCircle.inside by rfl,
+      (D.circleData j).planeJordanCircle.closure_inside]
+    exact Or.inr hxCarrier
+  rcases D.closedPlaneDisks_disjoint_or_strictly_nested hpairwise hjo.symm with
+      hdisjoint | houterInside | hjInside
+  · exact False.elim <| Set.disjoint_left.mp hdisjoint hxOuterDisk hxJDisk
+  · exact False.elim <|
+      (D.circleData j).planeJordanCircle.inside_subset_compl
+        (houterInside hxOuterDisk) hxCarrier
+  · exact hjInside
+
 /-- Distinct closed disks lying strictly inside one selected Jordan circle. -/
 def innerClosedPlaneDiskFinset
     (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
@@ -472,6 +512,21 @@ def maximalInnerOpenUnion
   ⋃ i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer,
     (D.circleData i).planeJordanCircle.inside
 
+/-- The union of the selected maximal closed inner disks. -/
+def maximalInnerClosedUnion
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    Set JordanCurve.Arcs.Plane :=
+  ⋃ i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer,
+    D.closedPlaneDisk i
+
+/-- The selected maximal closed inner disks other than one specified disk. -/
+def maximalInnerClosedUnionExcept
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer i : ι) :
+    Set JordanCurve.Arcs.Plane := by
+  classical
+  exact ⋃ j ∈ (D.inclusionMaximalInnerClosedPlaneDiskIndices outer).filter (fun j ↦ j ≠ i),
+    D.closedPlaneDisk j
+
 theorem isOpen_maximalInnerOpenUnion
     (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
     IsOpen (D.maximalInnerOpenUnion outer) := by
@@ -481,11 +536,58 @@ theorem isOpen_maximalInnerOpenUnion
   intro _
   exact (D.circleData i).planeJordanCircle.inside_isOpen
 
+theorem isClosed_maximalInnerClosedUnion
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    IsClosed (D.maximalInnerClosedUnion outer) :=
+  isClosed_biUnion_finset fun _ _ ↦ isClosed_closure
+
+theorem isClosed_maximalInnerClosedUnionExcept
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer i : ι) :
+    IsClosed (D.maximalInnerClosedUnionExcept outer i) := by
+  classical
+  exact isClosed_biUnion_finset fun _ _ ↦ isClosed_closure
+
+/-- The open core between the outer carrier and all selected maximal inner closed disks. -/
+def outerDiskOpenCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    Set JordanCurve.Arcs.Plane :=
+  (D.circleData outer).planeJordanCircle.inside \ D.maximalInnerClosedUnion outer
+
+theorem isOpen_outerDiskOpenCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    IsOpen (D.outerDiskOpenCore outer) :=
+  (D.circleData outer).planeJordanCircle.inside_isOpen.sdiff
+    (D.isClosed_maximalInnerClosedUnion outer)
+
 /-- The closed part of the outer disk left after deleting all selected inner open disks. -/
 def outerDiskRemainder
     (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
     Set JordanCurve.Arcs.Plane :=
   D.closedPlaneDisk outer \ D.maximalInnerOpenUnion outer
+
+theorem outerDiskOpenCore_subset_outerDiskRemainder
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    D.outerDiskOpenCore outer ⊆ D.outerDiskRemainder outer := by
+  rintro x ⟨hxOuter, hxClosed⟩
+  refine ⟨subset_closure hxOuter, ?_⟩
+  intro hxOpen
+  obtain ⟨i, hxOpen⟩ := Set.mem_iUnion.mp hxOpen
+  obtain ⟨hi, hxi⟩ := Set.mem_iUnion.mp hxOpen
+  apply hxClosed
+  exact Set.mem_iUnion.mpr ⟨i,
+    Set.mem_iUnion.mpr ⟨hi, subset_closure hxi⟩⟩
+
+/-- The canonical open core, regarded as a subset of the closed punctured remainder. -/
+def outerDiskRemainderCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    Set (D.outerDiskRemainder outer) :=
+  ((↑) : D.outerDiskRemainder outer → JordanCurve.Arcs.Plane) ⁻¹'
+    D.outerDiskOpenCore outer
+
+theorem isOpen_outerDiskRemainderCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    IsOpen (D.outerDiskRemainderCore outer) :=
+  (D.isOpen_outerDiskOpenCore outer).preimage continuous_subtype_val
 
 theorem isClosed_outerDiskRemainder
     (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
@@ -551,6 +653,255 @@ theorem outerDiskRemainder_inter_maximalInnerClosedPlaneDisk
             hpairwise outer hi hj (Ne.symm hji)
         exact Set.disjoint_left.mp hdisjoint hxDisk (subset_closure hxInside)
     exact ⟨⟨hxOuter, hxNotInner⟩, hxDisk⟩
+
+/-- The closed punctured remainder consists exactly of its open core, the outer boundary,
+and the boundary circles of the selected maximal inner disks. -/
+theorem outerDiskRemainder_eq_openCore_union_carriers
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) :
+    D.outerDiskRemainder outer =
+      D.outerDiskOpenCore outer ∪
+        (D.circleData outer).planeJordanCircle.carrier ∪
+          ⋃ i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer,
+            (D.circleData i).planeJordanCircle.carrier := by
+  apply Set.Subset.antisymm
+  · intro x hx
+    have hxOuter : x ∈ (D.circleData outer).planeJordanCircle.inside ∨
+        x ∈ (D.circleData outer).planeJordanCircle.carrier := by
+      have hxOuterDisk := hx.1
+      rw [show D.closedPlaneDisk outer =
+        closure (D.circleData outer).planeJordanCircle.inside by rfl,
+        (D.circleData outer).planeJordanCircle.closure_inside] at hxOuterDisk
+      exact hxOuterDisk
+    rcases hxOuter with hxInside | hxCarrier
+    · by_cases hxClosed : x ∈ D.maximalInnerClosedUnion outer
+      · obtain ⟨i, hxClosed⟩ := Set.mem_iUnion.mp hxClosed
+        obtain ⟨hi, hxi⟩ := Set.mem_iUnion.mp hxClosed
+        have hxiCases : x ∈ (D.circleData i).planeJordanCircle.inside ∨
+            x ∈ (D.circleData i).planeJordanCircle.carrier := by
+          rw [show D.closedPlaneDisk i =
+            closure (D.circleData i).planeJordanCircle.inside by rfl,
+            (D.circleData i).planeJordanCircle.closure_inside] at hxi
+          exact hxi
+        rcases hxiCases with hxiInside | hxiCarrier
+        · exact False.elim <| hx.2 <| Set.mem_iUnion.mpr ⟨i,
+            Set.mem_iUnion.mpr ⟨hi, hxiInside⟩⟩
+        · exact Or.inr <| Set.mem_iUnion.mpr ⟨i,
+            Set.mem_iUnion.mpr ⟨hi, hxiCarrier⟩⟩
+      · exact Or.inl <| Or.inl ⟨hxInside, hxClosed⟩
+    · exact Or.inl <| Or.inr hxCarrier
+  · rintro x ((hxCore | hxOuterCarrier) | hxInnerCarrier)
+    · exact D.outerDiskOpenCore_subset_outerDiskRemainder outer hxCore
+    · refine ⟨?_, ?_⟩
+      · rw [show D.closedPlaneDisk outer =
+          closure (D.circleData outer).planeJordanCircle.inside by rfl,
+          (D.circleData outer).planeJordanCircle.closure_inside]
+        exact Or.inr hxOuterCarrier
+      · intro hxInner
+        obtain ⟨i, hxInner⟩ := Set.mem_iUnion.mp hxInner
+        obtain ⟨hi, hxiInside⟩ := Set.mem_iUnion.mp hxInner
+        have hxiOuterInside :
+            x ∈ (D.circleData outer).planeJordanCircle.inside :=
+          D.inclusionMaximalInnerClosedPlaneDisk_inside outer hi
+            (subset_closure hxiInside)
+        exact (D.circleData outer).planeJordanCircle.inside_subset_compl
+          hxiOuterInside hxOuterCarrier
+    · obtain ⟨i, hxInnerCarrier⟩ := Set.mem_iUnion.mp hxInnerCarrier
+      obtain ⟨hi, hxiCarrier⟩ := Set.mem_iUnion.mp hxInnerCarrier
+      have hxi : x ∈ D.outerDiskRemainder outer ∩ D.closedPlaneDisk i := by
+        rw [D.outerDiskRemainder_inter_maximalInnerClosedPlaneDisk
+          hpairwise outer hi]
+        exact hxiCarrier
+      exact hxi.1
+
+/-- The outer boundary is approached from the canonical open core. -/
+theorem outerCarrier_subset_closure_outerDiskOpenCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (outer : ι) :
+    (D.circleData outer).planeJordanCircle.carrier ⊆
+      closure (D.outerDiskOpenCore outer) := by
+  intro x hxCarrier
+  have hxClosure : x ∈ closure (D.circleData outer).planeJordanCircle.inside := by
+    rw [(D.circleData outer).planeJordanCircle.closure_inside]
+    exact Or.inr hxCarrier
+  have hxNotClosed : x ∉ D.maximalInnerClosedUnion outer := by
+    intro hxClosed
+    obtain ⟨i, hxClosed⟩ := Set.mem_iUnion.mp hxClosed
+    obtain ⟨hi, hxi⟩ := Set.mem_iUnion.mp hxClosed
+    have hxInside : x ∈ (D.circleData outer).planeJordanCircle.inside :=
+      D.inclusionMaximalInnerClosedPlaneDisk_inside outer hi hxi
+    exact (D.circleData outer).planeJordanCircle.inside_subset_compl
+      hxInside hxCarrier
+  have hxInter : x ∈ closure
+      ((D.circleData outer).planeJordanCircle.inside ∩
+        (D.maximalInnerClosedUnion outer)ᶜ) :=
+    (D.isClosed_maximalInnerClosedUnion outer).isOpen_compl.closure_inter
+      ⟨hxClosure, hxNotClosed⟩
+  simpa only [outerDiskOpenCore, sdiff_eq] using hxInter
+
+/-- Every selected inner boundary is approached from the canonical open core. -/
+theorem innerCarrier_subset_closure_outerDiskOpenCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) {i : ι}
+    (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer) :
+    (D.circleData i).planeJordanCircle.carrier ⊆
+      closure (D.outerDiskOpenCore outer) := by
+  classical
+  let J := (D.circleData i).planeJordanCircle
+  intro x hxCarrier
+  have hxDisk : x ∈ D.closedPlaneDisk i := by
+    rw [show D.closedPlaneDisk i = closure J.inside by rfl, J.closure_inside]
+    exact Or.inr hxCarrier
+  have hxOuter : x ∈ (D.circleData outer).planeJordanCircle.inside :=
+    D.inclusionMaximalInnerClosedPlaneDisk_inside outer hi hxDisk
+  have hxNotOther : x ∉ D.maximalInnerClosedUnionExcept outer i := by
+    intro hxOther
+    obtain ⟨j, hxOther⟩ := Set.mem_iUnion.mp hxOther
+    obtain ⟨hj, hxj⟩ := Set.mem_iUnion.mp hxOther
+    have hjSelected : j ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer :=
+      (Finset.mem_filter.mp hj).1
+    have hji : j ≠ i := (Finset.mem_filter.mp hj).2
+    have hdisjoint :=
+      D.inclusionMaximalInnerClosedPlaneDiskIndices_pairwise_disjoint
+        hpairwise outer hi hjSelected hji.symm
+    exact Set.disjoint_left.mp hdisjoint hxDisk hxj
+  have hxClosureOutside : x ∈ closure J.outside := by
+    rw [J.closure_outside]
+    exact Or.inr hxCarrier
+  have hopen : IsOpen
+      ((D.circleData outer).planeJordanCircle.inside ∩
+        (D.maximalInnerClosedUnionExcept outer i)ᶜ) :=
+    (D.circleData outer).planeJordanCircle.inside_isOpen.inter
+      (D.isClosed_maximalInnerClosedUnionExcept outer i).isOpen_compl
+  have hxLocal : x ∈ closure
+      (J.outside ∩ ((D.circleData outer).planeJordanCircle.inside ∩
+        (D.maximalInnerClosedUnionExcept outer i)ᶜ)) :=
+    hopen.closure_inter ⟨hxClosureOutside, hxOuter, hxNotOther⟩
+  apply closure_mono ?_ hxLocal
+  rintro y ⟨hyOutside, hyOuter, hyNotOther⟩
+  refine ⟨hyOuter, ?_⟩
+  intro hyClosed
+  obtain ⟨j, hyClosed⟩ := Set.mem_iUnion.mp hyClosed
+  obtain ⟨hj, hyj⟩ := Set.mem_iUnion.mp hyClosed
+  by_cases hji : j = i
+  · subst j
+    rw [show D.closedPlaneDisk i = closure J.inside by rfl, J.closure_inside] at hyj
+    rcases hyj with hyInside | hyCarrier
+    · exact Set.disjoint_left.mp J.inside_disjoint_outside hyInside hyOutside
+    · exact J.outside_subset_compl hyOutside hyCarrier
+  · apply hyNotOther
+    exact Set.mem_iUnion.mpr ⟨j, Set.mem_iUnion.mpr ⟨
+      Finset.mem_filter.mpr ⟨hj, hji⟩, hyj⟩⟩
+
+/-- The canonical open core is dense in the closed punctured remainder. -/
+theorem dense_outerDiskRemainderCore
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) :
+    Dense (D.outerDiskRemainderCore outer) := by
+  rw [Subtype.dense_iff]
+  have himage : ((↑) '' D.outerDiskRemainderCore outer) =
+      D.outerDiskOpenCore outer := by
+    apply Set.Subset.antisymm
+    · rintro _ ⟨x, hx, rfl⟩
+      exact hx
+    · intro x hx
+      exact ⟨⟨x, D.outerDiskOpenCore_subset_outerDiskRemainder outer hx⟩, hx, rfl⟩
+  rw [himage]
+  intro x hx
+  rw [D.outerDiskRemainder_eq_openCore_union_carriers hpairwise outer] at hx
+  rcases hx with (hxCore | hxOuter) | hxInner
+  · exact subset_closure hxCore
+  · exact D.outerCarrier_subset_closure_outerDiskOpenCore outer hxOuter
+  · obtain ⟨i, hxInner⟩ := Set.mem_iUnion.mp hxInner
+    obtain ⟨hi, hxi⟩ := Set.mem_iUnion.mp hxInner
+    exact D.innerCarrier_subset_closure_outerDiskOpenCore hpairwise outer hi hxi
+
+/-! ## The ambient sphere map on the punctured outer disk -/
+
+/-- In a common stereographic chart, mapping an inner circle point back through the outer
+closed disk recovers the original ambient circle point. -/
+theorem planarDiskAmbientMap_circleData_planeCircle
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (outer i : ι) (hi : D.closedPlaneDisk i ⊆ D.closedPlaneDisk outer)
+    (z : Circle) :
+    (D.circleData outer).planarDiskAmbientMap
+        ⟨(D.circleData i).planeCircle z,
+          hi ((D.circleData i).planeCirclePoint z).property⟩ =
+      (circle i).circle z := by
+  change S.parametrization
+    ((stereographic' 2 D.pole).symm
+      ((stereographic' 2 D.pole) ((D.circleData i).sphereCircle z))) =
+    (circle i).circle z
+  rw [(stereographic' 2 D.pole).left_inv
+    ((D.circleData i).sphereCircle_mem_stereographicSource z)]
+  exact (D.circleData i).sphere_parametrization_sphereCircle z
+
+/-- The ambient sphere map restricted to the closed punctured outer planar disk. -/
+def outerDiskRemainderAmbientMap
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    D.outerDiskRemainder outer → R3 :=
+  fun x ↦ (D.circleData outer).planarDiskAmbientMap ⟨x, x.property.1⟩
+
+theorem continuous_outerDiskRemainderAmbientMap
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle) (outer : ι) :
+    Continuous (D.outerDiskRemainderAmbientMap outer) := by
+  apply (D.circleData outer).continuous_planarDiskAmbientMap.comp
+  exact continuous_subtype_val.subtype_mk fun x ↦ x.property.1
+
+/-- A selected inner circle point, canonically regarded as a point of the punctured outer
+remainder. -/
+def innerCircleRemainderPoint
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) {i : ι}
+    (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer)
+    (z : Circle) : D.outerDiskRemainder outer :=
+  ⟨(D.circleData i).planeCircle z, by
+    have hcarrier : (D.circleData i).planeCircle z ∈
+        (D.circleData i).planeJordanCircle.carrier := by
+      rw [(D.circleData i).carrier_planeJordanCircle]
+      exact ⟨z, rfl⟩
+    have hintersection : (D.circleData i).planeCircle z ∈
+        D.outerDiskRemainder outer ∩ D.closedPlaneDisk i := by
+      rw [D.outerDiskRemainder_inter_maximalInnerClosedPlaneDisk hpairwise outer hi]
+      exact hcarrier
+    exact hintersection.1⟩
+
+@[simp]
+theorem coe_innerCircleRemainderPoint
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) {i : ι}
+    (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer)
+    (z : Circle) :
+    (D.innerCircleRemainderPoint hpairwise outer hi z : JordanCurve.Arcs.Plane) =
+      (D.circleData i).planeCircle z :=
+  rfl
+
+/-- The punctured outer-disk ambient map has the expected value on every selected inner
+boundary circle. -/
+@[simp]
+theorem outerDiskRemainderAmbientMap_innerCircleRemainderPoint
+    (D : FiniteEmbeddedSphereCircleCommonPoleData S circle)
+    (hpairwise : Pairwise fun i j ↦
+      Disjoint (Set.range (circle i).circle) (Set.range (circle j).circle))
+    (outer : ι) {i : ι}
+    (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer)
+    (z : Circle) :
+    D.outerDiskRemainderAmbientMap outer
+        (D.innerCircleRemainderPoint hpairwise outer hi z) =
+      (circle i).circle z := by
+  apply D.planarDiskAmbientMap_circleData_planeCircle outer i
+  exact fun x hx ↦ subset_closure
+    (D.inclusionMaximalInnerClosedPlaneDisk_inside outer hi hx)
 
 end FiniteEmbeddedSphereCircleCommonPoleData
 

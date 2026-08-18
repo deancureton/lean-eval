@@ -141,6 +141,41 @@ theorem range_planeDisk (D : EmbeddedSphereCirclePoleData S C) :
     exact congrArg Subtype.val <|
       D.regionalExtension.insideHomeomorph.symm_apply_apply xb
 
+/-- The Schoenflies disk parametrization as a homeomorphism onto the exact closed planar
+Jordan disk. -/
+def planeDiskHomeomorph (D : EmbeddedSphereCirclePoleData S C) :
+    ClosedUnitDisk ≃ₜ closure D.planeJordanCircle.inside :=
+  D.isEmbedding_planeDisk.toHomeomorph.trans (Homeomorph.setCongr D.range_planeDisk)
+
+@[simp]
+theorem coe_planeDiskHomeomorph
+    (D : EmbeddedSphereCirclePoleData S C) (z : ClosedUnitDisk) :
+    (D.planeDiskHomeomorph z : JordanCurve.Arcs.Plane) = D.planeDisk z :=
+  rfl
+
+/-- Reparameterize a map on the standard closed disk onto the corresponding closed planar
+Jordan disk. -/
+def planarizedDiskMap
+    (D : EmbeddedSphereCirclePoleData S C) {Y : Type*}
+    (f : ClosedUnitDisk → Y) : closure D.planeJordanCircle.inside → Y :=
+  f ∘ D.planeDiskHomeomorph.symm
+
+theorem continuous_planarizedDiskMap
+    (D : EmbeddedSphereCirclePoleData S C) {Y : Type*} [TopologicalSpace Y]
+    {f : ClosedUnitDisk → Y} (hf : Continuous f) :
+    Continuous (D.planarizedDiskMap f) :=
+  hf.comp D.planeDiskHomeomorph.symm.continuous
+
+@[simp]
+theorem planarizedDiskMap_planeDisk
+    (D : EmbeddedSphereCirclePoleData S C) {Y : Type*}
+    (f : ClosedUnitDisk → Y) (z : ClosedUnitDisk) :
+    D.planarizedDiskMap f
+      ⟨D.planeDisk z, D.range_planeDisk ▸ Set.mem_range_self z⟩ = f z := by
+  change f (D.planeDiskHomeomorph.symm
+    (D.planeDiskHomeomorph z)) = f z
+  rw [D.planeDiskHomeomorph.symm_apply_apply]
+
 theorem planeDisk_boundary (D : EmbeddedSphereCirclePoleData S C) (t : ℝ) :
     D.planeDisk (unitDiskBoundary t) = D.planeCircle (Circle.exp t) := by
   let E := D.regionalExtension
@@ -159,6 +194,35 @@ theorem planeDisk_boundary (D : EmbeddedSphereCirclePoleData S C) (t : ℝ) :
   rw [show JordanCurve.Arcs.spherePlaneHomeoCircle (JordanCurve.Arcs.param t) =
       Circle.exp t by
     exact JordanCurve.Arcs.spherePlaneHomeoCircle.apply_symm_apply (Circle.exp t)]
+
+/-- Every point of the planar Jordan carrier is reached by the standard boundary
+parametrization of the Schoenflies disk. -/
+theorem exists_planeDisk_unitDiskBoundary_eq_of_mem_carrier
+    (D : EmbeddedSphereCirclePoleData S C) {x : JordanCurve.Arcs.Plane}
+    (hx : x ∈ D.planeJordanCircle.carrier) :
+    ∃ t : ℝ, D.planeDisk (unitDiskBoundary t) = x := by
+  obtain ⟨q, hq⟩ := hx
+  obtain ⟨t, ht⟩ := Circle.exp_surjective
+    (JordanCurve.Arcs.spherePlaneHomeoCircle q)
+  refine ⟨t, ?_⟩
+  rw [D.planeDisk_boundary, ht]
+  exact hq
+
+/-- On the Jordan carrier, a reparameterized planar disk map is one of the original
+standard-boundary values. -/
+theorem exists_planarizedDiskMap_eq_unitDiskBoundary_of_mem_carrier
+    (D : EmbeddedSphereCirclePoleData S C) {Y : Type*}
+    (f : ClosedUnitDisk → Y) (x : closure D.planeJordanCircle.inside)
+    (hx : (x : JordanCurve.Arcs.Plane) ∈ D.planeJordanCircle.carrier) :
+    ∃ t : ℝ, D.planarizedDiskMap f x = f (unitDiskBoundary t) := by
+  obtain ⟨t, ht⟩ := D.exists_planeDisk_unitDiskBoundary_eq_of_mem_carrier hx
+  refine ⟨t, ?_⟩
+  have hxEq : x =
+      ⟨D.planeDisk (unitDiskBoundary t),
+        D.range_planeDisk ▸ Set.mem_range_self (unitDiskBoundary t)⟩ := by
+    apply Subtype.ext
+    exact ht.symm
+  rw [hxEq, D.planarizedDiskMap_planeDisk]
 
 /-- Lift the planar filling back to the standard sphere through the stereographic chart. -/
 def sphereDisk (D : EmbeddedSphereCirclePoleData S C) (z : ClosedUnitDisk) :
@@ -203,6 +267,78 @@ def embeddedDisk (D : EmbeddedSphereCirclePoleData S C) :
   boundary t := by
     rw [D.sphereDisk_boundary, D.sphere_parametrization_sphereCircle,
       C.parametrization]
+
+/-- The exact closed planar Jordan disk mapped back into the ambient sphere. -/
+def planarDiskAmbientMap (D : EmbeddedSphereCirclePoleData S C) :
+    closure D.planeJordanCircle.inside → R3 :=
+  fun x ↦ S.parametrization ((stereographic' 2 D.pole).symm x)
+
+theorem continuous_planarDiskAmbientMap (D : EmbeddedSphereCirclePoleData S C) :
+    Continuous D.planarDiskAmbientMap := by
+  have hstereographic : Continuous fun x : closure D.planeJordanCircle.inside ↦
+      (stereographic' 2 D.pole).symm (x : JordanCurve.Arcs.Plane) := by
+    rw [← continuousOn_univ]
+    exact (stereographic' 2 D.pole).symm.continuousOn.comp
+      continuous_subtype_val.continuousOn fun _ _ ↦ by
+        rw [OpenPartialHomeomorph.symm_source, stereographic'_target]
+        trivial
+  exact S.isEmbedding.continuous.comp hstereographic
+
+@[simp]
+theorem planarDiskAmbientMap_planeDisk
+    (D : EmbeddedSphereCirclePoleData S C) (z : ClosedUnitDisk) :
+    D.planarDiskAmbientMap (D.planeDiskHomeomorph z) = D.embeddedDisk.disk z :=
+  rfl
+
+/-- A point of the planar Jordan circle, packaged as a point of its closed bounded disk. -/
+def planeCirclePoint
+    (D : EmbeddedSphereCirclePoleData S C) (z : Circle) :
+    closure D.planeJordanCircle.inside :=
+  ⟨D.planeCircle z, by
+    rw [D.planeJordanCircle.closure_inside]
+    right
+    refine ⟨JordanCurve.Arcs.spherePlaneHomeoCircle.symm z, ?_⟩
+    exact congrArg D.planeCircle
+      (JordanCurve.Arcs.spherePlaneHomeoCircle.apply_symm_apply z)⟩
+
+@[simp]
+theorem coe_planeCirclePoint
+    (D : EmbeddedSphereCirclePoleData S C) (z : Circle) :
+    (D.planeCirclePoint z : JordanCurve.Arcs.Plane) = D.planeCircle z :=
+  rfl
+
+/-- The canonical planar boundary point agrees with the Schoenflies disk boundary. -/
+theorem planeCirclePoint_exp_eq_planeDiskHomeomorph_boundary
+    (D : EmbeddedSphereCirclePoleData S C) (t : ℝ) :
+    D.planeCirclePoint (Circle.exp t) =
+      D.planeDiskHomeomorph (unitDiskBoundary t) := by
+  apply Subtype.ext
+  exact (D.planeDisk_boundary t).symm
+
+/-- Reparameterizing a standard disk map onto the planar Jordan disk preserves its boundary
+values at the canonical circle points. -/
+@[simp]
+theorem planarizedDiskMap_planeCirclePoint_exp
+    (D : EmbeddedSphereCirclePoleData S C) {Y : Type*}
+    (f : ClosedUnitDisk → Y) (t : ℝ) :
+    D.planarizedDiskMap f (D.planeCirclePoint (Circle.exp t)) =
+      f (unitDiskBoundary t) := by
+  rw [D.planeCirclePoint_exp_eq_planeDiskHomeomorph_boundary]
+  exact D.planarizedDiskMap_planeDisk f (unitDiskBoundary t)
+
+/-- Mapping a canonical planar boundary point back to the ambient sphere recovers the original
+embedded torus circle point. -/
+@[simp]
+theorem planarDiskAmbientMap_planeCirclePoint
+    (D : EmbeddedSphereCirclePoleData S C) (z : Circle) :
+    D.planarDiskAmbientMap (D.planeCirclePoint z) = C.circle z := by
+  change S.parametrization
+    ((stereographic' 2 D.pole).symm (D.planeCircle z)) = C.circle z
+  rw [show (stereographic' 2 D.pole).symm (D.planeCircle z) =
+      D.sphereCircle z by
+    exact (stereographic' 2 D.pole).left_inv
+      (D.sphereCircle_mem_stereographicSource z)]
+  exact D.sphere_parametrization_sphereCircle z
 
 theorem embeddedDisk_range_subset_carrier (D : EmbeddedSphereCirclePoleData S C) :
     Set.range D.embeddedDisk.disk ⊆ S.carrier := by
