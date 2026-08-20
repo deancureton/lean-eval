@@ -403,10 +403,16 @@ theorem coveringPlaneCoordinates_symm_bandSeamPath (u : unitInterval) :
     ring
   · simp [bandLeftVertex, bandRightVertex, AffineMap.lineMap_apply_module]
 
+/-- A global band chart whose surface patch is retained as an open subset of the transported
+torus. -/
+structure OpenGlobalBandTubularChartData where
+  data : GlobalBandTubularChartData F b
+  surfacePatch_open : IsOpen data.surfacePatch
+
 /-- The planar extendible-arc strip descends through an injective covering neighborhood to the
 desired transported-torus band chart. -/
-theorem exists_globalBandTubularChartData :
-    Nonempty (GlobalBandTubularChartData F b) := by
+theorem exists_openGlobalBandTubularChartData :
+    Nonempty (OpenGlobalBandTubularChartData F b) := by
   let E := F.globalBandExtendibleInjectivePath b
   obtain ⟨Uinj, hUinjOpen, hpathUinj, hinj⟩ :=
     F.exists_open_injOn_globalBandExtendedPlanePath b
@@ -447,16 +453,23 @@ theorem exists_globalBandTubularChartData :
     intro x y hxy
     apply Subtype.ext
     apply hinj (hVU x.2).1 (hVU y.2).1 hxy
+  have hpVopen : IsOpenEmbedding pV :=
+    hpVlocal.isOpenEmbedding_of_injective hpVinj
   let ep : V ≃ₜ Set.range pV :=
-    (hpVlocal.isOpenEmbedding_of_injective hpVinj).isEmbedding.toHomeomorph
+    hpVopen.isEmbedding.toHomeomorph
   let strip : Submission.SurfaceRegularValue.Plane ≃ₜ Set.range pV :=
     coveringPlaneCoordinates.symm.trans (e.trans ep)
-  refine ⟨GlobalBandTubularChartData.ofStrip (Set.range pV) strip ?_ ?_⟩
-  · rintro _ ⟨z, rfl⟩
+  have hstrip : Set.range (fun z ↦
+      (((strip z : Set.range pV) : transportedTorus Phi) : R3)) ⊆
+      F.globalBandOpenNeighborhood b := by
+    rintro _ ⟨z, rfl⟩
     change ((pV (e (coveringPlaneCoordinates.symm z)) : transportedTorus Phi) : R3) ∈
       F.globalBandOpenNeighborhood b
     exact (hVU (e (coveringPlaneCoordinates.symm z)).2).2
-  · intro u
+  have halign : ∀ u : unitInterval,
+      (((strip (bandSeamPath u) : Set.range pV) : transportedTorus Phi) : R3) =
+        ((F.globalBandPath b u : transportedTorus Phi) : R3) := by
+    intro u
     change ((pV (e (coveringPlaneCoordinates.symm (bandSeamPath u))) :
       transportedTorus Phi) : R3) =
       ((F.globalBandPath b u : transportedTorus Phi) : R3)
@@ -477,6 +490,39 @@ theorem exists_globalBandTubularChartData :
           F.torusCoveringProjection_globalBandCircle_planeLift]
       _ = ((F.globalBandPath b u : transportedTorus Phi) : R3) := by
         rfl
+  let T := GlobalBandTubularChartData.ofStrip (Set.range pV) strip hstrip halign
+  refine ⟨⟨T, ?_⟩⟩
+  change IsOpen (Set.range pV)
+  exact hpVopen.isOpen_range
+
+/-- The open global band chart supplies the original chart data after forgetting openness. -/
+theorem exists_globalBandTubularChartData :
+    Nonempty (GlobalBandTubularChartData F b) :=
+  ⟨(Classical.choice (F.exists_openGlobalBandTubularChartData b)).data⟩
+
+/-- Choose an open transported-torus chart for the band indexed by `b`. -/
+noncomputable def globalBandOpenTubularChartData :
+    OpenGlobalBandTubularChartData F b :=
+  Classical.choice (F.exists_openGlobalBandTubularChartData b)
+
+/-- Choose the validated open tubular strip simultaneously for every canonical inward
+excursion. -/
+noncomputable def globalBandOpenTubularChartFamily
+    (F : CutCircleTransverseCyclicOrderFamily G) :
+    GlobalBandTubularChartFamily F where
+  band b := (F.globalBandOpenTubularChartData b).data
+
+theorem globalBandOpenTubularChartFamily_surfacePatch_open
+    (F : CutCircleTransverseCyclicOrderFamily G)
+    (b : Fin F.toPairedSeamEnumeration.bandCount) :
+    IsOpen ((F.globalBandOpenTubularChartFamily).band b).surfacePatch :=
+  (F.globalBandOpenTubularChartData b).surfacePatch_open
+
+/-- Choose the validated tubular strip simultaneously for every canonical inward excursion. -/
+noncomputable def globalBandTubularChartFamily
+    (F : CutCircleTransverseCyclicOrderFamily G) :
+    GlobalBandTubularChartFamily F where
+  band b := Classical.choice (F.exists_globalBandTubularChartData b)
 
 end CutCircleTransverseCyclicOrderFamily
 

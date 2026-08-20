@@ -115,6 +115,144 @@ theorem isNonzeroAxisSlope
 
 end SphereCircleDoubledCoordinateFilling
 
+/-! ## Canonical doubled-coordinate caps of one zero-winding circle -/
+
+namespace EmbeddedTorusIntersectionCircle
+
+variable (C : EmbeddedTorusIntersectionCircle Phi)
+
+/-- The canonical torus-side disk map of one zero-winding circle. -/
+def zeroWindingTorusDiskMap
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (z : ClosedUnitDisk) : transportedTorus Phi :=
+  let D := C.inessentialTorusCircleDisk hzero
+  ⟨D.disk z, D.range_subset ⟨z, rfl⟩⟩
+
+theorem continuous_zeroWindingTorusDiskMap
+    (hzero : C.windingLoop.windingPair = (0, 0)) :
+    Continuous (C.zeroWindingTorusDiskMap hzero) :=
+  let D := C.inessentialTorusCircleDisk hzero
+  D.isEmbedding.continuous.subtype_mk _
+
+theorem zeroWindingTorusDiskMap_boundary
+    (hzero : C.windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    C.zeroWindingTorusDiskMap hzero (unitDiskBoundary t) = C.windingLoop.curve t := by
+  apply Subtype.ext
+  exact (C.inessentialTorusCircleDisk hzero).boundary t
+
+/-- Product-torus coordinates on the canonical disk of one zero-winding circle. -/
+def zeroWindingTorusDiskCoordinates
+    (hzero : C.windingLoop.windingPair = (0, 0)) :
+    ClosedUnitDisk → Circle × Circle :=
+  fun z ↦ (transportedTorusHomeomorph Phi).symm (C.zeroWindingTorusDiskMap hzero z)
+
+theorem continuous_zeroWindingTorusDiskCoordinates
+    (hzero : C.windingLoop.windingPair = (0, 0)) :
+    Continuous (C.zeroWindingTorusDiskCoordinates hzero) :=
+  (transportedTorusHomeomorph Phi).symm.continuous.comp
+    (C.continuous_zeroWindingTorusDiskMap hzero)
+
+theorem zeroWindingTorusDiskCoordinates_boundary
+    (hzero : C.windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    C.zeroWindingTorusDiskCoordinates hzero (unitDiskBoundary t) =
+      transportedLoopCoordinates Phi C.windingLoop.curve t := by
+  simp only [zeroWindingTorusDiskCoordinates, transportedLoopCoordinates]
+  rw [C.zeroWindingTorusDiskMap_boundary hzero t]
+
+/-- The doubled first-coordinate map on the canonical zero-winding cap. -/
+def firstZeroWindingDoubledCapMap
+    (hzero : C.windingLoop.windingPair = (0, 0)) : ClosedUnitDisk → Circle :=
+  fun z ↦ (C.zeroWindingTorusDiskCoordinates hzero z).1⁻¹ ^ 2
+
+theorem continuous_firstZeroWindingDoubledCapMap
+    (hzero : C.windingLoop.windingPair = (0, 0)) :
+    Continuous (C.firstZeroWindingDoubledCapMap hzero) := by
+  have hcoordinates := C.continuous_zeroWindingTorusDiskCoordinates hzero
+  unfold firstZeroWindingDoubledCapMap
+  fun_prop
+
+theorem firstZeroWindingDoubledCapMap_boundary
+    (hzero : C.windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    C.firstZeroWindingDoubledCapMap hzero (unitDiskBoundary t) =
+      ((transportedLoopCoordinates Phi C.windingLoop.curve t).1)⁻¹ ^ 2 := by
+  rw [firstZeroWindingDoubledCapMap,
+    C.zeroWindingTorusDiskCoordinates_boundary hzero t]
+
+/-- The doubled second-coordinate map on the canonical zero-winding cap. -/
+def secondZeroWindingDoubledCapMap
+    (hzero : C.windingLoop.windingPair = (0, 0)) : ClosedUnitDisk → Circle :=
+  fun z ↦ (C.zeroWindingTorusDiskCoordinates hzero z).2⁻¹ ^ 2
+
+theorem continuous_secondZeroWindingDoubledCapMap
+    (hzero : C.windingLoop.windingPair = (0, 0)) :
+    Continuous (C.secondZeroWindingDoubledCapMap hzero) := by
+  have hcoordinates := C.continuous_zeroWindingTorusDiskCoordinates hzero
+  unfold secondZeroWindingDoubledCapMap
+  fun_prop
+
+theorem secondZeroWindingDoubledCapMap_boundary
+    (hzero : C.windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    C.secondZeroWindingDoubledCapMap hzero (unitDiskBoundary t) =
+      ((transportedLoopCoordinates Phi C.windingLoop.curve t).2)⁻¹ ^ 2 := by
+  rw [secondZeroWindingDoubledCapMap,
+    C.zeroWindingTorusDiskCoordinates_boundary hzero t]
+
+/-- The first zero-winding cap reparameterized onto a planar Jordan disk. -/
+def firstPlanarizedZeroWindingDoubledCapMap
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) :
+    closure P.planeJordanCircle.inside → Circle :=
+  P.planarizedDiskMap (C.firstZeroWindingDoubledCapMap hzero)
+
+theorem continuous_firstPlanarizedZeroWindingDoubledCapMap
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) :
+    Continuous (C.firstPlanarizedZeroWindingDoubledCapMap hzero P) :=
+  P.continuous_planarizedDiskMap (C.continuous_firstZeroWindingDoubledCapMap hzero)
+
+@[simp]
+theorem firstPlanarizedZeroWindingDoubledCapMap_planeCirclePoint_exp
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) (t : ℝ) :
+    C.firstPlanarizedZeroWindingDoubledCapMap hzero P
+        (P.planeCirclePoint (Circle.exp t)) =
+      ((transportedLoopCoordinates Phi C.windingLoop.curve t).1)⁻¹ ^ 2 := by
+  rw [firstPlanarizedZeroWindingDoubledCapMap,
+    P.planarizedDiskMap_planeCirclePoint_exp,
+    C.firstZeroWindingDoubledCapMap_boundary hzero]
+
+/-- The second zero-winding cap reparameterized onto a planar Jordan disk. -/
+def secondPlanarizedZeroWindingDoubledCapMap
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) :
+    closure P.planeJordanCircle.inside → Circle :=
+  P.planarizedDiskMap (C.secondZeroWindingDoubledCapMap hzero)
+
+theorem continuous_secondPlanarizedZeroWindingDoubledCapMap
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) :
+    Continuous (C.secondPlanarizedZeroWindingDoubledCapMap hzero P) :=
+  P.continuous_planarizedDiskMap (C.continuous_secondZeroWindingDoubledCapMap hzero)
+
+@[simp]
+theorem secondPlanarizedZeroWindingDoubledCapMap_planeCirclePoint_exp
+    {T : EmbeddedTopologicalSphereInR3}
+    (hzero : C.windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T C) (t : ℝ) :
+    C.secondPlanarizedZeroWindingDoubledCapMap hzero P
+        (P.planeCirclePoint (Circle.exp t)) =
+      ((transportedLoopCoordinates Phi C.windingLoop.curve t).2)⁻¹ ^ 2 := by
+  rw [secondPlanarizedZeroWindingDoubledCapMap,
+    P.planarizedDiskMap_planeCirclePoint_exp,
+    C.secondZeroWindingDoubledCapMap_boundary hzero]
+
+end EmbeddedTorusIntersectionCircle
+
 /-- The reduced innermost-circle property required of one finite sphere stage. -/
 def FiniteSphereSurgeryIntersectionSystem.HasEssentialCoordinateFilling
     (S : FiniteSphereSurgeryIntersectionSystem Phi iota) : Prop :=
@@ -133,6 +271,108 @@ def FiniteSphereSurgeryIntersectionSystem.HasEssentialDoubledCoordinateFilling
 namespace FiniteSphereSurgeryIntersectionSystem
 
 /-! ## Canonical doubled-coordinate caps for inessential circles -/
+
+/-! ### Caps from one zero-winding circle
+
+The innermost-essential-circle argument does not make every circle in the ambient finite
+system inessential.  It only makes the circles strictly inside the selected essential circle
+inessential.  The following pointwise API exposes the same canonical torus cap from the zero
+winding of one specified circle, so the later planar pasting theorem need not assume
+`AllInessential` for the whole stage. -/
+
+/-- The canonical torus-side disk of one specified zero-winding circle. -/
+def torusDiskMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (z : ClosedUnitDisk) : transportedTorus Phi :=
+  let D := EmbeddedTorusIntersectionCircle.inessentialTorusCircleDisk (S.circle i) hzero
+  ⟨D.disk z, D.range_subset ⟨z, rfl⟩⟩
+
+theorem continuous_torusDiskMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    Continuous (S.torusDiskMapOfZero i hzero) :=
+  let D := EmbeddedTorusIntersectionCircle.inessentialTorusCircleDisk (S.circle i) hzero
+  D.isEmbedding.continuous.subtype_mk _
+
+theorem torusDiskMapOfZero_boundary
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    S.torusDiskMapOfZero i hzero (unitDiskBoundary t) =
+      (S.circle i).windingLoop.curve t := by
+  apply Subtype.ext
+  exact (EmbeddedTorusIntersectionCircle.inessentialTorusCircleDisk
+    (S.circle i) hzero).boundary t
+
+/-- Product-torus coordinates on the canonical cap of one zero-winding circle. -/
+def inessentialTorusDiskCoordinatesOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    ClosedUnitDisk → Circle × Circle :=
+  fun z ↦ (transportedTorusHomeomorph Phi).symm (S.torusDiskMapOfZero i hzero z)
+
+theorem continuous_inessentialTorusDiskCoordinatesOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    Continuous (S.inessentialTorusDiskCoordinatesOfZero i hzero) :=
+  (transportedTorusHomeomorph Phi).symm.continuous.comp
+    (S.continuous_torusDiskMapOfZero i hzero)
+
+theorem inessentialTorusDiskCoordinatesOfZero_boundary
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    S.inessentialTorusDiskCoordinatesOfZero i hzero (unitDiskBoundary t) =
+      transportedLoopCoordinates Phi (S.circle i).windingLoop.curve t := by
+  simp only [inessentialTorusDiskCoordinatesOfZero, transportedLoopCoordinates]
+  rw [S.torusDiskMapOfZero_boundary i hzero t]
+
+/-- The doubled first-coordinate map on one zero-winding torus cap. -/
+def firstInessentialDoubledCapMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    ClosedUnitDisk → Circle :=
+  fun z ↦ (S.inessentialTorusDiskCoordinatesOfZero i hzero z).1⁻¹ ^ 2
+
+theorem continuous_firstInessentialDoubledCapMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    Continuous (S.firstInessentialDoubledCapMapOfZero i hzero) := by
+  have hcoordinates := S.continuous_inessentialTorusDiskCoordinatesOfZero i hzero
+  unfold firstInessentialDoubledCapMapOfZero
+  fun_prop
+
+theorem firstInessentialDoubledCapMapOfZero_boundary
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    S.firstInessentialDoubledCapMapOfZero i hzero (unitDiskBoundary t) =
+      ((transportedLoopCoordinates Phi (S.circle i).windingLoop.curve t).1)⁻¹ ^ 2 := by
+  rw [firstInessentialDoubledCapMapOfZero,
+    S.inessentialTorusDiskCoordinatesOfZero_boundary i hzero t]
+
+/-- The doubled second-coordinate map on one zero-winding torus cap. -/
+def secondInessentialDoubledCapMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    ClosedUnitDisk → Circle :=
+  fun z ↦ (S.inessentialTorusDiskCoordinatesOfZero i hzero z).2⁻¹ ^ 2
+
+theorem continuous_secondInessentialDoubledCapMapOfZero
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) :
+    Continuous (S.secondInessentialDoubledCapMapOfZero i hzero) := by
+  have hcoordinates := S.continuous_inessentialTorusDiskCoordinatesOfZero i hzero
+  unfold secondInessentialDoubledCapMapOfZero
+  fun_prop
+
+theorem secondInessentialDoubledCapMapOfZero_boundary
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0)) (t : ℝ) :
+    S.secondInessentialDoubledCapMapOfZero i hzero (unitDiskBoundary t) =
+      ((transportedLoopCoordinates Phi (S.circle i).windingLoop.curve t).2)⁻¹ ^ 2 := by
+  rw [secondInessentialDoubledCapMapOfZero,
+    S.inessentialTorusDiskCoordinatesOfZero_boundary i hzero t]
+
+/-! ### Stage-wide convenience wrappers -/
 
 /-- Product-torus coordinates of the canonical torus disk capping an inessential circle. -/
 def inessentialTorusDiskCoordinates
@@ -203,6 +443,68 @@ theorem secondInessentialDoubledCapMap_boundary
   rw [secondInessentialDoubledCapMap, S.inessentialTorusDiskCoordinates_boundary hzero i t]
 
 /-! ## Canonical caps in a common planar sphere chart -/
+
+/-- The first pointwise zero-winding cap, reparameterized onto a planar Jordan disk. -/
+def firstPlanarizedInessentialDoubledCapMapOfZero
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) :
+    closure P.planeJordanCircle.inside → Circle :=
+  P.planarizedDiskMap (S.firstInessentialDoubledCapMapOfZero i hzero)
+
+theorem continuous_firstPlanarizedInessentialDoubledCapMapOfZero
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) :
+    Continuous (S.firstPlanarizedInessentialDoubledCapMapOfZero i hzero P) :=
+  P.continuous_planarizedDiskMap
+    (S.continuous_firstInessentialDoubledCapMapOfZero i hzero)
+
+@[simp]
+theorem firstPlanarizedInessentialDoubledCapMapOfZero_planeCirclePoint_exp
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) (t : ℝ) :
+    S.firstPlanarizedInessentialDoubledCapMapOfZero i hzero P
+        (P.planeCirclePoint (Circle.exp t)) =
+      ((transportedLoopCoordinates Phi (S.circle i).windingLoop.curve t).1)⁻¹ ^ 2 := by
+  rw [firstPlanarizedInessentialDoubledCapMapOfZero,
+    P.planarizedDiskMap_planeCirclePoint_exp,
+    S.firstInessentialDoubledCapMapOfZero_boundary i hzero]
+
+/-- The second pointwise zero-winding cap, reparameterized onto a planar Jordan disk. -/
+def secondPlanarizedInessentialDoubledCapMapOfZero
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) :
+    closure P.planeJordanCircle.inside → Circle :=
+  P.planarizedDiskMap (S.secondInessentialDoubledCapMapOfZero i hzero)
+
+theorem continuous_secondPlanarizedInessentialDoubledCapMapOfZero
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) :
+    Continuous (S.secondPlanarizedInessentialDoubledCapMapOfZero i hzero P) :=
+  P.continuous_planarizedDiskMap
+    (S.continuous_secondInessentialDoubledCapMapOfZero i hzero)
+
+@[simp]
+theorem secondPlanarizedInessentialDoubledCapMapOfZero_planeCirclePoint_exp
+    {T : EmbeddedTopologicalSphereInR3}
+    (S : FiniteSphereSurgeryIntersectionSystem Phi iota) (i : iota)
+    (hzero : (S.circle i).windingLoop.windingPair = (0, 0))
+    (P : EmbeddedSphereCirclePoleData T (S.circle i)) (t : ℝ) :
+    S.secondPlanarizedInessentialDoubledCapMapOfZero i hzero P
+        (P.planeCirclePoint (Circle.exp t)) =
+      ((transportedLoopCoordinates Phi (S.circle i).windingLoop.curve t).2)⁻¹ ^ 2 := by
+  rw [secondPlanarizedInessentialDoubledCapMapOfZero,
+    P.planarizedDiskMap_planeCirclePoint_exp,
+    S.secondInessentialDoubledCapMapOfZero_boundary i hzero]
 
 /-- The first doubled-coordinate cap, reparameterized onto a closed planar Jordan disk. -/
 def firstPlanarizedInessentialDoubledCapMap

@@ -39,6 +39,12 @@ theorem isClosed_axisFillingPiece (k : Option (D.maximalInnerDiskIndex outer)) :
   | none => exact (D.isClosed_outerDiskRemainder outer).preimage continuous_subtype_val
   | some i => exact isClosed_closure.preimage continuous_subtype_val
 
+/-- Exactly the pointwise inessentiality needed to cap the selected maximal inner circles.
+The outer circle and circles outside its planar disk are deliberately unrestricted. -/
+def MaximalInnerAllInessential : Prop :=
+  ∀ i : D.maximalInnerDiskIndex outer,
+    (F.circle i.1).windingLoop.windingPair = (0, 0)
+
 /-- The remainder and maximal inner disks cover the selected outer closed disk. -/
 theorem axisFillingPiece_cover : ⋃ k, D.axisFillingPiece outer k = Set.univ := by
   apply Set.eq_univ_of_forall
@@ -54,6 +60,254 @@ theorem axisFillingPiece_cover : ⋃ k, D.axisFillingPiece outer k = Set.univ :=
   · obtain ⟨i, hxInner⟩ := Set.mem_iUnion.mp hxInner
     obtain ⟨hi, hxi⟩ := Set.mem_iUnion.mp hxInner
     exact Set.mem_iUnion.mpr ⟨some ⟨i, hi⟩, hxi⟩
+
+include hpairwise in
+/-- On a remainder/inner-disk overlap, the first doubled-coordinate formulas agree using only
+the zero winding of that selected inner circle. -/
+theorem firstRemainderCapOfZero_compatible
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi)
+    {i : ι} (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer)
+    (x : JordanCurve.Arcs.Plane) (hxRemainder : x ∈ D.outerDiskRemainder outer)
+    (hxDisk : x ∈ D.closedPlaneDisk i) :
+    D.firstOuterDiskRemainderDoubledCoordinateMap outer hside ⟨x, hxRemainder⟩ =
+      F.firstPlanarizedInessentialDoubledCapMapOfZero i (hinner ⟨i, hi⟩)
+        (D.circleData i) ⟨x, hxDisk⟩ := by
+  have hxCarrier : x ∈ (D.circleData i).planeJordanCircle.carrier := by
+    rw [← D.outerDiskRemainder_inter_maximalInnerClosedPlaneDisk hpairwise outer hi]
+    exact ⟨hxRemainder, hxDisk⟩
+  obtain ⟨t, ht⟩ :=
+    (D.circleData i).exists_planeDisk_unitDiskBoundary_eq_of_mem_carrier hxCarrier
+  have hplane : (D.circleData i).planeCircle (Circle.exp t) = x := by
+    rw [← (D.circleData i).planeDisk_boundary t]
+    exact ht
+  rw [show (⟨x, hxRemainder⟩ : D.outerDiskRemainder outer) =
+      D.innerCircleRemainderPoint hpairwise outer hi (Circle.exp t) by
+    apply Subtype.ext
+    exact hplane.symm]
+  rw [D.firstOuterDiskRemainderDoubledCoordinateMap_innerCircleRemainderPoint
+    hpairwise outer hside hi t]
+  change _ = F.firstPlanarizedInessentialDoubledCapMapOfZero i (hinner ⟨i, hi⟩)
+    (D.circleData i)
+    ⟨x, (show x ∈ closure (D.circleData i).planeJordanCircle.inside from hxDisk)⟩
+  rw [show
+    (⟨x, (show x ∈ closure (D.circleData i).planeJordanCircle.inside from hxDisk)⟩ :
+      closure (D.circleData i).planeJordanCircle.inside) =
+      (D.circleData i).planeCirclePoint (Circle.exp t) by
+    apply Subtype.ext
+    exact hplane.symm]
+  exact (F.firstPlanarizedInessentialDoubledCapMapOfZero_planeCirclePoint_exp
+    i (hinner ⟨i, hi⟩) (D.circleData i) t).symm
+
+include hpairwise in
+/-- On a remainder/inner-disk overlap, the second doubled-coordinate formulas agree using only
+the zero winding of that selected inner circle. -/
+theorem secondRemainderCapOfZero_compatible
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi)
+    {i : ι} (hi : i ∈ D.inclusionMaximalInnerClosedPlaneDiskIndices outer)
+    (x : JordanCurve.Arcs.Plane) (hxRemainder : x ∈ D.outerDiskRemainder outer)
+    (hxDisk : x ∈ D.closedPlaneDisk i) :
+    D.secondOuterDiskRemainderDoubledCoordinateMap outer hside ⟨x, hxRemainder⟩ =
+      F.secondPlanarizedInessentialDoubledCapMapOfZero i (hinner ⟨i, hi⟩)
+        (D.circleData i) ⟨x, hxDisk⟩ := by
+  have hxCarrier : x ∈ (D.circleData i).planeJordanCircle.carrier := by
+    rw [← D.outerDiskRemainder_inter_maximalInnerClosedPlaneDisk hpairwise outer hi]
+    exact ⟨hxRemainder, hxDisk⟩
+  obtain ⟨t, ht⟩ :=
+    (D.circleData i).exists_planeDisk_unitDiskBoundary_eq_of_mem_carrier hxCarrier
+  have hplane : (D.circleData i).planeCircle (Circle.exp t) = x := by
+    rw [← (D.circleData i).planeDisk_boundary t]
+    exact ht
+  rw [show (⟨x, hxRemainder⟩ : D.outerDiskRemainder outer) =
+      D.innerCircleRemainderPoint hpairwise outer hi (Circle.exp t) by
+    apply Subtype.ext
+    exact hplane.symm]
+  rw [D.secondOuterDiskRemainderDoubledCoordinateMap_innerCircleRemainderPoint
+    hpairwise outer hside hi t]
+  change _ = F.secondPlanarizedInessentialDoubledCapMapOfZero i (hinner ⟨i, hi⟩)
+    (D.circleData i)
+    ⟨x, (show x ∈ closure (D.circleData i).planeJordanCircle.inside from hxDisk)⟩
+  rw [show
+    (⟨x, (show x ∈ closure (D.circleData i).planeJordanCircle.inside from hxDisk)⟩ :
+      closure (D.circleData i).planeJordanCircle.inside) =
+      (D.circleData i).planeCirclePoint (Circle.exp t) by
+    apply Subtype.ext
+    exact hplane.symm]
+  exact (F.secondPlanarizedInessentialDoubledCapMapOfZero_planeCirclePoint_exp
+    i (hinner ⟨i, hi⟩) (D.circleData i) t).symm
+
+/-! ## Pasting from pointwise-zero maximal inner circles -/
+
+/-- Piecewise first-coordinate values requiring zero winding only on maximal inner circles. -/
+def firstAxisFillingPieceValueOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi) :
+    ∀ k, D.axisFillingPiece outer k → Circle
+  | none, x => D.firstOuterDiskRemainderDoubledCoordinateMap outer hside ⟨x, x.2⟩
+  | some i, x =>
+      F.firstPlanarizedInessentialDoubledCapMapOfZero i.1 (hinner i) (D.circleData i.1)
+        ⟨x, (show (x : JordanCurve.Arcs.Plane) ∈
+          closure (D.circleData i.1).planeJordanCircle.inside from x.2)⟩
+
+theorem continuous_firstAxisFillingPieceValueOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi)
+    (k : Option (D.maximalInnerDiskIndex outer)) :
+    Continuous (D.firstAxisFillingPieceValueOfInnerZero outer hinner hside k) := by
+  cases k with
+  | none =>
+      exact (D.continuous_firstOuterDiskRemainderDoubledCoordinateMap outer hside).comp <|
+        Continuous.subtype_mk (continuous_subtype_val.comp continuous_subtype_val) _
+  | some i =>
+      exact (F.continuous_firstPlanarizedInessentialDoubledCapMapOfZero
+        i.1 (hinner i) (D.circleData i.1)).comp <|
+          Continuous.subtype_mk (continuous_subtype_val.comp continuous_subtype_val) _
+
+include hpairwise in
+/-- The pointwise-zero first-coordinate values agree on every pairwise overlap. -/
+theorem firstAxisFillingPieceValueOfInnerZero_compatible
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi)
+    (a b : Option (D.maximalInnerDiskIndex outer))
+    (x : D.closedPlaneDisk outer) (hxa : x ∈ D.axisFillingPiece outer a)
+    (hxb : x ∈ D.axisFillingPiece outer b) :
+    D.firstAxisFillingPieceValueOfInnerZero outer hinner hside a ⟨x, hxa⟩ =
+      D.firstAxisFillingPieceValueOfInnerZero outer hinner hside b ⟨x, hxb⟩ := by
+  cases a with
+  | none =>
+      cases b with
+      | none => rfl
+      | some j =>
+          exact D.firstRemainderCapOfZero_compatible hpairwise outer hinner hside
+            j.2 x hxa hxb
+  | some i =>
+      cases b with
+      | none =>
+          exact (D.firstRemainderCapOfZero_compatible hpairwise outer hinner hside
+            i.2 x hxb hxa).symm
+      | some j =>
+          by_cases hij : i = j
+          · subst j
+            rfl
+          · exfalso
+            have hijVal : i.1 ≠ j.1 := fun h ↦ hij (Subtype.ext h)
+            exact Set.disjoint_left.mp
+              (D.inclusionMaximalInnerClosedPlaneDiskIndices_pairwise_disjoint
+                hpairwise outer i.2 j.2 hijVal) hxa hxb
+
+/-- The pointwise-zero first-coordinate finite closed-cover pasting package. -/
+def firstAxisFillingPastingDataOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi) :
+    FiniteClosedCoverPastingData (Option (D.maximalInnerDiskIndex outer))
+      (D.closedPlaneDisk outer) Circle where
+  piece := D.axisFillingPiece outer
+  isClosed_piece := D.isClosed_axisFillingPiece outer
+  cover := D.axisFillingPiece_cover outer
+  value := D.firstAxisFillingPieceValueOfInnerZero outer hinner hside
+  continuous_value := D.continuous_firstAxisFillingPieceValueOfInnerZero outer hinner hside
+  compatible := D.firstAxisFillingPieceValueOfInnerZero_compatible
+    hpairwise outer hinner hside
+
+/-- The continuous first-coordinate filling from pointwise-zero maximal inner circles. -/
+def firstAxisFillingMapOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi) :
+    D.closedPlaneDisk outer → Circle :=
+  (D.firstAxisFillingPastingDataOfInnerZero hpairwise outer hinner hside).glued
+
+theorem continuous_firstAxisFillingMapOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi) :
+    Continuous (D.firstAxisFillingMapOfInnerZero hpairwise outer hinner hside) :=
+  (D.firstAxisFillingPastingDataOfInnerZero
+    hpairwise outer hinner hside).continuous_glued
+
+/-- Piecewise second-coordinate values requiring zero winding only on maximal inner circles. -/
+def secondAxisFillingPieceValueOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi) :
+    ∀ k, D.axisFillingPiece outer k → Circle
+  | none, x => D.secondOuterDiskRemainderDoubledCoordinateMap outer hside ⟨x, x.2⟩
+  | some i, x =>
+      F.secondPlanarizedInessentialDoubledCapMapOfZero i.1 (hinner i) (D.circleData i.1)
+        ⟨x, (show (x : JordanCurve.Arcs.Plane) ∈
+          closure (D.circleData i.1).planeJordanCircle.inside from x.2)⟩
+
+theorem continuous_secondAxisFillingPieceValueOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi)
+    (k : Option (D.maximalInnerDiskIndex outer)) :
+    Continuous (D.secondAxisFillingPieceValueOfInnerZero outer hinner hside k) := by
+  cases k with
+  | none =>
+      exact (D.continuous_secondOuterDiskRemainderDoubledCoordinateMap outer hside).comp <|
+        Continuous.subtype_mk (continuous_subtype_val.comp continuous_subtype_val) _
+  | some i =>
+      exact (F.continuous_secondPlanarizedInessentialDoubledCapMapOfZero
+        i.1 (hinner i) (D.circleData i.1)).comp <|
+          Continuous.subtype_mk (continuous_subtype_val.comp continuous_subtype_val) _
+
+include hpairwise in
+/-- The pointwise-zero second-coordinate values agree on every pairwise overlap. -/
+theorem secondAxisFillingPieceValueOfInnerZero_compatible
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi)
+    (a b : Option (D.maximalInnerDiskIndex outer))
+    (x : D.closedPlaneDisk outer) (hxa : x ∈ D.axisFillingPiece outer a)
+    (hxb : x ∈ D.axisFillingPiece outer b) :
+    D.secondAxisFillingPieceValueOfInnerZero outer hinner hside a ⟨x, hxa⟩ =
+      D.secondAxisFillingPieceValueOfInnerZero outer hinner hside b ⟨x, hxb⟩ := by
+  cases a with
+  | none =>
+      cases b with
+      | none => rfl
+      | some j =>
+          exact D.secondRemainderCapOfZero_compatible hpairwise outer hinner hside
+            j.2 x hxa hxb
+  | some i =>
+      cases b with
+      | none =>
+          exact (D.secondRemainderCapOfZero_compatible hpairwise outer hinner hside
+            i.2 x hxb hxa).symm
+      | some j =>
+          by_cases hij : i = j
+          · subst j
+            rfl
+          · exfalso
+            have hijVal : i.1 ≠ j.1 := fun h ↦ hij (Subtype.ext h)
+            exact Set.disjoint_left.mp
+              (D.inclusionMaximalInnerClosedPlaneDiskIndices_pairwise_disjoint
+                hpairwise outer i.2 j.2 hijVal) hxa hxb
+
+/-- The pointwise-zero second-coordinate finite closed-cover pasting package. -/
+def secondAxisFillingPastingDataOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi) :
+    FiniteClosedCoverPastingData (Option (D.maximalInnerDiskIndex outer))
+      (D.closedPlaneDisk outer) Circle where
+  piece := D.axisFillingPiece outer
+  isClosed_piece := D.isClosed_axisFillingPiece outer
+  cover := D.axisFillingPiece_cover outer
+  value := D.secondAxisFillingPieceValueOfInnerZero outer hinner hside
+  continuous_value := D.continuous_secondAxisFillingPieceValueOfInnerZero outer hinner hside
+  compatible := D.secondAxisFillingPieceValueOfInnerZero_compatible
+    hpairwise outer hinner hside
+
+/-- The continuous second-coordinate filling from pointwise-zero maximal inner circles. -/
+def secondAxisFillingMapOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi) :
+    D.closedPlaneDisk outer → Circle :=
+  (D.secondAxisFillingPastingDataOfInnerZero hpairwise outer hinner hside).glued
+
+theorem continuous_secondAxisFillingMapOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi) :
+    Continuous (D.secondAxisFillingMapOfInnerZero hpairwise outer hinner hside) :=
+  (D.secondAxisFillingPastingDataOfInnerZero
+    hpairwise outer hinner hside).continuous_glued
 
 include hpairwise in
 /-- On a remainder/inner-disk overlap, the first doubled-coordinate formulas agree. -/
@@ -360,6 +614,134 @@ theorem secondOuterDiskRemainderDoubledCoordinateMap_outerCircleRemainderPoint
       (Circle.exp t)).trans <| ((F.circle outer).parametrization t).trans <|
         windingLoop_curve_eq_transportedTorusMap_coordinates (F.circle outer) t]
   exact transportedExteriorMeridianCoordinate_torusMap Phi zw.1 zw.2
+
+/-- The pointwise-inner first-coordinate filling reduces to the remainder value on the outer
+circle. -/
+theorem firstAxisFillingMapOfInnerZero_outerCirclePoint
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi)
+    (z : Circle) :
+    D.firstAxisFillingMapOfInnerZero hpairwise outer hinner hside
+        ((D.circleData outer).planeCirclePoint z) =
+      D.firstOuterDiskRemainderDoubledCoordinateMap outer hside
+        (D.outerCircleRemainderPoint outer z) := by
+  let P := D.firstAxisFillingPastingDataOfInnerZero hpairwise outer hinner hside
+  have hpiece : (D.circleData outer).planeCirclePoint z ∈ D.axisFillingPiece outer none :=
+    (D.outerCircleRemainderPoint outer z).2
+  change P.glued ((D.circleData outer).planeCirclePoint z) = _
+  rw [P.glued_eq none _ hpiece]
+  rfl
+
+/-- The pointwise-inner second-coordinate filling reduces to the remainder value on the outer
+circle. -/
+theorem secondAxisFillingMapOfInnerZero_outerCirclePoint
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi)
+    (z : Circle) :
+    D.secondAxisFillingMapOfInnerZero hpairwise outer hinner hside
+        ((D.circleData outer).planeCirclePoint z) =
+      D.secondOuterDiskRemainderDoubledCoordinateMap outer hside
+        (D.outerCircleRemainderPoint outer z) := by
+  let P := D.secondAxisFillingPastingDataOfInnerZero hpairwise outer hinner hside
+  have hpiece : (D.circleData outer).planeCirclePoint z ∈ D.axisFillingPiece outer none :=
+    (D.outerCircleRemainderPoint outer z).2
+  change P.glued ((D.circleData outer).planeCirclePoint z) = _
+  rw [P.glued_eq none _ hpiece]
+  rfl
+
+/-- Pointwise-zero maximal inner circles and a tube-side remainder give a doubled first-
+coordinate filling of the outer circle. -/
+def firstDoubledCoordinateFillingOfOuterDiskOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedTubeSide Phi) :
+    SphereCircleDoubledCoordinateFilling (F.circle outer) := by
+  let filling : ClosedUnitDisk → Circle :=
+    D.firstAxisFillingMapOfInnerZero hpairwise outer hinner hside ∘
+      (D.circleData outer).planeDiskHomeomorph
+  refine .first filling
+    ((D.continuous_firstAxisFillingMapOfInnerZero hpairwise outer hinner hside).comp
+      (D.circleData outer).planeDiskHomeomorph.continuous) ?_
+  intro t
+  change D.firstAxisFillingMapOfInnerZero hpairwise outer hinner hside
+      ((D.circleData outer).planeDiskHomeomorph (unitDiskBoundary t)) = _
+  rw [← (D.circleData outer).planeCirclePoint_exp_eq_planeDiskHomeomorph_boundary t]
+  rw [D.firstAxisFillingMapOfInnerZero_outerCirclePoint
+    hpairwise outer hinner hside]
+  exact D.firstOuterDiskRemainderDoubledCoordinateMap_outerCircleRemainderPoint
+    outer hside t
+
+/-- Pointwise-zero maximal inner circles and an exterior-side remainder give a doubled second-
+coordinate filling of the outer circle. -/
+def secondDoubledCoordinateFillingOfOuterDiskOfInnerZero
+    (hinner : D.MaximalInnerAllInessential outer)
+    (hside : ∀ x, D.outerDiskRemainderAmbientMap outer x ∈ transportedExteriorSide Phi) :
+    SphereCircleDoubledCoordinateFilling (F.circle outer) := by
+  let filling : ClosedUnitDisk → Circle :=
+    D.secondAxisFillingMapOfInnerZero hpairwise outer hinner hside ∘
+      (D.circleData outer).planeDiskHomeomorph
+  refine .second filling
+    ((D.continuous_secondAxisFillingMapOfInnerZero hpairwise outer hinner hside).comp
+      (D.circleData outer).planeDiskHomeomorph.continuous) ?_
+  intro t
+  change D.secondAxisFillingMapOfInnerZero hpairwise outer hinner hside
+      ((D.circleData outer).planeDiskHomeomorph (unitDiskBoundary t)) = _
+  rw [← (D.circleData outer).planeCirclePoint_exp_eq_planeDiskHomeomorph_boundary t]
+  rw [D.secondAxisFillingMapOfInnerZero_outerCirclePoint
+    hpairwise outer hinner hside]
+  exact D.secondOuterDiskRemainderDoubledCoordinateMap_outerCircleRemainderPoint
+    outer hside t
+
+/-- Among finitely many essential circles in one common sphere chart, choose one minimal by
+inclusion of its closed planar disk.  Every selected maximal inner circle is then inessential. -/
+theorem exists_essential_maximalInnerAllInessential
+    (hessential : ∃ i, (F.circle i).Essential) :
+    ∃ outer, (F.circle outer).Essential ∧ D.MaximalInnerAllInessential outer := by
+  let essentialIndices : Set ι := {i | (F.circle i).Essential}
+  have hnonempty : essentialIndices.Nonempty := by
+    obtain ⟨i, hi⟩ := hessential
+    exact ⟨i, hi⟩
+  obtain ⟨outer, houter, hminimal⟩ :=
+    Set.Finite.exists_minimalFor D.closedPlaneDisk essentialIndices
+      (Set.toFinite essentialIndices) hnonempty
+  refine ⟨outer, houter, ?_⟩
+  intro i
+  by_contra hi
+  have hiEssential : (F.circle i.1).Essential := hi
+  have hiStrict : D.closedPlaneDisk i.1 ⊆
+      (D.circleData outer).planeJordanCircle.inside :=
+    D.inclusionMaximalInnerClosedPlaneDisk_inside outer i.2
+  have hiSubset : D.closedPlaneDisk i.1 ⊆ D.closedPlaneDisk outer :=
+    hiStrict.trans subset_closure
+  have houterSubset : D.closedPlaneDisk outer ⊆ D.closedPlaneDisk i.1 :=
+    hminimal hiEssential hiSubset
+  let x := (D.circleData outer).planeCirclePoint (Circle.exp 0)
+  have hxInside : (x : JordanCurve.Arcs.Plane) ∈
+      (D.circleData outer).planeJordanCircle.inside :=
+    hiStrict (houterSubset x.2)
+  have hxCarrier : (x : JordanCurve.Arcs.Plane) ∈
+      (D.circleData outer).planeJordanCircle.carrier := by
+    rw [(D.circleData outer).carrier_planeJordanCircle]
+    exact ⟨Circle.exp 0, (D.circleData outer).coe_planeCirclePoint (Circle.exp 0) |>.symm⟩
+  exact (D.circleData outer).planeJordanCircle.inside_subset_compl hxInside hxCarrier
+
+include D hpairwise in
+/-- A finite pairwise-disjoint circle family lying on one embedded sphere has the reduced
+essential doubled-coordinate filling property.  Minimal planar nesting supplies the inner caps,
+and the finite planar pushout places the remaining punctured disk on one torus side. -/
+theorem hasEssentialDoubledCoordinateFilling_of_commonPoleData
+    (hSphere : S.carrier ⊆ F.sphereFamily.carrier) :
+    F.HasEssentialDoubledCoordinateFilling := by
+  intro hessential
+  obtain ⟨outer, houter, hinner⟩ :=
+    exists_essential_maximalInnerAllInessential (D := D) hessential
+  rcases D.canonicalOuterDiskRemainder_liesOnOneTorusSide_of_planarPushout
+      hpairwise outer hSphere with hTube | hExterior
+  · exact ⟨outer, houter,
+      ⟨D.firstDoubledCoordinateFillingOfOuterDiskOfInnerZero
+        hpairwise outer hinner hTube⟩⟩
+  · exact ⟨outer, houter,
+      ⟨D.secondDoubledCoordinateFillingOfOuterDiskOfInnerZero
+        hpairwise outer hinner hExterior⟩⟩
 
 theorem firstAxisFillingMap_outerCirclePoint
     (hzero : F.AllInessential)

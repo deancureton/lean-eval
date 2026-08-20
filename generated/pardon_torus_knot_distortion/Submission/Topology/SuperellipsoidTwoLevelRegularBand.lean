@@ -89,17 +89,49 @@ private theorem upper_axis_point_mem_originalBox (hr : 0 < r) :
     simp only [sub_self, abs_zero]
     exact mul_pos (axisWeight_pos i) hr
 
-/-- A regular band narrowed to the incoming scale has honest separated convex endpoint spheres.
+/-- A narrow regular coordinate band together with strict interior witnesses at its two endpoint
+heights.  This is the analytic and convex input needed to construct both endpoint barrier graphs
+and the separated terminal spheres. -/
+structure CanonicalEndpointHeightData
+    (S : SuperellipsoidDoubleBubbleSelection K Phi frame c r W) where
+  band : OrientedCoordinateRegularBandData Phi frame S.cut.height
+  width_le : band.ε ≤ r / 4
+  lowerPoint : ∃ x, x ∈ superellipsoidBody frame c S.outer.scale ∧
+    x.ofLp (frame 2) < S.cut.height - band.ε
+  upperPoint : ∃ x, x ∈ superellipsoidBody frame c S.outer.scale ∧
+    S.cut.height + band.ε < x.ofLp (frame 2)
 
-The endpoint sphere construction is the explicit separated-truncation rounding, while regularity
-of every height in the wider closed band is retained by `B` itself. -/
-theorem exists_narrowRegularBand_and_neckPinchRounding
+namespace CanonicalEndpointHeightData
+
+variable {S : SuperellipsoidDoubleBubbleSelection K Phi frame c r W}
+
+/-- The lower endpoint is a regular transported-torus coordinate level. -/
+theorem lowerSurfaceRegular (D : CanonicalEndpointHeightData S) :
+    IsRegularValue (orientedCoordinateLift Phi frame 2) (S.cut.height - D.band.ε) := by
+  apply D.band.isRegularValue_of_mem_closedBand
+  rw [sub_sub_cancel_left, abs_neg, abs_of_pos D.band.ε_pos]
+  linarith [D.band.ε_pos]
+
+/-- The upper endpoint is a regular transported-torus coordinate level. -/
+theorem upperSurfaceRegular (D : CanonicalEndpointHeightData S) :
+    IsRegularValue (orientedCoordinateLift Phi frame 2) (S.cut.height + D.band.ε) := by
+  apply D.band.isRegularValue_of_mem_closedBand
+  rw [add_sub_cancel_left, abs_of_pos D.band.ε_pos]
+  linarith [D.band.ε_pos]
+
+/-- The endpoint witnesses construct the separated convex terminal rounding. -/
+def roundingData (D : CanonicalEndpointHeightData S) (hr : 0 < r) :
+    SuperellipsoidGlobalNeckPinchRoundingData
+      frame c S.outer.scale S.cut.height (S.outer.scale_pos hr) :=
+  separatedTruncationGlobalNeckPinchRoundingData
+    (S.outer.scale_pos hr) D.band.ε_pos D.lowerPoint D.upperPoint
+
+end CanonicalEndpointHeightData
+
+/-- Every selected regular cut has canonical narrow endpoint-height data. -/
+theorem exists_canonicalEndpointHeightData
     (S : SuperellipsoidDoubleBubbleSelection K Phi frame c r W)
-    (hr : 0 < r) :
-    ∃ B : OrientedCoordinateRegularBandData Phi frame S.cut.height,
-      B.ε ≤ r / 4 ∧
-        Nonempty (SuperellipsoidGlobalNeckPinchRoundingData
-          frame c S.outer.scale S.cut.height (S.outer.scale_pos hr)) := by
+    (hr : 0 < r) : Nonempty (CanonicalEndpointHeightData S) := by
   obtain ⟨B₀⟩ := exists_orientedCoordinateRegularBandData
     Phi frame S.cut.height S.cut.surfaceRegular
   let B := B₀.narrow (r / 4) (div_pos hr (by norm_num))
@@ -120,8 +152,25 @@ theorem exists_narrowRegularBand_and_neckPinchRounding
       have hcut := S.cutHeight_mem.2
       dsimp [shellEpsilon] at hcut
       linarith
-  exact ⟨B, hε, ⟨separatedTruncationGlobalNeckPinchRoundingData
-    (S.outer.scale_pos hr) B.ε_pos hlower hupper⟩⟩
+  exact ⟨{
+    band := B
+    width_le := hε
+    lowerPoint := hlower
+    upperPoint := hupper }⟩
+
+/-- A regular band narrowed to the incoming scale has honest separated convex endpoint spheres.
+
+The endpoint sphere construction is the explicit separated-truncation rounding, while regularity
+of every height in the wider closed band is retained by `B` itself. -/
+theorem exists_narrowRegularBand_and_neckPinchRounding
+    (S : SuperellipsoidDoubleBubbleSelection K Phi frame c r W)
+    (hr : 0 < r) :
+    ∃ B : OrientedCoordinateRegularBandData Phi frame S.cut.height,
+      B.ε ≤ r / 4 ∧
+        Nonempty (SuperellipsoidGlobalNeckPinchRoundingData
+          frame c S.outer.scale S.cut.height (S.outer.scale_pos hr)) := by
+  obtain ⟨D⟩ := exists_canonicalEndpointHeightData S hr
+  exact ⟨D.band, D.width_le, ⟨D.roundingData hr⟩⟩
 
 end SuperellipsoidDoubleBubbleSelection
 
