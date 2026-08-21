@@ -158,15 +158,216 @@ private theorem canonicalBandMap_rightOuterArm_height
       (D.centralRightOuterArmLift b (D.openChartNarrowedTime t)) = _
   exact D.centralRightOuterArmLift_height b (D.openChartNarrowedTime t)
 
-private noncomputable def lowerPortBranch
+noncomputable def lowerPortBranch
     (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :=
   seamToCornerPathOfBandSide D.centralCutOrder
     D.centralHeightFlowStraightenedChartFamily b side 0
 
-private noncomputable def upperPortBranch
+noncomputable def upperPortBranch
     (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :=
   seamToCornerPathOfBandSide D.centralCutOrder
     D.centralHeightFlowStraightenedChartFamily b side 1
+
+theorem leftPath_range_eq_portBranches
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath =
+      Set.range (D.lowerPortBranch b 0) ∪ Set.range (D.upperPortBranch b 0) := by
+  ext x
+  constructor
+  · rintro ⟨u, rfl⟩
+    have hu : bandLeftPath u ∈
+        Set.range standardLeftLowerBranchPath ∪
+          Set.range standardLeftUpperBranchPath := by
+      rw [← range_bandLeftPath_eq_standardHalves]
+      exact ⟨u, rfl⟩
+    rcases hu with ⟨v, hv⟩ | ⟨v, hv⟩
+    · exact Or.inl ⟨v,
+        congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+    · exact Or.inr ⟨v,
+        congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+  · rintro (⟨u, rfl⟩ | ⟨u, rfl⟩)
+    · have hu : standardLeftLowerBranchPath u ∈ Set.range bandLeftPath := by
+        rw [range_bandLeftPath_eq_standardHalves]
+        exact Or.inl ⟨u, rfl⟩
+      obtain ⟨v, hv⟩ := hu
+      exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+    · have hu : standardLeftUpperBranchPath u ∈ Set.range bandLeftPath := by
+        rw [range_bandLeftPath_eq_standardHalves]
+        exact Or.inr ⟨u, rfl⟩
+      obtain ⟨v, hv⟩ := hu
+      exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+theorem rightPath_range_eq_portBranches
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).rightPath =
+      Set.range (D.lowerPortBranch b 1) ∪ Set.range (D.upperPortBranch b 1) := by
+  ext x
+  constructor
+  · rintro ⟨u, rfl⟩
+    have hu : bandRightPath u ∈
+        Set.range standardRightLowerBranchPath ∪
+          Set.range standardRightUpperBranchPath := by
+      rw [← range_bandRightPath_eq_standardHalves]
+      exact ⟨u, rfl⟩
+    rcases hu with ⟨v, hv⟩ | ⟨v, hv⟩
+    · exact Or.inl ⟨unitInterval.symm v, by
+        change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+            (standardRightLowerBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+        rw [unitInterval.symm_symm]
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+    · exact Or.inr ⟨unitInterval.symm v, by
+        change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+            (standardRightUpperBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+        rw [unitInterval.symm_symm]
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+  · rintro (⟨u, rfl⟩ | ⟨u, rfl⟩)
+    · have hu : standardRightLowerBranchPath (unitInterval.symm u) ∈
+          Set.range bandRightPath := by
+        rw [range_bandRightPath_eq_standardHalves]
+        exact Or.inl ⟨unitInterval.symm u, rfl⟩
+      obtain ⟨v, hv⟩ := hu
+      exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+    · have hu : standardRightUpperBranchPath (unitInterval.symm u) ∈
+          Set.range bandRightPath := by
+        rw [range_bandRightPath_eq_standardHalves]
+        exact Or.inr ⟨unitInterval.symm u, rfl⟩
+      obtain ⟨v, hv⟩ := hu
+      exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+/-- At the all-false resolution, one local edge is exactly the two incident outer port
+branches. -/
+theorem range_booleanFourPortLocalPath_false_eq_portBranches
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
+    Set.range ((booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path (b, side)) =
+      Set.range (D.lowerPortBranch b side) ∪ Set.range (D.upperPortBranch b side) := by
+  refine Fin.cases ?_ (fun side : Fin 1 ↦
+    Fin.cases ?_ (fun z : Fin 0 ↦ Fin.elim0 z) side) side
+  · change Set.range ((booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path
+          (b, (0 : Fin 2))) =
+      Set.range (D.lowerPortBranch b 0) ∪ Set.range (D.upperPortBranch b 0)
+    change Set.range (booleanFourPortLocalPath
+      D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false) (b, 0)) = _
+    simpa only [booleanFourPortLocalPath, Bool.false_eq_true, ↓reduceDIte,
+      Fin.cases_zero, Path.cast_coe] using D.leftPath_range_eq_portBranches b
+  · change Set.range ((booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path
+          (b, Fin.succ 0)) =
+      Set.range (D.lowerPortBranch b (Fin.succ 0)) ∪
+        Set.range (D.upperPortBranch b (Fin.succ 0))
+    change Set.range (booleanFourPortLocalPath
+      D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)
+        (b, Fin.succ 0)) = _
+    unfold booleanFourPortLocalPath
+    simp only
+    rw [dif_neg (by simp)]
+    simp only [Fin.cases_succ, Fin.cases_zero, Path.cast_coe]
+    exact D.rightPath_range_eq_portBranches b
+
+private theorem lowerPortBranch_zero_range_subset_leftPath
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.lowerPortBranch b 0) ⊆
+      Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath := by
+  rintro _ ⟨u, rfl⟩
+  change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+    (standardLeftLowerBranchPath u) ∈ _
+  have hz : standardLeftLowerBranchPath u ∈ Set.range bandLeftPath := by
+    rw [range_bandLeftPath_eq_standardHalves]
+    exact Or.inl ⟨u, rfl⟩
+  obtain ⟨v, hv⟩ := hz
+  exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+private theorem lowerPortBranch_one_range_subset_rightPath
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.lowerPortBranch b 1) ⊆
+      Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).rightPath := by
+  rintro _ ⟨u, rfl⟩
+  change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+    (standardRightLowerBranchPath (unitInterval.symm u)) ∈ _
+  have hz : standardRightLowerBranchPath (unitInterval.symm u) ∈
+      Set.range bandRightPath := by
+    rw [range_bandRightPath_eq_standardHalves]
+    exact Or.inl ⟨unitInterval.symm u, rfl⟩
+  obtain ⟨v, hv⟩ := hz
+  exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+private theorem upperPortBranch_zero_range_subset_leftPath
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.upperPortBranch b 0) ⊆
+      Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath := by
+  rintro _ ⟨u, rfl⟩
+  change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+    (standardLeftUpperBranchPath u) ∈ _
+  have hz : standardLeftUpperBranchPath u ∈ Set.range bandLeftPath := by
+    rw [range_bandLeftPath_eq_standardHalves]
+    exact Or.inr ⟨u, rfl⟩
+  obtain ⟨v, hv⟩ := hz
+  exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+private theorem upperPortBranch_one_range_subset_rightPath
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.upperPortBranch b 1) ⊆
+      Set.range (D.centralHeightFlowStraightenedChartFamily.chart b).rightPath := by
+  rintro _ ⟨u, rfl⟩
+  change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+    (standardRightUpperBranchPath (unitInterval.symm u)) ∈ _
+  have hz : standardRightUpperBranchPath (unitInterval.symm u) ∈
+      Set.range bandRightPath := by
+    rw [range_bandRightPath_eq_standardHalves]
+    exact Or.inr ⟨unitInterval.symm u, rfl⟩
+  obtain ⟨v, hv⟩ := hz
+  exact ⟨v, congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv⟩
+
+private theorem lowerPortBranch_ranges_pairwise_disjoint :
+    Pairwise fun p q :
+        Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount × Fin 2 ↦
+      Disjoint (Set.range (D.lowerPortBranch p.1 p.2))
+        (Set.range (D.lowerPortBranch q.1 q.2)) := by
+  rintro ⟨b, side⟩ ⟨b', side'⟩ hne
+  by_cases hbb' : b = b'
+  · subst b'
+    have hside : side ≠ side' := fun h ↦ hne (Prod.ext rfl h)
+    fin_cases side <;> fin_cases side'
+    · exact (hside rfl).elim
+    · exact (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath_disjoint_rightPath
+        |>.mono (D.lowerPortBranch_zero_range_subset_leftPath b)
+          (D.lowerPortBranch_one_range_subset_rightPath b)
+    · exact (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath_disjoint_rightPath.symm
+        |>.mono (D.lowerPortBranch_one_range_subset_rightPath b)
+          (D.lowerPortBranch_zero_range_subset_leftPath b)
+    · exact (hside rfl).elim
+  · exact (D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts
+        |>.support_pairwise hbb').mono
+      (seamToCornerPathOfBandSide_range_subset_support D.centralCutOrder
+        D.centralHeightFlowStraightenedChartFamily b side 0)
+      (seamToCornerPathOfBandSide_range_subset_support D.centralCutOrder
+        D.centralHeightFlowStraightenedChartFamily b' side' 0)
+
+private theorem upperPortBranch_ranges_pairwise_disjoint :
+    Pairwise fun p q :
+        Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount × Fin 2 ↦
+      Disjoint (Set.range (D.upperPortBranch p.1 p.2))
+        (Set.range (D.upperPortBranch q.1 q.2)) := by
+  rintro ⟨b, side⟩ ⟨b', side'⟩ hne
+  by_cases hbb' : b = b'
+  · subst b'
+    have hside : side ≠ side' := fun h ↦ hne (Prod.ext rfl h)
+    fin_cases side <;> fin_cases side'
+    · exact (hside rfl).elim
+    · exact (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath_disjoint_rightPath
+        |>.mono (D.upperPortBranch_zero_range_subset_leftPath b)
+          (D.upperPortBranch_one_range_subset_rightPath b)
+    · exact (D.centralHeightFlowStraightenedChartFamily.chart b).leftPath_disjoint_rightPath.symm
+        |>.mono (D.upperPortBranch_one_range_subset_rightPath b)
+          (D.upperPortBranch_zero_range_subset_leftPath b)
+    · exact (hside rfl).elim
+  · exact (D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts
+        |>.support_pairwise hbb').mono
+      (seamToCornerPathOfBandSide_range_subset_support D.centralCutOrder
+        D.centralHeightFlowStraightenedChartFamily b side 1)
+      (seamToCornerPathOfBandSide_range_subset_support D.centralCutOrder
+        D.centralHeightFlowStraightenedChartFamily b' side' 1)
 
 private theorem lowerPortBranch_range_subset_outerCarrier
     (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
@@ -901,6 +1102,364 @@ theorem upperTrimmedOuterPath_not_mem_seam
     superellipsoidTorusSeam Phi frame c S.outer.scale S.cut.height
   exact hnot
 
+theorem lowerTrimmedOuterPath_height_lt
+    (g : D.centralOuterOrder.GlobalLowerOuterGap) (u : unitInterval) :
+    (D.lowerTrimmedOuterPath g u).ofLp (frame 2) < S.cut.height := by
+  obtain ⟨q, hq⟩ := D.lowerTrimmedOuterPath_range_subset_gap g ⟨u, rfl⟩
+  have hle := D.centralOuterOrder.lowerGapPath_mem
+    (D.centralOuterOrder.lowerGapAsLowerGap g) q
+  have houter := D.centralOuterOrder.gapPath_mem_outerCircle
+    (D.centralOuterOrder.lowerGapAsGlobalOuterGap g) q
+  have hsection := D.centralGraph.outer.circle_mem_section g.1.1 houter
+  have hne : (D.lowerTrimmedOuterPath g u).ofLp (frame 2) ≠ S.cut.height := by
+    intro heq
+    apply D.lowerTrimmedOuterPath_not_mem_seam g u
+    exact ⟨⟨hq ▸ hsection.1, hq ▸ hsection.2⟩, heq⟩
+  have hle' : (D.lowerTrimmedOuterPath g u).ofLp (frame 2) ≤ S.cut.height :=
+    hq ▸ hle
+  exact lt_of_le_of_ne hle' hne
+
+theorem upperTrimmedOuterPath_height_gt
+    (g : D.centralOuterOrder.GlobalUpperOuterGap) (u : unitInterval) :
+    S.cut.height < (D.upperTrimmedOuterPath g u).ofLp (frame 2) := by
+  obtain ⟨q, hq⟩ := D.upperTrimmedOuterPath_range_subset_gap g ⟨u, rfl⟩
+  have hge := D.centralOuterOrder.upperGapPath_mem
+    (D.centralOuterOrder.upperGapAsUpperGap g) q
+  have houter := D.centralOuterOrder.gapPath_mem_outerCircle
+    (D.centralOuterOrder.upperGapAsGlobalOuterGap g) q
+  have hsection := D.centralGraph.outer.circle_mem_section g.1.1 houter
+  have hne : S.cut.height ≠ (D.upperTrimmedOuterPath g u).ofLp (frame 2) := by
+    intro heq
+    apply D.upperTrimmedOuterPath_not_mem_seam g u
+    exact ⟨⟨hq ▸ hsection.1, hq ▸ hsection.2⟩, heq.symm⟩
+  have hge' : S.cut.height ≤ (D.upperTrimmedOuterPath g u).ofLp (frame 2) :=
+    hq ▸ hge
+  exact lt_of_le_of_ne hge' hne
+
+private theorem lowerTrimmedOuterPath_mem_support_exists_port
+    (g : D.centralOuterOrder.GlobalLowerOuterGap)
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount)
+    {x : R3} (hx : x ∈ Set.range (D.lowerTrimmedOuterPath g))
+    (hxs : x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).support) :
+    ∃ side : Fin 2, x ∈ Set.range (D.lowerPortBranch b side) := by
+  obtain ⟨q, hq⟩ := D.lowerTrimmedOuterPath_range_subset_gap g hx
+  obtain ⟨u, hu⟩ := hx
+  have hxHeight : x.ofLp (frame 2) < S.cut.height :=
+    hu ▸ D.lowerTrimmedOuterPath_height_lt g u
+  have hxCarrier : x ∈ D.centralGraph.carrier := by
+    rw [← hq]
+    exact canonicalBarrierPath_mem_carrier D.centralGraph D.centralOuterOrder
+      D.centralCutOrder D.scale_pos (Sum.inl g) q
+  have hxSingular :
+      x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).singularPatch := by
+    change x ∈ (D.centralHeightFlowArcExactness.charts.chart b).singularPatch
+    have hxs' : x ∈ (D.centralHeightFlowArcExactness.charts.chart b).support := hxs
+    rw [← D.centralHeightFlowArcExactness.exactness.local_arc_union_exact b,
+      ← carrier_inter_eq_iUnion D.centralGraph D.centralOuterOrder
+        D.centralCutOrder D.scale_pos]
+    exact ⟨hxCarrier, hxs'⟩
+  rcases hxSingular with (hleft | hright) | hseam
+  · obtain ⟨t, rfl⟩ := hleft
+    have ht : bandLeftPath t ∈
+        Set.range standardLeftLowerBranchPath ∪
+          Set.range standardLeftUpperBranchPath := by
+      rw [← range_bandLeftPath_eq_standardHalves]
+      exact ⟨t, rfl⟩
+    rcases ht with ⟨v, hv⟩ | ⟨v, hv⟩
+    · refine ⟨0, v, ?_⟩
+      change _ = (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+        (bandLeftPath t)
+      exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+    · have hupper :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+              (bandLeftPath t) ∈ Set.range (D.upperPortBranch b 0) := by
+        refine ⟨v, ?_⟩
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+      have hge := D.upperPortBranch_range_subset_upperHalfspace b 0 hupper
+      exact (not_lt_of_ge hge hxHeight).elim
+  · obtain ⟨t, rfl⟩ := hright
+    have ht : bandRightPath t ∈
+        Set.range standardRightLowerBranchPath ∪
+          Set.range standardRightUpperBranchPath := by
+      rw [← range_bandRightPath_eq_standardHalves]
+      exact ⟨t, rfl⟩
+    rcases ht with ⟨v, hv⟩ | ⟨v, hv⟩
+    · refine ⟨1, unitInterval.symm v, ?_⟩
+      change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+          (standardRightLowerBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+      rw [unitInterval.symm_symm]
+      exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+    · have hupper :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+              (bandRightPath t) ∈ Set.range (D.upperPortBranch b 1) := by
+        refine ⟨unitInterval.symm v, ?_⟩
+        change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+            (standardRightUpperBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+        rw [unitInterval.symm_symm]
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+      have hge := D.upperPortBranch_range_subset_upperHalfspace b 1 hupper
+      exact (not_lt_of_ge hge hxHeight).elim
+  · obtain ⟨t, rfl⟩ := hseam
+    have hcircle := D.centralCutOrder.globalInwardExcursionPath_mem_cutCircle
+      (D.centralCutOrder.globalGapOfBand b) t
+    have hsection := D.centralGraph.cut.circle_mem_section
+      (D.centralCutOrder.globalGapOfBand b).1.1 hcircle
+    have hheight :
+        ((D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t).ofLp
+          (frame 2) = S.cut.height := by
+      have hcore :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t =
+            ((D.centralCutOrder.globalBandPath b t : transportedTorus Phi) : R3) :=
+        (D.centralHeightFlowStraightenedBandData b).core_alignment t
+      rw [hcore]
+      exact hsection.2
+    rw [hheight] at hxHeight
+    exact (lt_irrefl _ hxHeight).elim
+
+private theorem upperTrimmedOuterPath_mem_support_exists_port
+    (g : D.centralOuterOrder.GlobalUpperOuterGap)
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount)
+    {x : R3} (hx : x ∈ Set.range (D.upperTrimmedOuterPath g))
+    (hxs : x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).support) :
+    ∃ side : Fin 2, x ∈ Set.range (D.upperPortBranch b side) := by
+  obtain ⟨q, hq⟩ := D.upperTrimmedOuterPath_range_subset_gap g hx
+  obtain ⟨u, hu⟩ := hx
+  have hxHeight : S.cut.height < x.ofLp (frame 2) :=
+    hu ▸ D.upperTrimmedOuterPath_height_gt g u
+  have hxCarrier : x ∈ D.centralGraph.carrier := by
+    rw [← hq]
+    exact canonicalBarrierPath_mem_carrier D.centralGraph D.centralOuterOrder
+      D.centralCutOrder D.scale_pos (Sum.inr (Sum.inl g)) q
+  have hxSingular :
+      x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).singularPatch := by
+    change x ∈ (D.centralHeightFlowArcExactness.charts.chart b).singularPatch
+    have hxs' : x ∈ (D.centralHeightFlowArcExactness.charts.chart b).support := hxs
+    rw [← D.centralHeightFlowArcExactness.exactness.local_arc_union_exact b,
+      ← carrier_inter_eq_iUnion D.centralGraph D.centralOuterOrder
+        D.centralCutOrder D.scale_pos]
+    exact ⟨hxCarrier, hxs'⟩
+  rcases hxSingular with (hleft | hright) | hseam
+  · obtain ⟨t, rfl⟩ := hleft
+    have ht : bandLeftPath t ∈
+        Set.range standardLeftLowerBranchPath ∪
+          Set.range standardLeftUpperBranchPath := by
+      rw [← range_bandLeftPath_eq_standardHalves]
+      exact ⟨t, rfl⟩
+    rcases ht with ⟨v, hv⟩ | ⟨v, hv⟩
+    · have hlower :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+              (bandLeftPath t) ∈ Set.range (D.lowerPortBranch b 0) := by
+        refine ⟨v, ?_⟩
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+      have hle := D.lowerPortBranch_range_subset_lowerHalfspace b 0 hlower
+      exact (not_lt_of_ge hle hxHeight).elim
+    · refine ⟨0, v, ?_⟩
+      change _ = (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+        (bandLeftPath t)
+      exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+  · obtain ⟨t, rfl⟩ := hright
+    have ht : bandRightPath t ∈
+        Set.range standardRightLowerBranchPath ∪
+          Set.range standardRightUpperBranchPath := by
+      rw [← range_bandRightPath_eq_standardHalves]
+      exact ⟨t, rfl⟩
+    rcases ht with ⟨v, hv⟩ | ⟨v, hv⟩
+    · have hlower :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+              (bandRightPath t) ∈ Set.range (D.lowerPortBranch b 1) := by
+        refine ⟨unitInterval.symm v, ?_⟩
+        change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+            (standardRightLowerBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+        rw [unitInterval.symm_symm]
+        exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+      have hle := D.lowerPortBranch_range_subset_lowerHalfspace b 1 hlower
+      exact (not_lt_of_ge hle hxHeight).elim
+    · refine ⟨1, unitInterval.symm v, ?_⟩
+      change (D.centralHeightFlowStraightenedChartFamily.chart b).chart
+          (standardRightUpperBranchPath (unitInterval.symm (unitInterval.symm v))) = _
+      rw [unitInterval.symm_symm]
+      exact congrArg (D.centralHeightFlowStraightenedChartFamily.chart b).chart hv
+  · obtain ⟨t, rfl⟩ := hseam
+    have hcircle := D.centralCutOrder.globalInwardExcursionPath_mem_cutCircle
+      (D.centralCutOrder.globalGapOfBand b) t
+    have hsection := D.centralGraph.cut.circle_mem_section
+      (D.centralCutOrder.globalGapOfBand b).1.1 hcircle
+    have hheight :
+        ((D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t).ofLp
+          (frame 2) = S.cut.height := by
+      have hcore :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t =
+            ((D.centralCutOrder.globalBandPath b t : transportedTorus Phi) : R3) :=
+        (D.centralHeightFlowStraightenedBandData b).core_alignment t
+      rw [hcore]
+      exact hsection.2
+    rw [hheight] at hxHeight
+    exact (lt_irrefl _ hxHeight).elim
+
+private theorem lowerPortBranch_eq_incidentGapPortBranch
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
+    let ge := D.centralOuterOrder.globalLowerEndpointEquiv.symm
+      (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+    Set.range (D.lowerPortBranch b side) =
+      Set.range (D.lowerGapPortBranch ge.1 ge.2) := by
+  dsimp only
+  let ge := D.centralOuterOrder.globalLowerEndpointEquiv.symm
+    (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+  have hglobal : D.centralOuterOrder.globalLowerEndpointEquiv ge =
+      D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side) :=
+    D.centralOuterOrder.globalLowerEndpointEquiv.apply_symm_apply _
+  have hside : seamBandSide D.centralCutOrder
+      (D.centralOuterOrder.globalLowerEndpointEquiv ge) = (b, side) := by
+    rw [hglobal]
+    exact D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm_apply_apply _
+  rw [D.range_lowerGapPortBranch_eq ge.1 ge.2, hside]
+
+private theorem upperPortBranch_eq_incidentGapPortBranch
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
+    let ge := D.centralOuterOrder.globalUpperEndpointEquiv.symm
+      (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+    Set.range (D.upperPortBranch b side) =
+      Set.range (D.upperGapPortBranch ge.1 ge.2) := by
+  dsimp only
+  let ge := D.centralOuterOrder.globalUpperEndpointEquiv.symm
+    (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+  have hglobal : D.centralOuterOrder.globalUpperEndpointEquiv ge =
+      D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side) :=
+    D.centralOuterOrder.globalUpperEndpointEquiv.apply_symm_apply _
+  have hside : seamBandSide D.centralCutOrder
+      (D.centralOuterOrder.globalUpperEndpointEquiv ge) = (b, side) := by
+    rw [hglobal]
+    exact D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm_apply_apply _
+  rw [D.range_upperGapPortBranch_eq ge.1 ge.2, hside]
+
+theorem lowerPortBranch_range_subset_activeCarrier
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
+    Set.range (D.lowerPortBranch b side) ⊆
+      ⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle i.1).circle := by
+  let ge := D.centralOuterOrder.globalLowerEndpointEquiv.symm
+    (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+  intro x hx
+  apply D.lowerGapPortBranch_range_subset_activeCarrier ge.1 ge.2
+  rw [← D.lowerPortBranch_eq_incidentGapPortBranch b side]
+  exact hx
+
+theorem upperPortBranch_range_subset_activeCarrier
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) (side : Fin 2) :
+    Set.range (D.upperPortBranch b side) ⊆
+      ⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle i.1).circle := by
+  let ge := D.centralOuterOrder.globalUpperEndpointEquiv.symm
+    (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+  intro x hx
+  apply D.upperGapPortBranch_range_subset_activeCarrier ge.1 ge.2
+  rw [← D.upperPortBranch_eq_incidentGapPortBranch b side]
+  exact hx
+
+theorem canonicalBooleanOutsidePath_range_subset_activeCarrier
+    (e : BooleanOutsideEdge D.centralOuterOrder) :
+    Set.range (D.canonicalBooleanOutsidePath e) ⊆
+      ⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle i.1).circle := by
+  rcases e with g | g
+  · intro x hx
+    have hxGap := D.lowerTrimmedOuterPath_range_subset_gap g hx
+    have hxUnion : x ∈ ⋃ h : D.centralOuterOrder.GlobalLowerOuterGap,
+        Set.range fun u ↦
+          ((D.centralOuterOrder.globalLowerOuterPath h u : transportedTorus Phi) : R3) :=
+      Set.mem_iUnion.mpr ⟨g, hxGap⟩
+    rw [D.centralOuterOrder.iUnion_range_globalLowerOuterPath_eq] at hxUnion
+    exact hxUnion.1
+  · intro x hx
+    have hxGap := D.upperTrimmedOuterPath_range_subset_gap g hx
+    have hxUnion : x ∈ ⋃ h : D.centralOuterOrder.GlobalUpperOuterGap,
+        Set.range fun u ↦
+          ((D.centralOuterOrder.globalUpperOuterPath h u : transportedTorus Phi) : R3) :=
+      Set.mem_iUnion.mpr ⟨g, hxGap⟩
+    rw [D.centralOuterOrder.iUnion_range_globalUpperOuterPath_eq] at hxUnion
+    exact hxUnion.1
+
+private theorem activeOuterCarrier_disjoint_inactiveOuterCircle
+    (i : D.centralOuterOrder.InactiveOuterCircle) :
+    Disjoint
+      (⋃ a : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle a.1).circle)
+      (Set.range (D.centralGraph.outer.circle i.1).circle) := by
+  rw [Set.disjoint_left]
+  intro x hxActive hxInactive
+  obtain ⟨a, ha⟩ := Set.mem_iUnion.mp hxActive
+  have hai : a.1 ≠ i.1 := by
+    intro h
+    exact i.2 (h ▸ a.2)
+  exact Set.disjoint_left.mp (D.centralGraph.outer.pairwise_disjoint hai) ha hxInactive
+
+private theorem inactiveOuterCircle_range_disjoint_seam
+    (i : D.centralOuterOrder.InactiveOuterCircle) :
+    Disjoint (Set.range (D.centralGraph.outer.circle i.1).circle)
+      (superellipsoidTorusSeam Phi frame c S.outer.scale S.cut.height) := by
+  rw [Set.disjoint_left]
+  intro x hxCircle hxSeam
+  obtain ⟨z, rfl⟩ := hxCircle
+  obtain ⟨t, rfl⟩ := Circle.exp_surjective z
+  apply D.centralOuterOrder.inactiveOuter_height_ne_zero i t
+  unfold windingLoopCutHeight
+  rw [← (D.centralGraph.outer.circle i.1).parametrization]
+  exact sub_eq_zero.mpr hxSeam.2
+
+theorem inactiveOuterCircle_range_disjoint_support
+    (i : D.centralOuterOrder.InactiveOuterCircle)
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Disjoint (Set.range (D.centralGraph.outer.circle i.1).circle)
+      (D.centralHeightFlowStraightenedChartFamily.chart b).support := by
+  rw [Set.disjoint_left]
+  intro x hxCircle hxSupport
+  have hxCarrier : x ∈ D.centralGraph.carrier :=
+    Or.inl (Set.mem_iUnion.mpr ⟨i.1, hxCircle⟩)
+  have hxSingular :
+      x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).singularPatch := by
+    change x ∈ (D.centralHeightFlowArcExactness.charts.chart b).singularPatch
+    rw [← D.centralHeightFlowArcExactness.exactness.local_arc_union_exact b,
+      ← carrier_inter_eq_iUnion D.centralGraph D.centralOuterOrder
+        D.centralCutOrder D.scale_pos]
+    exact ⟨hxCarrier, hxSupport⟩
+  rcases hxSingular with (hxLeft | hxRight) | hxSeam
+  · rw [D.leftPath_range_eq_portBranches b] at hxLeft
+    have hxActive : x ∈ ⋃ a : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle a.1).circle := by
+      rcases hxLeft with hxLeft | hxLeft
+      · exact D.lowerPortBranch_range_subset_activeCarrier b 0 hxLeft
+      · exact D.upperPortBranch_range_subset_activeCarrier b 0 hxLeft
+    exact Set.disjoint_left.mp
+      (D.activeOuterCarrier_disjoint_inactiveOuterCircle i) hxActive hxCircle
+  · rw [D.rightPath_range_eq_portBranches b] at hxRight
+    have hxActive : x ∈ ⋃ a : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle a.1).circle := by
+      rcases hxRight with hxRight | hxRight
+      · exact D.lowerPortBranch_range_subset_activeCarrier b 1 hxRight
+      · exact D.upperPortBranch_range_subset_activeCarrier b 1 hxRight
+    exact Set.disjoint_left.mp
+      (D.activeOuterCarrier_disjoint_inactiveOuterCircle i) hxActive hxCircle
+  · obtain ⟨t, rfl⟩ := hxSeam
+    have hcircle := D.centralCutOrder.globalInwardExcursionPath_mem_cutCircle
+      (D.centralCutOrder.globalGapOfBand b) t
+    have hsection := D.centralGraph.cut.circle_mem_section
+      (D.centralCutOrder.globalGapOfBand b).1.1 hcircle
+    have hheight :
+        ((D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t).ofLp
+          (frame 2) = S.cut.height := by
+      have hcore :
+          (D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t =
+            ((D.centralCutOrder.globalBandPath b t : transportedTorus Phi) : R3) :=
+        (D.centralHeightFlowStraightenedBandData b).core_alignment t
+      rw [hcore]
+      exact hsection.2
+    have hxGeometricSeam :
+        (D.centralHeightFlowStraightenedChartFamily.chart b).seamPath t ∈
+          superellipsoidTorusSeam Phi frame c S.outer.scale S.cut.height :=
+      ⟨D.centralGraph.outer.circle_mem_section i.1 hxCircle, hheight⟩
+    exact Set.disjoint_left.mp (D.inactiveOuterCircle_range_disjoint_seam i)
+      hxCircle hxGeometricSeam
+
 theorem lowerTrimmedOuterPath_ranges_pairwise_disjoint :
     Pairwise fun g h : D.centralOuterOrder.GlobalLowerOuterGap ↦
       Disjoint (Set.range (D.lowerTrimmedOuterPath g))
@@ -1250,6 +1809,552 @@ theorem range_upperGapPortBranch_eq_subpath
   · rw [show (Fin.succ 0 : Fin 2) = 1 from rfl,
       OuterCircleTransverseHeightCyclicOrderFamily.finTwoUnitInterval_one]
     exact D.range_upperGapPortBranch_one_eq_subpath g
+
+private theorem lowerGapPortBranches_disjoint
+    (g : D.centralOuterOrder.GlobalLowerOuterGap) :
+    Disjoint (Set.range (D.lowerGapPortBranch g 0))
+      (Set.range (D.lowerGapPortBranch g 1)) := by
+  let bs0 := seamBandSide D.centralCutOrder
+    (D.centralOuterOrder.globalLowerEndpointEquiv (g, 0))
+  let bs1 := seamBandSide D.centralCutOrder
+    (D.centralOuterOrder.globalLowerEndpointEquiv (g, 1))
+  have hbs : bs0 ≠ bs1 := by
+    intro h
+    have hv : D.centralOuterOrder.globalLowerEndpointEquiv (g, 0) =
+        D.centralOuterOrder.globalLowerEndpointEquiv (g, 1) := by
+      apply D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm.injective
+      exact h
+    have hpair := D.centralOuterOrder.globalLowerEndpointEquiv.injective hv
+    have he := congrArg Prod.snd hpair
+    norm_num at he
+  have hdis := D.lowerPortBranch_ranges_pairwise_disjoint hbs
+  rw [D.range_lowerGapPortBranch_eq g 0, D.range_lowerGapPortBranch_eq g 1]
+  exact hdis
+
+private theorem upperGapPortBranches_disjoint
+    (g : D.centralOuterOrder.GlobalUpperOuterGap) :
+    Disjoint (Set.range (D.upperGapPortBranch g 0))
+      (Set.range (D.upperGapPortBranch g 1)) := by
+  let bs0 := seamBandSide D.centralCutOrder
+    (D.centralOuterOrder.globalUpperEndpointEquiv (g, 0))
+  let bs1 := seamBandSide D.centralCutOrder
+    (D.centralOuterOrder.globalUpperEndpointEquiv (g, 1))
+  have hbs : bs0 ≠ bs1 := by
+    intro h
+    have hv : D.centralOuterOrder.globalUpperEndpointEquiv (g, 0) =
+        D.centralOuterOrder.globalUpperEndpointEquiv (g, 1) := by
+      apply D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm.injective
+      exact h
+    have hpair := D.centralOuterOrder.globalUpperEndpointEquiv.injective hv
+    have he := congrArg Prod.snd hpair
+    norm_num at he
+  have hdis := D.upperPortBranch_ranges_pairwise_disjoint hbs
+  rw [D.range_upperGapPortBranch_eq g 0, D.range_upperGapPortBranch_eq g 1]
+  exact hdis
+
+theorem lowerGapCornerParameter_zero_lt_one
+    (g : D.centralOuterOrder.GlobalLowerOuterGap) :
+    D.lowerGapCornerParameter g 0 < D.lowerGapCornerParameter g 1 := by
+  rcases lt_trichotomy (D.lowerGapCornerParameter g 0)
+      (D.lowerGapCornerParameter g 1) with hlt | heq | hgt
+  · exact hlt
+  · have h01 := D.lowerGapCornerParameter_injective g heq
+    norm_num at h01
+  · obtain ⟨t, ht1, ht0⟩ := exists_between hgt
+    let p := D.ambientLowerOuterPath g
+    have htPort0 : D.ambientLowerOuterPath g t ∈
+        Set.range (D.lowerGapPortBranch g 0) := by
+      rw [D.range_lowerGapPortBranch_zero_eq_subpath]
+      change p t ∈ Set.range (p.subpath 0 (D.lowerGapCornerParameter g 0))
+      rw [Path.range_subpath_of_le p 0 _ bot_le]
+      exact ⟨t, ⟨bot_le, ht0.le⟩, rfl⟩
+    have htPort1 : D.ambientLowerOuterPath g t ∈
+        Set.range (D.lowerGapPortBranch g 1) := by
+      rw [D.range_lowerGapPortBranch_one_eq_subpath]
+      change p t ∈ Set.range (p.subpath 1 (D.lowerGapCornerParameter g 1))
+      rw [Path.range_subpath_of_ge p 1 _ le_top]
+      exact ⟨t, ⟨ht1.le, le_top⟩, rfl⟩
+    exact (Set.disjoint_left.mp (D.lowerGapPortBranches_disjoint g)
+      htPort0 htPort1).elim
+
+theorem upperGapCornerParameter_zero_lt_one
+    (g : D.centralOuterOrder.GlobalUpperOuterGap) :
+    D.upperGapCornerParameter g 0 < D.upperGapCornerParameter g 1 := by
+  rcases lt_trichotomy (D.upperGapCornerParameter g 0)
+      (D.upperGapCornerParameter g 1) with hlt | heq | hgt
+  · exact hlt
+  · have h01 := D.upperGapCornerParameter_injective g heq
+    norm_num at h01
+  · obtain ⟨t, ht1, ht0⟩ := exists_between hgt
+    let p := D.ambientUpperOuterPath g
+    have htPort0 : D.ambientUpperOuterPath g t ∈
+        Set.range (D.upperGapPortBranch g 0) := by
+      rw [D.range_upperGapPortBranch_zero_eq_subpath]
+      change p t ∈ Set.range (p.subpath 0 (D.upperGapCornerParameter g 0))
+      rw [Path.range_subpath_of_le p 0 _ bot_le]
+      exact ⟨t, ⟨bot_le, ht0.le⟩, rfl⟩
+    have htPort1 : D.ambientUpperOuterPath g t ∈
+        Set.range (D.upperGapPortBranch g 1) := by
+      rw [D.range_upperGapPortBranch_one_eq_subpath]
+      change p t ∈ Set.range (p.subpath 1 (D.upperGapCornerParameter g 1))
+      rw [Path.range_subpath_of_ge p 1 _ le_top]
+      exact ⟨t, ⟨ht1.le, le_top⟩, rfl⟩
+    exact (Set.disjoint_left.mp (D.upperGapPortBranches_disjoint g)
+      htPort0 htPort1).elim
+
+private theorem range_eq_three_subpaths {X : Type*} [TopologicalSpace X]
+    {a b : X} (p : Path a b) (s t : unitInterval) (hst : s ≤ t) :
+    Set.range p =
+      (Set.range (p.subpath 0 s) ∪ Set.range (p.subpath s t)) ∪
+        Set.range (p.subpath 1 t) := by
+  rw [Path.range_subpath_of_le p 0 s bot_le,
+    Path.range_subpath_of_le p s t hst,
+    Path.range_subpath_of_ge p 1 t le_top]
+  ext x
+  constructor
+  · rintro ⟨u, rfl⟩
+    by_cases hus : u ≤ s
+    · exact Or.inl (Or.inl ⟨u, ⟨bot_le, hus⟩, rfl⟩)
+    · by_cases hut : u ≤ t
+      · exact Or.inl (Or.inr ⟨u, ⟨le_of_not_ge hus, hut⟩, rfl⟩)
+      · exact Or.inr ⟨u, ⟨le_of_not_ge hut, le_top⟩, rfl⟩
+  · rintro ((⟨u, _hu, rfl⟩ | ⟨u, _hu, rfl⟩) | ⟨u, _hu, rfl⟩) <;>
+      exact ⟨u, rfl⟩
+
+/-- A lower outer gap is exactly its two port branches and trimmed middle arc. -/
+theorem range_globalLowerOuterPath_eq_portBranches_union_trimmed
+    (g : D.centralOuterOrder.GlobalLowerOuterGap) :
+    Set.range (fun u ↦
+        ((D.centralOuterOrder.globalLowerOuterPath g u : transportedTorus Phi) : R3)) =
+      (Set.range (D.lowerGapPortBranch g 0) ∪ Set.range (D.lowerTrimmedOuterPath g)) ∪
+        Set.range (D.lowerGapPortBranch g 1) := by
+  have htrim : Set.range (D.lowerTrimmedOuterPath g) =
+      Set.range ((D.ambientLowerOuterPath g).subpath
+        (D.lowerGapCornerParameter g 0) (D.lowerGapCornerParameter g 1)) :=
+    congrArg Set.range (Path.cast_coe _ _ _)
+  change Set.range (D.ambientLowerOuterPath g) = _
+  rw [D.range_lowerGapPortBranch_zero_eq_subpath, htrim,
+    D.range_lowerGapPortBranch_one_eq_subpath]
+  exact range_eq_three_subpaths (D.ambientLowerOuterPath g)
+    (D.lowerGapCornerParameter g 0) (D.lowerGapCornerParameter g 1)
+    (D.lowerGapCornerParameter_zero_lt_one g).le
+
+/-- An upper outer gap is exactly its two port branches and trimmed middle arc. -/
+theorem range_globalUpperOuterPath_eq_portBranches_union_trimmed
+    (g : D.centralOuterOrder.GlobalUpperOuterGap) :
+    Set.range (fun u ↦
+        ((D.centralOuterOrder.globalUpperOuterPath g u : transportedTorus Phi) : R3)) =
+      (Set.range (D.upperGapPortBranch g 0) ∪ Set.range (D.upperTrimmedOuterPath g)) ∪
+        Set.range (D.upperGapPortBranch g 1) := by
+  have htrim : Set.range (D.upperTrimmedOuterPath g) =
+      Set.range ((D.ambientUpperOuterPath g).subpath
+        (D.upperGapCornerParameter g 0) (D.upperGapCornerParameter g 1)) :=
+    congrArg Set.range (Path.cast_coe _ _ _)
+  change Set.range (D.ambientUpperOuterPath g) = _
+  rw [D.range_upperGapPortBranch_zero_eq_subpath, htrim,
+    D.range_upperGapPortBranch_one_eq_subpath]
+  exact range_eq_three_subpaths (D.ambientUpperOuterPath g)
+    (D.upperGapCornerParameter g 0) (D.upperGapCornerParameter g 1)
+    (D.upperGapCornerParameter_zero_lt_one g).le
+
+private theorem range_adjacent_subpaths_inter {X : Type*} [TopologicalSpace X]
+    {a b : X} (p : Path a b) (hp : Function.Injective p)
+    (s t u : unitInterval) (hst : s ≤ t) (htu : t ≤ u) :
+    Set.range (p.subpath s t) ∩ Set.range (p.subpath t u) = {p t} := by
+  rw [Path.range_subpath_of_le p s t hst,
+    Path.range_subpath_of_le p t u htu]
+  ext x
+  constructor
+  · rintro ⟨⟨v, hv, rfl⟩, ⟨w, hw, hwv⟩⟩
+    have hvw : v = w := hp hwv.symm
+    subst w
+    have hvt : v = t := le_antisymm hv.2 hw.1
+    subst v
+    rfl
+  · intro hx
+    rw [Set.mem_singleton_iff] at hx
+    subst x
+    exact ⟨⟨t, ⟨hst, le_rfl⟩, rfl⟩, ⟨t, ⟨le_rfl, htu⟩, rfl⟩⟩
+
+private theorem range_middle_subpath_inter_reversed_right {X : Type*}
+    [TopologicalSpace X] {a b : X} (p : Path a b) (hp : Function.Injective p)
+    (s t u : unitInterval) (hst : s ≤ t) (htu : t ≤ u) :
+    Set.range (p.subpath s t) ∩ Set.range (p.subpath u t) = {p t} := by
+  have hreverse : Set.range (p.subpath u t) = Set.range (p.subpath t u) := by
+    rw [Path.range_subpath_of_ge p u t htu,
+      Path.range_subpath_of_le p t u htu]
+  rw [hreverse]
+  exact range_adjacent_subpaths_inter p hp s t u hst htu
+
+theorem lowerTrimmedOuterPath_inter_lowerGapPortBranch
+    (g : D.centralOuterOrder.GlobalLowerOuterGap) (e : Fin 2) :
+    Set.range (D.lowerTrimmedOuterPath g) ∩
+        Set.range (D.lowerGapPortBranch g e) =
+      {fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart
+        (booleanOutsideEndpointEquiv D.centralOuterOrder D.centralCutOrder
+          (Sum.inl g, e))} := by
+  have htrim : (D.lowerTrimmedOuterPath g : unitInterval → R3) =
+      (D.ambientLowerOuterPath g).subpath
+        (D.lowerGapCornerParameter g 0) (D.lowerGapCornerParameter g 1) := by
+    funext u
+    unfold lowerTrimmedOuterPath
+    exact congrFun (Path.cast_coe _ _ _) u
+  refine Fin.cases ?_ (fun e ↦ Fin.cases ?_ (fun z ↦ Fin.elim0 z) e) e
+  · rw [htrim, D.range_lowerGapPortBranch_zero_eq_subpath, Set.inter_comm,
+      D.lowerGapCorner_eq g 0]
+    exact range_adjacent_subpaths_inter (D.ambientLowerOuterPath g)
+      (D.centralOuterOrder.globalLowerOuterPath_injective g) 0
+      (D.lowerGapCornerParameter g 0) (D.lowerGapCornerParameter g 1) bot_le
+      (D.lowerGapCornerParameter_zero_lt_one g).le
+  · rw [show (Fin.succ 0 : Fin 2) = 1 from rfl, htrim,
+      D.range_lowerGapPortBranch_one_eq_subpath, D.lowerGapCorner_eq g 1]
+    exact range_middle_subpath_inter_reversed_right (D.ambientLowerOuterPath g)
+      (D.centralOuterOrder.globalLowerOuterPath_injective g)
+      (D.lowerGapCornerParameter g 0) (D.lowerGapCornerParameter g 1) 1
+      (D.lowerGapCornerParameter_zero_lt_one g).le le_top
+
+theorem upperTrimmedOuterPath_inter_upperGapPortBranch
+    (g : D.centralOuterOrder.GlobalUpperOuterGap) (e : Fin 2) :
+    Set.range (D.upperTrimmedOuterPath g) ∩
+        Set.range (D.upperGapPortBranch g e) =
+      {fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart
+        (booleanOutsideEndpointEquiv D.centralOuterOrder D.centralCutOrder
+          (Sum.inr g, e))} := by
+  have htrim : (D.upperTrimmedOuterPath g : unitInterval → R3) =
+      (D.ambientUpperOuterPath g).subpath
+        (D.upperGapCornerParameter g 0) (D.upperGapCornerParameter g 1) := by
+    funext u
+    unfold upperTrimmedOuterPath
+    exact congrFun (Path.cast_coe _ _ _) u
+  refine Fin.cases ?_ (fun e ↦ Fin.cases ?_ (fun z ↦ Fin.elim0 z) e) e
+  · rw [htrim, D.range_upperGapPortBranch_zero_eq_subpath, Set.inter_comm,
+      D.upperGapCorner_eq g 0]
+    exact range_adjacent_subpaths_inter (D.ambientUpperOuterPath g)
+      (D.centralOuterOrder.globalUpperOuterPath_injective g) 0
+      (D.upperGapCornerParameter g 0) (D.upperGapCornerParameter g 1) bot_le
+      (D.upperGapCornerParameter_zero_lt_one g).le
+  · rw [show (Fin.succ 0 : Fin 2) = 1 from rfl, htrim,
+      D.range_upperGapPortBranch_one_eq_subpath, D.upperGapCorner_eq g 1]
+    exact range_middle_subpath_inter_reversed_right (D.ambientUpperOuterPath g)
+      (D.centralOuterOrder.globalUpperOuterPath_injective g)
+      (D.upperGapCornerParameter g 0) (D.upperGapCornerParameter g 1) 1
+      (D.upperGapCornerParameter_zero_lt_one g).le le_top
+
+theorem canonicalBooleanOutsidePath_mem_support_exists_endpoint
+    (e : BooleanOutsideEdge D.centralOuterOrder)
+    (b : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount)
+    {x : R3} (hx : x ∈ Set.range (D.canonicalBooleanOutsidePath e))
+    (hxs : x ∈ (D.centralHeightFlowStraightenedChartFamily.chart b).support) :
+    ∃ j : Fin 2,
+      (booleanOutsideEndpointEquiv D.centralOuterOrder D.centralCutOrder (e, j)).1 = b ∧
+        x = fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart
+          (booleanOutsideEndpointEquiv D.centralOuterOrder D.centralCutOrder (e, j)) := by
+  rcases e with g | g
+  · obtain ⟨side, hxPort⟩ :=
+      D.lowerTrimmedOuterPath_mem_support_exists_port g b hx hxs
+    let ge := D.centralOuterOrder.globalLowerEndpointEquiv.symm
+      (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+    have hxGapPort : x ∈ Set.range (D.lowerGapPortBranch ge.1 ge.2) := by
+      rw [← D.lowerPortBranch_eq_incidentGapPortBranch b side]
+      exact hxPort
+    have hge : ge.1 = g := by
+      by_contra hne
+      exact Set.disjoint_left.mp
+        (D.centralOuterOrder.globalLowerOuterPath_ranges_pairwise_disjoint hne)
+        (D.lowerGapPortBranch_range_subset_gap ge.1 ge.2 hxGapPort)
+        (D.lowerTrimmedOuterPath_range_subset_gap g hx)
+    subst g
+    have hxInter : x ∈ Set.range (D.lowerTrimmedOuterPath ge.1) ∩
+        Set.range (D.lowerGapPortBranch ge.1 ge.2) := ⟨hx, hxGapPort⟩
+    rw [D.lowerTrimmedOuterPath_inter_lowerGapPortBranch ge.1 ge.2] at hxInter
+    have hxCorner := Set.mem_singleton_iff.mp hxInter
+    refine ⟨ge.2, ?_, hxCorner⟩
+    have hglobal : D.centralOuterOrder.globalLowerEndpointEquiv ge =
+        D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side) :=
+      D.centralOuterOrder.globalLowerEndpointEquiv.apply_symm_apply _
+    simp only [booleanOutsideEndpointEquiv_lower]
+    rw [show seamBandSide D.centralCutOrder
+        (D.centralOuterOrder.globalLowerEndpointEquiv ge) = (b, side) by
+      rw [hglobal]
+      exact D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm_apply_apply _]
+  · obtain ⟨side, hxPort⟩ :=
+      D.upperTrimmedOuterPath_mem_support_exists_port g b hx hxs
+    let ge := D.centralOuterOrder.globalUpperEndpointEquiv.symm
+      (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+    have hxGapPort : x ∈ Set.range (D.upperGapPortBranch ge.1 ge.2) := by
+      rw [← D.upperPortBranch_eq_incidentGapPortBranch b side]
+      exact hxPort
+    have hge : ge.1 = g := by
+      by_contra hne
+      exact Set.disjoint_left.mp
+        (D.centralOuterOrder.globalUpperOuterPath_ranges_pairwise_disjoint hne)
+        (D.upperGapPortBranch_range_subset_gap ge.1 ge.2 hxGapPort)
+        (D.upperTrimmedOuterPath_range_subset_gap g hx)
+    subst g
+    have hxInter : x ∈ Set.range (D.upperTrimmedOuterPath ge.1) ∩
+        Set.range (D.upperGapPortBranch ge.1 ge.2) := ⟨hx, hxGapPort⟩
+    rw [D.upperTrimmedOuterPath_inter_upperGapPortBranch ge.1 ge.2] at hxInter
+    have hxCorner := Set.mem_singleton_iff.mp hxInter
+    refine ⟨ge.2, ?_, hxCorner⟩
+    have hglobal : D.centralOuterOrder.globalUpperEndpointEquiv ge =
+        D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side) :=
+      D.centralOuterOrder.globalUpperEndpointEquiv.apply_symm_apply _
+    simp only [booleanOutsideEndpointEquiv_upper]
+    rw [show seamBandSide D.centralCutOrder
+        (D.centralOuterOrder.globalUpperEndpointEquiv ge) = (b, side) by
+      rw [hglobal]
+      exact D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv.symm_apply_apply _]
+
+theorem point_mem_path_of_mem_endpointSet
+    {vertex X : Type*} [Fintype vertex] [TopologicalSpace X]
+    (P : FiniteEndpointPairing vertex) (point : vertex → X)
+    (paths : FiniteAlternatingEndpointSystem.EndpointPathFamily P point)
+    {e : P.edge} {v : vertex} (hv : v ∈ P.endpointSet e) :
+    point v ∈ Set.range (paths.path e) := by
+  obtain ⟨j, hj⟩ := hv
+  fin_cases j
+  · refine ⟨0, ?_⟩
+    rw [(paths.path e).source]
+    exact congrArg point (by simpa using hj)
+  · refine ⟨1, ?_⟩
+    rw [(paths.path e).target]
+    exact congrArg point (by simpa using hj)
+
+theorem mem_endpointSet_of_point_mem_path
+    {vertex X : Type*} [Fintype vertex] [TopologicalSpace X]
+    (P : FiniteEndpointPairing vertex) (point : vertex → X)
+    (paths : FiniteAlternatingEndpointSystem.EndpointPathFamily P point)
+    (hpairwise : Pairwise fun e f : P.edge ↦
+      Disjoint (Set.range (paths.path e)) (Set.range (paths.path f)))
+    {e : P.edge} {v : vertex} (hv : point v ∈ Set.range (paths.path e)) :
+    v ∈ P.endpointSet e := by
+  let ej := P.endpointEquiv.symm v
+  have hev : P.endpointEquiv ej = v := P.endpointEquiv.apply_symm_apply v
+  have hvOwn : point v ∈ Set.range (paths.path ej.1) :=
+    point_mem_path_of_mem_endpointSet P point paths ⟨ej.2, hev⟩
+  have he : e = ej.1 := by
+    by_contra hne
+    exact Set.disjoint_left.mp (hpairwise hne) hv hvOwn
+  subst e
+  exact ⟨ej.2, hev⟩
+
+theorem canonicalBooleanOutsidePath_cross_intersection_subset
+    (choice : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount → Bool)
+    (e : BooleanOutsideEdge D.centralOuterOrder)
+    (f : FourPortLocalEdge D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.canonicalBooleanOutsidePath e) ∩
+        Set.range ((booleanFourPortLocalEndpointPaths
+          D.centralHeightFlowStraightenedChartFamily.chart choice).path f) ⊆
+      fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart ''
+        ((booleanOutsidePairing D.centralOuterOrder D.centralCutOrder).endpointSet e ∩
+          (fourPortLocalPairing choice).endpointSet f) := by
+  rintro x ⟨hxOutside, hxLocal⟩
+  have hxSupport := D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts
+    |>.booleanFourPortLocalEndpointPaths_range_subset_support choice f hxLocal
+  obtain ⟨j, _hband, hxPoint⟩ :=
+    D.canonicalBooleanOutsidePath_mem_support_exists_endpoint e f.1
+      hxOutside hxSupport
+  let v := booleanOutsideEndpointEquiv D.centralOuterOrder D.centralCutOrder (e, j)
+  have hvOutside :
+      v ∈ (booleanOutsidePairing D.centralOuterOrder D.centralCutOrder).endpointSet e :=
+    ⟨j, rfl⟩
+  have hvLocal : v ∈ (fourPortLocalPairing choice).endpointSet f := by
+    apply mem_endpointSet_of_point_mem_path (fourPortLocalPairing choice)
+      (fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart)
+      (booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart choice)
+      (D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts
+        |>.booleanFourPortLocalEndpointPaths_pairwise choice)
+    exact hxPoint ▸ hxLocal
+  exact ⟨v, ⟨hvOutside, hvLocal⟩, hxPoint.symm⟩
+
+theorem canonicalBooleanOutsidePath_cross_intersection_superset
+    (choice : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount → Bool)
+    (e : BooleanOutsideEdge D.centralOuterOrder)
+    (f : FourPortLocalEdge D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart ''
+        ((booleanOutsidePairing D.centralOuterOrder D.centralCutOrder).endpointSet e ∩
+          (fourPortLocalPairing choice).endpointSet f) ⊆
+      Set.range (D.canonicalBooleanOutsidePath e) ∩
+        Set.range ((booleanFourPortLocalEndpointPaths
+          D.centralHeightFlowStraightenedChartFamily.chart choice).path f) := by
+  rintro _ ⟨v, ⟨hvOutside, hvLocal⟩, rfl⟩
+  constructor
+  · exact point_mem_path_of_mem_endpointSet
+      (booleanOutsidePairing D.centralOuterOrder D.centralCutOrder)
+      (fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart)
+      D.canonicalBooleanOutsideEndpointPaths hvOutside
+  · exact point_mem_path_of_mem_endpointSet (fourPortLocalPairing choice)
+      (fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart)
+      (booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart choice) hvLocal
+
+theorem canonicalBooleanOutsidePath_cross_intersection
+    (choice : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount → Bool)
+    (e : BooleanOutsideEdge D.centralOuterOrder)
+    (f : FourPortLocalEdge D.centralCutOrder.toPairedSeamEnumeration.bandCount) :
+    Set.range (D.canonicalBooleanOutsidePath e) ∩
+        Set.range ((booleanFourPortLocalEndpointPaths
+          D.centralHeightFlowStraightenedChartFamily.chart choice).path f) =
+      fourPortChartPoint D.centralHeightFlowStraightenedChartFamily.chart ''
+        ((booleanOutsidePairing D.centralOuterOrder D.centralCutOrder).endpointSet e ∩
+          (fourPortLocalPairing choice).endpointSet f) := by
+  apply Set.Subset.antisymm
+  · exact D.canonicalBooleanOutsidePath_cross_intersection_subset choice e f
+  · exact D.canonicalBooleanOutsidePath_cross_intersection_superset choice e f
+
+/-- The canonical trimmed outer gaps satisfy exact incidence with every Boolean four-port
+resolution. -/
+noncomputable def canonicalBooleanOutsidePathData :
+    BooleanFourPortOutsidePathData Phi
+      D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts where
+  outside := booleanOutsidePairing D.centralOuterOrder D.centralCutOrder
+  paths := D.canonicalBooleanOutsideEndpointPaths
+  chart_mem_torus := chart_mem_transportedTorus D.centralCutOrder
+    D.centralHeightFlowStraightenedChartFamily
+  paths_mem_torus := D.canonicalBooleanOutsidePath_range_subset_transportedTorus
+  paths_injective := D.canonicalBooleanOutsidePath_injective
+  paths_pairwise := D.canonicalBooleanOutsidePath_ranges_pairwise_disjoint
+  cross_intersection := D.canonicalBooleanOutsidePath_cross_intersection
+
+/-- The fixed seam-free outer circles, which do not participate in any four-port move. -/
+def canonicalInactiveOuterCarrier : Set R3 :=
+  ⋃ i : D.centralOuterOrder.InactiveOuterCircle,
+    Set.range (D.centralGraph.outer.circle i.1).circle
+
+theorem superellipsoidOuterTorusSection_eq_active_union_inactive :
+    superellipsoidOuterTorusSection Phi frame c S.outer.scale =
+      (⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle i.1).circle) ∪
+        D.canonicalInactiveOuterCarrier := by
+  classical
+  calc
+    superellipsoidOuterTorusSection Phi frame c S.outer.scale =
+        ⋃ i, Set.range (D.centralGraph.outer.circle i).circle :=
+      D.centralGraph.outer.section_exact
+    _ = _ := by
+      ext x
+      simp only [canonicalInactiveOuterCarrier, Set.mem_iUnion, Set.mem_union]
+      constructor
+      · rintro ⟨i, hi⟩
+        by_cases hactive : (D.centralOuterOrder.regular i).crossings.Nonempty
+        · exact Or.inl ⟨⟨i, hactive⟩, hi⟩
+        · exact Or.inr ⟨⟨i, hactive⟩, hi⟩
+      · rintro (⟨i, hi⟩ | ⟨i, hi⟩)
+        · exact ⟨i.1, hi⟩
+        · exact ⟨i.1, hi⟩
+
+theorem canonicalBooleanOutsidePathData_ambientSection_disjoint_inactiveOuterCircle
+    (choice : Fin D.centralCutOrder.toPairedSeamEnumeration.bandCount → Bool)
+    (i : D.centralOuterOrder.InactiveOuterCircle) :
+    Disjoint (D.canonicalBooleanOutsidePathData.ambientSection choice)
+      (Set.range (D.centralGraph.outer.circle i.1).circle) := by
+  rw [Set.disjoint_left]
+  intro x hxSection hxInactive
+  rw [D.canonicalBooleanOutsidePathData.ambientSection_eq_iUnion_ranges] at hxSection
+  rcases hxSection with hxOutside | hxLocal
+  · obtain ⟨e, he⟩ := Set.mem_iUnion.mp hxOutside
+    have hxActive := D.canonicalBooleanOutsidePath_range_subset_activeCarrier e he
+    exact Set.disjoint_left.mp
+      (D.activeOuterCarrier_disjoint_inactiveOuterCircle i) hxActive hxInactive
+  · obtain ⟨e, he⟩ := Set.mem_iUnion.mp hxLocal
+    have hxSupport := D.centralHeightFlowArcExactness.charts.toFinitePairedSeamBandCharts
+      |>.booleanFourPortLocalEndpointPaths_range_subset_support choice e he
+    exact Set.disjoint_left.mp (D.inactiveOuterCircle_range_disjoint_support i e.1)
+      hxInactive hxSupport
+
+/-- The all-vertical Boolean resolution reconstructs exactly the active outer circles. -/
+theorem canonicalBooleanOutsidePathData_ambientSection_false_eq_activeOuterCarrier :
+    D.canonicalBooleanOutsidePathData.ambientSection (fun _ ↦ false) =
+      ⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+        Set.range (D.centralGraph.outer.circle i.1).circle := by
+  classical
+  rw [D.canonicalBooleanOutsidePathData.ambientSection_eq_iUnion_ranges]
+  ext x
+  constructor
+  · rintro (hxOutside | hxLocal)
+    · obtain ⟨e, he⟩ := Set.mem_iUnion.mp hxOutside
+      rcases e with g | g
+      · have hxGap := D.lowerTrimmedOuterPath_range_subset_gap g he
+        have hxUnion : x ∈ ⋃ h : D.centralOuterOrder.GlobalLowerOuterGap,
+            Set.range fun u ↦
+              ((D.centralOuterOrder.globalLowerOuterPath h u : transportedTorus Phi) : R3) :=
+          Set.mem_iUnion.mpr ⟨g, hxGap⟩
+        rw [D.centralOuterOrder.iUnion_range_globalLowerOuterPath_eq] at hxUnion
+        exact hxUnion.1
+      · have hxGap := D.upperTrimmedOuterPath_range_subset_gap g he
+        have hxUnion : x ∈ ⋃ h : D.centralOuterOrder.GlobalUpperOuterGap,
+            Set.range fun u ↦
+              ((D.centralOuterOrder.globalUpperOuterPath h u : transportedTorus Phi) : R3) :=
+          Set.mem_iUnion.mpr ⟨g, hxGap⟩
+        rw [D.centralOuterOrder.iUnion_range_globalUpperOuterPath_eq] at hxUnion
+        exact hxUnion.1
+    · obtain ⟨⟨b, side⟩, he⟩ := Set.mem_iUnion.mp hxLocal
+      change x ∈ Set.range ((booleanFourPortLocalEndpointPaths
+        D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path
+          (b, side)) at he
+      rw [D.range_booleanFourPortLocalPath_false_eq_portBranches b side] at he
+      rcases he with he | he
+      · let ge := D.centralOuterOrder.globalLowerEndpointEquiv.symm
+          (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+        have he' : x ∈ Set.range (D.lowerGapPortBranch ge.1 ge.2) := by
+          rw [← D.lowerPortBranch_eq_incidentGapPortBranch b side]
+          exact he
+        exact D.lowerGapPortBranch_range_subset_activeCarrier ge.1 ge.2 he'
+      · let ge := D.centralOuterOrder.globalUpperEndpointEquiv.symm
+          (D.centralCutOrder.toPairedSeamEnumeration.endpointEquiv (b, side))
+        have he' : x ∈ Set.range (D.upperGapPortBranch ge.1 ge.2) := by
+          rw [← D.upperPortBranch_eq_incidentGapPortBranch b side]
+          exact he
+        exact D.upperGapPortBranch_range_subset_activeCarrier ge.1 ge.2 he'
+  · intro hx
+    rcases le_total (x.ofLp (frame 2)) S.cut.height with hxLower | hxUpper
+    · have hxHalf : x ∈
+          (⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+            Set.range (D.centralGraph.outer.circle i.1).circle) ∩
+              lowerClosedHalfspace frame S.cut.height := ⟨hx, hxLower⟩
+      rw [← D.centralOuterOrder.iUnion_range_globalLowerOuterPath_eq] at hxHalf
+      obtain ⟨g, hg⟩ := Set.mem_iUnion.mp hxHalf
+      rw [D.range_globalLowerOuterPath_eq_portBranches_union_trimmed g] at hg
+      rcases hg with (hg | hg) | hg
+      · refine Or.inr (Set.mem_iUnion.mpr ⟨?_, ?_⟩)
+        · exact seamBandSide D.centralCutOrder
+            (D.centralOuterOrder.globalLowerEndpointEquiv (g, 0))
+        · change x ∈ Set.range ((booleanFourPortLocalEndpointPaths
+            D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path _)
+          rw [D.range_booleanFourPortLocalPath_false_eq_portBranches]
+          exact Or.inl (D.range_lowerGapPortBranch_eq g 0 ▸ hg)
+      · exact Or.inl (Set.mem_iUnion.mpr ⟨Sum.inl g, hg⟩)
+      · refine Or.inr (Set.mem_iUnion.mpr ⟨?_, ?_⟩)
+        · exact seamBandSide D.centralCutOrder
+            (D.centralOuterOrder.globalLowerEndpointEquiv (g, 1))
+        · change x ∈ Set.range ((booleanFourPortLocalEndpointPaths
+            D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path _)
+          rw [D.range_booleanFourPortLocalPath_false_eq_portBranches]
+          exact Or.inl (D.range_lowerGapPortBranch_eq g 1 ▸ hg)
+    · have hxHalf : x ∈
+          (⋃ i : D.centralOuterOrder.ActiveOuterCircle,
+            Set.range (D.centralGraph.outer.circle i.1).circle) ∩
+              upperClosedHalfspace frame S.cut.height := ⟨hx, hxUpper⟩
+      rw [← D.centralOuterOrder.iUnion_range_globalUpperOuterPath_eq] at hxHalf
+      obtain ⟨g, hg⟩ := Set.mem_iUnion.mp hxHalf
+      rw [D.range_globalUpperOuterPath_eq_portBranches_union_trimmed g] at hg
+      rcases hg with (hg | hg) | hg
+      · refine Or.inr (Set.mem_iUnion.mpr ⟨?_, ?_⟩)
+        · exact seamBandSide D.centralCutOrder
+            (D.centralOuterOrder.globalUpperEndpointEquiv (g, 0))
+        · change x ∈ Set.range ((booleanFourPortLocalEndpointPaths
+            D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path _)
+          rw [D.range_booleanFourPortLocalPath_false_eq_portBranches]
+          exact Or.inr (D.range_upperGapPortBranch_eq g 0 ▸ hg)
+      · exact Or.inl (Set.mem_iUnion.mpr ⟨Sum.inr g, hg⟩)
+      · refine Or.inr (Set.mem_iUnion.mpr ⟨?_, ?_⟩)
+        · exact seamBandSide D.centralCutOrder
+            (D.centralOuterOrder.globalUpperEndpointEquiv (g, 1))
+        · change x ∈ Set.range ((booleanFourPortLocalEndpointPaths
+            D.centralHeightFlowStraightenedChartFamily.chart (fun _ ↦ false)).path _)
+          rw [D.range_booleanFourPortLocalPath_false_eq_portBranches]
+          exact Or.inr (D.range_upperGapPortBranch_eq g 1 ▸ hg)
 
 end SuperellipsoidDoubleBubbleSelection.CanonicalEndpointRegularityData
 end Submission.Topology

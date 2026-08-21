@@ -637,7 +637,7 @@ def centralConnectorFilledPlaneSweepExtension
     (b : D.ConnectorBandIndex) (z : Schoenflies.Plane) : Schoenflies.Plane :=
   D.centralConnectorFilledPlaneSweep b (centralConnectorSquareParameter z)
 
-private theorem centralConnectorFilledPlaneSweepExtension_apply_symm
+theorem centralConnectorFilledPlaneSweepExtension_apply_symm
     (b : D.ConnectorBandIndex) (q : ℝ × ℝ)
     (hq : q ∈ Icc (0 : ℝ) 1 ×ˢ Icc (0 : ℝ) 1) :
     D.centralConnectorFilledPlaneSweepExtension b (coveringPlaneCoordinates.symm q) =
@@ -792,6 +792,71 @@ theorem image_centralConnectorUnitSquare_eq_closure_inside
   · exact (D.continuous_centralConnectorFilledPlaneSweepExtension b).continuousOn
   · exact D.centralConnectorFilledPlaneSweepExtension_injOn b
   · exact D.image_frontier_centralConnectorFilledPlaneSweepExtension_eq_carrier b
+
+theorem image_interior_centralConnectorUnitSquare_eq_inside
+    (b : D.ConnectorBandIndex) :
+    D.centralConnectorFilledPlaneSweepExtension b '' interior centralConnectorUnitSquare =
+      (D.centralHeightFlowCompletedThetaSystem b).circle12.inside := by
+  let J := (D.centralHeightFlowCompletedThetaSystem b).circle12
+  let F := D.centralConnectorFilledPlaneSweepExtension b
+  have hFinj : Set.InjOn F centralConnectorUnitSquare :=
+    D.centralConnectorFilledPlaneSweepExtension_injOn b
+  have hboundary : F '' frontier centralConnectorUnitSquare = J.carrier :=
+    D.image_frontier_centralConnectorFilledPlaneSweepExtension_eq_carrier b
+  have hclosedImage : F '' centralConnectorUnitSquare = closure J.inside :=
+    D.image_centralConnectorUnitSquare_eq_closure_inside b
+  have hclosed : IsClosed centralConnectorUnitSquare :=
+    isCompact_centralConnectorUnitSquare.isClosed
+  have hsplit : centralConnectorUnitSquare =
+      interior centralConnectorUnitSquare ∪ frontier centralConnectorUnitSquare := by
+    calc
+      centralConnectorUnitSquare = closure centralConnectorUnitSquare := hclosed.closure_eq.symm
+      _ = _ := closure_eq_interior_union_frontier _
+  have havoid : F '' interior centralConnectorUnitSquare ⊆ J.carrierᶜ := by
+    rintro _ ⟨x, hx, rfl⟩ hxCarrier
+    rw [← hboundary] at hxCarrier
+    obtain ⟨y, hy, hxy⟩ := hxCarrier
+    have hxy' : x = y :=
+      hFinj (interior_subset hx) (hclosed.frontier_subset hy) hxy.symm
+    exact Set.disjoint_left.mp disjoint_interior_frontier hx (hxy' ▸ hy)
+  have hmeets :
+      (F '' interior centralConnectorUnitSquare ∩ J.inside).Nonempty := by
+    have hp := J.insidePoint_mem_inside
+    have hpClosure : J.insidePoint ∈ closure J.inside := subset_closure hp
+    rw [← hclosedImage] at hpClosure
+    obtain ⟨x, hx, hxImage⟩ := hpClosure
+    rw [hsplit] at hx
+    rcases hx with hxInterior | hxFrontier
+    · exact ⟨J.insidePoint, ⟨x, hxInterior, hxImage⟩, hp⟩
+    · have hcarrier : F x ∈ J.carrier := by
+        rw [← hboundary]
+        exact ⟨x, hxFrontier, rfl⟩
+      exact False.elim (J.inside_subset_compl hp (hxImage ▸ hcarrier))
+  have hside : F '' interior centralConnectorUnitSquare ⊆ J.inside := by
+    have hconnected : IsPreconnected (F '' interior centralConnectorUnitSquare) :=
+      convex_centralConnectorUnitSquare.interior.isPreconnected.image F
+        ((D.continuous_centralConnectorFilledPlaneSweepExtension b).continuousOn)
+    have hcover : F '' interior centralConnectorUnitSquare ⊆ J.inside ∪ J.outside := by
+      rw [J.inside_union_outside]
+      exact havoid
+    rcases hconnected.subset_or_subset J.inside_isOpen J.outside_isOpen
+        J.inside_disjoint_outside hcover with hinside | houtside
+    · exact hinside
+    · obtain ⟨y, hyImage, hyInside⟩ := hmeets
+      exact False.elim <|
+        Set.disjoint_left.mp J.inside_disjoint_outside hyInside (houtside hyImage)
+  apply Set.Subset.antisymm hside
+  intro y hy
+  have hyClosure : y ∈ closure J.inside := subset_closure hy
+  rw [← hclosedImage] at hyClosure
+  obtain ⟨x, hx, rfl⟩ := hyClosure
+  rw [hsplit] at hx
+  rcases hx with hxInterior | hxFrontier
+  · exact ⟨x, hxInterior, rfl⟩
+  · have hcarrier : F x ∈ J.carrier := by
+      rw [← hboundary]
+      exact ⟨x, hxFrontier, rfl⟩
+    exact False.elim (J.inside_subset_compl hy hcarrier)
 
 theorem range_centralHeightFlowCompletedPlaneThetaPath_zero_subset_sweep
     (b : D.ConnectorBandIndex) :
@@ -958,7 +1023,7 @@ theorem centralHeightFlowFourPortHomeomorph_fixes_seam
   simpa only [centralHeightFlowCompletedThetaPath, standardFourPortThetaPath] using
     D.centralHeightFlowFourPortHomeomorph_apply_completedThetaPath b 0 u
 
-private theorem centralHeightFlowFourPortHomeomorph_apply_leftLowerBranch
+theorem centralHeightFlowFourPortHomeomorph_apply_leftLowerBranch
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     D.centralHeightFlowFourPortHomeomorph b
         (D.centralLeftLowerHeightFlowBranchPath b u) =
@@ -980,7 +1045,7 @@ private theorem centralHeightFlowFourPortHomeomorph_apply_lowerConnector
     D.centralHeightFlowLowerThetaRoute_middleCoordinate,
     standardFourPortThetaPath_one, standardLowerThetaPath_middleCoordinate] using h
 
-private theorem centralHeightFlowFourPortHomeomorph_apply_rightLowerBranch
+theorem centralHeightFlowFourPortHomeomorph_apply_rightLowerBranch
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     D.centralHeightFlowFourPortHomeomorph b
         (D.centralRightLowerHeightFlowBranchPath b u) =
@@ -991,7 +1056,7 @@ private theorem centralHeightFlowFourPortHomeomorph_apply_rightLowerBranch
     D.centralHeightFlowLowerThetaRoute_thirdCoordinate,
     standardFourPortThetaPath_one, standardLowerThetaPath_thirdCoordinate] using h
 
-private theorem centralHeightFlowFourPortHomeomorph_apply_leftUpperBranch
+theorem centralHeightFlowFourPortHomeomorph_apply_leftUpperBranch
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     D.centralHeightFlowFourPortHomeomorph b
         (D.centralLeftUpperHeightFlowBranchPath b u) =
@@ -1012,7 +1077,7 @@ private theorem centralHeightFlowFourPortHomeomorph_apply_upperConnector
     D.centralHeightFlowUpperThetaRoute_middleCoordinate,
     standardFourPortThetaPath_two, standardUpperThetaPath_middleCoordinate] using h
 
-private theorem centralHeightFlowFourPortHomeomorph_apply_rightUpperBranch
+theorem centralHeightFlowFourPortHomeomorph_apply_rightUpperBranch
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     D.centralHeightFlowFourPortHomeomorph b
         (D.centralRightUpperHeightFlowBranchPath b u) =
@@ -1035,7 +1100,7 @@ private theorem centralHeightFlowFourPortHomeomorph_symm_apply_leftLowerBranch
     D.centralHeightFlowFourPortHomeomorph_apply_leftLowerBranch b
       (unitInterval.symm u)
 
-private theorem centralHeightFlowFourPortHomeomorph_symm_apply_lowerConnector
+theorem centralHeightFlowFourPortHomeomorph_symm_apply_lowerConnector
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     (D.centralHeightFlowFourPortHomeomorph b).symm (bandBottomPath u) =
       D.centralHeightFlowLowerConnector b u := by
@@ -1059,7 +1124,7 @@ private theorem centralHeightFlowFourPortHomeomorph_symm_apply_leftUpperBranch
   rw [(D.centralHeightFlowFourPortHomeomorph b).apply_symm_apply]
   exact (D.centralHeightFlowFourPortHomeomorph_apply_leftUpperBranch b u).symm
 
-private theorem centralHeightFlowFourPortHomeomorph_symm_apply_upperConnector
+theorem centralHeightFlowFourPortHomeomorph_symm_apply_upperConnector
     (b : D.ConnectorBandIndex) (u : unitInterval) :
     (D.centralHeightFlowFourPortHomeomorph b).symm (bandTopPath u) =
       D.centralHeightFlowUpperConnector b u := by

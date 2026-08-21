@@ -93,7 +93,7 @@ noncomputable def seamToCornerPathOfBandSide
       exact path.cast hsource htarget
 
 omit [Fintype (SuperellipsoidSeamVertex Phi frame c R d)] in
-private theorem chart_mem_transportedTorus
+theorem chart_mem_transportedTorus
     (T : cutOrder.GlobalBandTubularChartFamily)
     (b : Fin cutOrder.toPairedSeamEnumeration.bandCount) (z : Plane) :
     (T.chart b).chart z ∈ transportedTorus Phi :=
@@ -136,6 +136,52 @@ theorem seamToCornerPathOfBandSide_injective
     intro u v huv
     have h := congrArg unitInterval.symm huv
     simpa only [unitInterval.symm_symm] using h
+
+omit [Fintype (SuperellipsoidSeamVertex Phi frame c R d)] in
+theorem seamToCornerPathOfBandSide_range_subset_support
+    (T : cutOrder.GlobalBandTubularChartFamily)
+    (b : Fin cutOrder.toPairedSeamEnumeration.bandCount) (side level : Fin 2) :
+    Set.range (seamToCornerPathOfBandSide cutOrder T b side level) ⊆
+      (T.chart b).support := by
+  fin_cases side <;> fin_cases level
+  · rintro _ ⟨u, rfl⟩
+    apply (T.chart b).leftPath_range_subset_support
+    change (T.chart b).chart (standardLeftLowerBranchPath u) ∈
+      Set.range (T.chart b).leftPath
+    have hz : standardLeftLowerBranchPath u ∈ Set.range bandLeftPath := by
+      rw [range_bandLeftPath_eq_standardHalves]
+      exact Or.inl ⟨u, rfl⟩
+    obtain ⟨v, hv⟩ := hz
+    exact ⟨v, congrArg (T.chart b).chart hv⟩
+  · rintro _ ⟨u, rfl⟩
+    apply (T.chart b).leftPath_range_subset_support
+    change (T.chart b).chart (standardLeftUpperBranchPath u) ∈
+      Set.range (T.chart b).leftPath
+    have hz : standardLeftUpperBranchPath u ∈ Set.range bandLeftPath := by
+      rw [range_bandLeftPath_eq_standardHalves]
+      exact Or.inr ⟨u, rfl⟩
+    obtain ⟨v, hv⟩ := hz
+    exact ⟨v, congrArg (T.chart b).chart hv⟩
+  · rintro _ ⟨u, rfl⟩
+    apply (T.chart b).rightPath_range_subset_support
+    change (T.chart b).chart (standardRightLowerBranchPath (unitInterval.symm u)) ∈
+      Set.range (T.chart b).rightPath
+    have hz : standardRightLowerBranchPath (unitInterval.symm u) ∈
+        Set.range bandRightPath := by
+      rw [range_bandRightPath_eq_standardHalves]
+      exact Or.inl ⟨unitInterval.symm u, rfl⟩
+    obtain ⟨v, hv⟩ := hz
+    exact ⟨v, congrArg (T.chart b).chart hv⟩
+  · rintro _ ⟨u, rfl⟩
+    apply (T.chart b).rightPath_range_subset_support
+    change (T.chart b).chart (standardRightUpperBranchPath (unitInterval.symm u)) ∈
+      Set.range (T.chart b).rightPath
+    have hz : standardRightUpperBranchPath (unitInterval.symm u) ∈
+        Set.range bandRightPath := by
+      rw [range_bandRightPath_eq_standardHalves]
+      exact Or.inr ⟨unitInterval.symm u, rfl⟩
+    obtain ⟨v, hv⟩ := hz
+    exact ⟨v, congrArg (T.chart b).chart hv⟩
 
 /-- The canonical chart branch from a seam vertex to its lower or upper corner. -/
 noncomputable def seamToFourPortCornerPath

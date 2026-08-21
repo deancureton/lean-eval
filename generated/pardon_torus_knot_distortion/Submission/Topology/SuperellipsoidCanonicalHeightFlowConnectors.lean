@@ -2046,7 +2046,7 @@ private theorem centralConnector_actualCore_negative (b : D.ConnectorBandIndex)
   rw [← hnested]
   exact hcore q hq
 
-private theorem centralConnector_betweenExtremalCrossings_neg
+theorem centralConnector_betweenExtremalCrossings_neg
     (b : D.ConnectorBandIndex) (t : D.ConnectorFlowTimes)
     (hleft : (D.centralConnectorLeftZeroSet b t).Nonempty)
     (hright : (D.centralConnectorRightZeroSet b t).Nonempty)

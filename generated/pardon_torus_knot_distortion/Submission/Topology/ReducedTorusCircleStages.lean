@@ -75,6 +75,58 @@ theorem carrier_eq_transportedTorusPart {ambientSection : Set R3}
 
 end FiniteDisjointTorusCircleFamily
 
+namespace FiniteEmbeddedTorusCircleSection
+
+variable {ambientSection : Set R3} {ι κ : Type*} [Fintype ι] [Fintype κ]
+
+/-- Reindex an exact finite torus section along an equivalence of finite index types. -/
+def reindex (S : FiniteEmbeddedTorusCircleSection Phi ambientSection ι)
+    (e : κ ≃ ι) : FiniteEmbeddedTorusCircleSection Phi ambientSection κ where
+  circle k := S.circle (e k)
+  circle_mem_section k := S.circle_mem_section (e k)
+  pairwise_disjoint := by
+    intro k l hkl
+    exact S.pairwise_disjoint (fun h ↦ hkl (e.injective h))
+  section_exact := by
+    calc
+      ambientSection = ⋃ i, Set.range (S.circle i).circle := S.section_exact
+      _ = ⋃ k, Set.range (S.circle (e k)).circle := by
+        ext x
+        simp only [Set.mem_iUnion]
+        constructor
+        · rintro ⟨i, hi⟩
+          obtain ⟨k, rfl⟩ := e.surjective i
+          exact ⟨k, hi⟩
+        · rintro ⟨k, hk⟩
+          exact ⟨e k, hk⟩
+
+end FiniteEmbeddedTorusCircleSection
+
+/-- One exact finite torus-circle section together with its open parity region. -/
+structure ReducedTorusCircleStageEntry (Phi : AmbientIsotopy) where
+  circleCount : ℕ
+  ambientSection : Set R3
+  circleSection : FiniteEmbeddedTorusCircleSection Phi ambientSection (Fin circleCount)
+  region : Set (transportedTorus Phi)
+  isOpen_region : IsOpen region
+  frontier_region : frontier region = transportedTorusPart Phi ambientSection
+
+namespace ReducedTorusCircleStageEntry
+
+/-- The reduced parity stage determined by one exact entry. -/
+def parityStage (E : ReducedTorusCircleStageEntry Phi) : ReducedTorusParityStage Phi :=
+  E.circleSection.toReducedTorusParityStage E.region E.isOpen_region E.frontier_region
+
+@[simp] theorem parityStage_inside (E : ReducedTorusCircleStageEntry Phi) :
+    E.parityStage.inside = E.region :=
+  rfl
+
+@[simp] theorem parityStage_boundary (E : ReducedTorusCircleStageEntry Phi) :
+    E.parityStage.boundary = transportedTorusPart Phi E.ambientSection :=
+  rfl
+
+end ReducedTorusCircleStageEntry
+
 /-- Exact circle sections and exact open parity regions for finitely many reduced stages. -/
 structure ReducedTorusCircleStageGeometry (Phi : AmbientIsotopy) where
   length : ℕ
@@ -89,11 +141,46 @@ structure ReducedTorusCircleStageGeometry (Phi : AmbientIsotopy) where
 
 namespace ReducedTorusCircleStageGeometry
 
+/-- Clamp a natural index to the finite interval of a stage family. -/
+def boundedIndex (length k : ℕ) : Fin (length + 1) :=
+  ⟨min k length, Nat.lt_succ_of_le (Nat.min_le_right k length)⟩
+
+@[simp] theorem boundedIndex_eq_of_le {length k : ℕ} (hk : k ≤ length) :
+    boundedIndex length k = ⟨k, Nat.lt_succ_of_le hk⟩ := by
+  apply Fin.ext
+  simp [boundedIndex, Nat.min_eq_left hk]
+
+/-- Extend finitely many exact entries by reusing the terminal entry after the audited interval. -/
+def ofEntries {length : ℕ}
+    (entry : Fin (length + 1) → ReducedTorusCircleStageEntry Phi) :
+    ReducedTorusCircleStageGeometry Phi where
+  length := length
+  circleCount k := (entry (boundedIndex length k)).circleCount
+  ambientSection k := (entry (boundedIndex length k)).ambientSection
+  circleSection k := (entry (boundedIndex length k)).circleSection
+  region k := (entry (boundedIndex length k)).region
+  isOpen_region k := (entry (boundedIndex length k)).isOpen_region
+  frontier_region k := (entry (boundedIndex length k)).frontier_region
+
+@[simp] theorem ofEntries_circleCount {length : ℕ}
+    (entry : Fin (length + 1) → ReducedTorusCircleStageEntry Phi)
+    (k : Fin (length + 1)) :
+    (ofEntries entry).circleCount k = (entry k).circleCount := by
+  change (entry (boundedIndex length k.1)).circleCount = (entry k).circleCount
+  rw [boundedIndex_eq_of_le (length := length) (k := k.1) (Nat.le_of_lt_succ k.isLt)]
+
 /-- The exact reduced parity stage at one natural-number index. -/
 def parityStage (D : ReducedTorusCircleStageGeometry Phi) (k : ℕ) :
     ReducedTorusParityStage Phi :=
   (D.circleSection k).toReducedTorusParityStage
     (D.region k) (D.isOpen_region k) (D.frontier_region k)
+
+@[simp] theorem ofEntries_parityStage {length : ℕ}
+    (entry : Fin (length + 1) → ReducedTorusCircleStageEntry Phi)
+    (k : Fin (length + 1)) :
+    (ofEntries entry).parityStage k = (entry k).parityStage := by
+  change (entry (boundedIndex length k.1)).parityStage = (entry k).parityStage
+  rw [boundedIndex_eq_of_le (length := length) (k := k.1) (Nat.le_of_lt_succ k.isLt)]
 
 /-- Forget the ambient section names and retain the reduced axis-stage family. -/
 def toReducedTorusCircleStageSequence
