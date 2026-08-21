@@ -408,6 +408,14 @@ torus. -/
 structure OpenGlobalBandTubularChartData where
   data : GlobalBandTubularChartData F b
   surfacePatch_open : IsOpen data.surfacePatch
+  coveringPatch : Set TorusCoveringPlane
+  coveringPatch_open : IsOpen coveringPatch
+  coveringLift : Submission.SurfaceRegularValue.Plane ≃ₜ coveringPatch
+  coveringProjection_eq_strip : ∀ z,
+    ((torusCoveringProjectionToTorus Phi (coveringLift z) : transportedTorus Phi) : R3) =
+      (((data.strip z : data.surfacePatch) : transportedTorus Phi) : R3)
+  coveringProjection_injOn : Set.InjOn
+    (torusCoveringProjectionToTorus Phi) coveringPatch
 
 /-- The planar extendible-arc strip descends through an injective covering neighborhood to the
 desired transported-torus band chart. -/
@@ -491,9 +499,13 @@ theorem exists_openGlobalBandTubularChartData :
       _ = ((F.globalBandPath b u : transportedTorus Phi) : R3) := by
         rfl
   let T := GlobalBandTubularChartData.ofStrip (Set.range pV) strip hstrip halign
-  refine ⟨⟨T, ?_⟩⟩
-  change IsOpen (Set.range pV)
-  exact hpVopen.isOpen_range
+  refine ⟨⟨T, ?_, V, hVopen, coveringPlaneCoordinates.symm.trans e, ?_, ?_⟩⟩
+  · change IsOpen (Set.range pV)
+    exact hpVopen.isOpen_range
+  · intro z
+    rfl
+  · intro x hx y hy hxy
+    exact hinj (hVU hx).1 (hVU hy).1 hxy
 
 /-- The open global band chart supplies the original chart data after forgetting openness. -/
 theorem exists_globalBandTubularChartData :

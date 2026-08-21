@@ -154,7 +154,7 @@ theorem globalUpper_path_endpoint_injective :
     F.globalUpperEndpointEquiv_val_eq_path_endpoint]
   exact hpq
 
-private theorem gapPath_interior_not_mem_seam
+theorem gapPath_interior_not_mem_seam
     (g : F.GlobalOuterGap) (u : unitInterval)
     (hu0 : (u : ℝ) ≠ 0) (hu1 : (u : ℝ) ≠ 1) :
     ((F.gapPath g u : transportedTorus Phi) : R3) ∉

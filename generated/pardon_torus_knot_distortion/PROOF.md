@@ -438,6 +438,22 @@ and a natural-number family of those data gives the exact sequence consumed by t
 Thus ambient sphere parametrizations, sphere-side filling disks, and event regions are absent
 from the all-inessential construction boundary.
 
+`ReducedTorusCircleCore` also removes the ambient sphere system from the canonical-disk argument.
+For any finite pairwise-disjoint family of zero-winding torus circles, it constructs the canonical
+Schoenflies disks, selects the inclusion-maximal laminar disk images, derives pairwise-separated
+supports, and applies the finite sequential puncture pushout.  The resulting complement is
+connected and carries two independent winding loops, while every loop contained in the maximal
+disk union has winding pair `(0,0)`.  This is exactly `ReducedInessentialTorusCoreData`, obtained
+directly from the finite circle family.
+
+`ReducedTorusCircleTransitions` turns the local disk-side geometry into the complete reduced
+transition sequence.  At each move the canonical core may be selected from either endpoint.  The
+chosen endpoint boundary is covered automatically by its circle disks; the geometric input only
+has to place the newly introduced boundary patch and the actual label-change locus in one chosen
+endpoint disk.  Forward and reverse covers both construct the same forward parity transition,
+and a cover for every prefix step plus the terminal two-cell partition constructs
+`ReducedAllInessentialResolution` directly.
+
 The prefix update itself is reduced by `OpenRegionLensAttachment` to two local face equations.
 For open sets `A` and `L`, it proves
 `frontier (A ∪ L) = (frontier A \ L) ∪ (frontier L \ A)` and proves that the label-change locus
@@ -456,3 +472,73 @@ Once this middle family is built, its chain-side-cover adapter gives
 `SuperellipsoidFiniteStageSideCoverAxisData`. Apply
 `pardonTarget_of_superellipsoidFiniteStageSideCoverAxisData`, and use the ambient-isotopy and
 circle-reparametrization witnesses from the benchmark hypothesis.
+
+The reduced route now bypasses that ambient adapter entirely.  A finite entry type records one
+exact torus-circle section and one open region with that section as frontier.
+`ReducedTorusCircleStageGeometry.ofEntries` extends the `Fin (n+1)` family by its terminal entry,
+so the audited finite interval agrees definitionally with the concrete entries.
+`ReducedTorusBooleanStages` evaluates these entries along the canonical one-flip-at-a-time Boolean
+prefix and turns an indexed sided cover for every flip into the full reduced transition sequence.
+
+`SuperellipsoidReducedBooleanAxisIntegration` is the quantitative capstone for this route.  Given
+the reduced Boolean entries, their per-flip sided covers, terminal cells, and essential-circle
+charging transports, it proves the lower-or-upper child alternative and runs the complete Pardon
+shrinking contradiction.  No ambient middle sphere, filling disk, or moving-sphere event region
+occurs in this capstone.
+
+The remaining construction is consequently two-dimensional and explicit.  For every prefix one
+must decompose the resolved carrier into finitely many embedded torus circles and prove that it is
+the frontier of the recursively updated open parity region.  The initial carrier is the classified
+outer-circle family.  Each successor changes one standard four-port pairing; the fixed outside
+pieces connect the four support ports, and the selected vertical or horizontal local paths close
+them into a finite degree-two graph.  The existing `FiniteAlternatingEndpointSystem` construction
+then gives the circle maps, exact carrier union, and pairwise disjointness.  What is not yet
+packaged is the extraction of those fixed outside port-to-port paths from the canonical outer
+circle parametrizations and the exact chart-support equation.  Once that extraction is proved,
+the local lens frontier identity supplies the new open region, and the already validated raw-theta
+outer-face theorem supplies the forward-or-reverse disk-sided cover.
+
+`BooleanFourPortLocalPairing` now removes the finite matching combinatorics from that boundary.
+The four ports of every band are labelled by side and level.  At a false bit, the local perfect
+matching fixes the side and joins the two levels; at a true bit, it fixes the level and joins the
+two sides.  Combining this explicit matching with any fixed outside perfect matching gives the
+exact finite alternating endpoint system for every Boolean prefix.  Together with
+`ReducedTorusAlternatingStages`, this means the remaining circle-stage input is only one fixed
+outside endpoint pairing and its embedded paths, plus the local chart-path incidence and carrier
+equalities.  Circle parametrization, quotient-cycle enumeration, pairwise disjointness, exact
+carrier unions, Boolean evaluation, and the reduced Pardon axis are all already derived.
+
+`BooleanFourPortLocalPaths` realizes that local matching in the actual paired seam-band charts.
+It labels each abstract port by the corresponding chart corner and constructs the dependent path
+family by the two vertical chart arcs for `false` and the two horizontal chart arcs for `true`.
+The endpoint equalities are proved explicitly before transporting the paths, so no conclusion is
+hidden in a typing cast.  It remains to combine these local paths with the fixed outside paths and
+prove the resulting closed-arc incidence: same-colour paths are disjoint and an outside/local
+intersection is exactly their common labelled port.
+
+`BooleanFourPortLocalIncidence` discharges the choice-dependent half of that statement: every
+local path is injective, distinct local paths are disjoint, and each local range lies in its
+band support.  `FiniteAlternatingAmbientTorusCircleSection` then removes an otherwise awkward
+subtype duplication.  An ambient alternating system whose two path families lie on the
+transported torus lifts canonically to the exact finite torus-circle section used by the reduced
+axis argument.  The remaining outside construction may therefore use the literal ambient
+canonical barrier arcs and only has to prove their torus containment and exact intersections
+with the four local paths.
+
+`SuperellipsoidCanonicalBooleanOutsidePairing` now constructs the fixed outside perfect matching
+without a cardinality premise.  The lower and upper central outer-gap endpoints each enumerate
+the seam; the cut-gap enumeration converts every seam vertex to its unique band and side, and the
+lower/upper summand becomes the level bit.  `SuperellipsoidCanonicalBooleanOutsidePaths` constructs
+the exact seam-to-corner branch for every such endpoint and proves pointwise transported-torus
+membership.  One cannot concatenate these branches with the untrimmed seam-to-seam outer gap:
+that walk retraces both branch segments and is not injective.
+
+`SuperellipsoidCanonicalOuterGapTrim` now performs the required extraction.  Each chart corner has
+a canonical parameter strictly inside its complete outer gap; the retained path is the genuine
+subpath between the two parameters.  These retained paths are injective, lie on the transported
+torus, and are pairwise disjoint, including between the lower and upper families.  Moreover each
+seam-to-corner chart branch is proved to be exactly the corresponding endpoint subpath of the
+complete outer gap, rather than merely a subset of it.  The remaining outside-stage fact is the
+exact endpoint-only intersection of a retained path with each selected local vertical or
+horizontal chart path.  This now reduces to interval intersection for the endpoint subpaths and
+the standard chart-support incidence; no new global circle geometry remains in that step.

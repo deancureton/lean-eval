@@ -279,7 +279,8 @@ theorem oriented_cross_intersection
   rw [firstPaths.range_orientedPath, secondPaths.range_orientedPath]
   exact H.cross_intersection _ _
 
-private noncomputable def orientedFamily
+/-- Canonically orient both endpoint path families along the alternating successor. -/
+noncomputable def orientedFamily
     (firstPaths : EndpointPathFamily A.first point)
     (secondPaths : EndpointPathFamily A.second point) :
     OrientedAlternatingArcFamily A point :=
