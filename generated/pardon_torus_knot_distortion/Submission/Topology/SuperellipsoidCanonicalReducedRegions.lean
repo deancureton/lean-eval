@@ -796,6 +796,34 @@ def canonicalBooleanRemovedLenses
     (choice : D.ConnectorBandIndex → Bool) : Set (transportedTorus Phi) :=
   ⋃ b, if choice b then D.canonicalFourPortClosedLens b else ∅
 
+theorem canonicalBooleanRemovedLenses_update_true
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    D.canonicalBooleanRemovedLenses (Function.update choice b true) =
+      D.canonicalBooleanRemovedLenses choice ∪ D.canonicalFourPortClosedLens b := by
+  ext x
+  constructor
+  · intro hx
+    rw [canonicalBooleanRemovedLenses] at hx
+    obtain ⟨e, he⟩ := Set.mem_iUnion.mp hx
+    by_cases heb : e = b
+    · subst e
+      exact Or.inr (by simpa using he)
+    · apply Or.inl
+      rw [canonicalBooleanRemovedLenses]
+      exact Set.mem_iUnion.mpr ⟨e, by
+        simpa [Function.update_of_ne heb] using he⟩
+  · rintro (hx | hx)
+    · rw [canonicalBooleanRemovedLenses] at hx ⊢
+      obtain ⟨e, he⟩ := Set.mem_iUnion.mp hx
+      refine Set.mem_iUnion.mpr ⟨e, ?_⟩
+      by_cases heb : e = b
+      · subst e
+        simp [hb] at he
+      · simpa [Function.update_of_ne heb] using he
+    · rw [canonicalBooleanRemovedLenses]
+      exact Set.mem_iUnion.mpr ⟨b, by simpa using hx⟩
+
 theorem isClosed_canonicalBooleanRemovedLenses
     (choice : D.ConnectorBandIndex → Bool) :
     IsClosed (D.canonicalBooleanRemovedLenses choice) := by
@@ -877,6 +905,40 @@ def canonicalBooleanReducedRegion
   superellipsoidReducedInside Phi frame c S.outer.scale \
     D.canonicalBooleanRemovedLenses choice
 
+@[simp] theorem canonicalBooleanRemovedLenses_false :
+    D.canonicalBooleanRemovedLenses (fun _ ↦ false) = ∅ := by
+  rw [canonicalBooleanRemovedLenses]
+  simp
+
+@[simp] theorem canonicalBooleanReducedRegion_false :
+    D.canonicalBooleanReducedRegion (fun _ ↦ false) =
+      superellipsoidReducedInside Phi frame c S.outer.scale := by
+  rw [canonicalBooleanReducedRegion, D.canonicalBooleanRemovedLenses_false]
+  exact Set.sdiff_empty
+
+theorem canonicalBooleanReducedRegion_update_true
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    D.canonicalBooleanReducedRegion (Function.update choice b true) =
+      D.canonicalBooleanReducedRegion choice \ D.canonicalFourPortClosedLens b := by
+  rw [canonicalBooleanReducedRegion, D.canonicalBooleanRemovedLenses_update_true choice b hb,
+    canonicalBooleanReducedRegion]
+  ext x
+  simp only [Set.mem_sdiff, Set.mem_union]
+  tauto
+
+theorem canonicalBooleanReducedRegion_labelChange_subset_lens
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    {x | (x ∈ D.canonicalBooleanReducedRegion choice) ≠
+        (x ∈ D.canonicalBooleanReducedRegion (Function.update choice b true))} ⊆
+      D.canonicalFourPortClosedLens b := by
+  intro x hx
+  by_contra hxLens
+  apply hx
+  rw [D.canonicalBooleanReducedRegion_update_true choice b hb]
+  simp only [Set.mem_sdiff, hxLens, not_false_eq_true, and_true]
+
 theorem isOpen_canonicalBooleanReducedRegion
     (choice : D.ConnectorBandIndex → Bool) :
     IsOpen (D.canonicalBooleanReducedRegion choice) :=
@@ -924,6 +986,47 @@ theorem canonicalBooleanAugmentedAmbientSection_eq_paths
             D.centralHeightFlowStraightenedChartFamily.chart choice).path e))) ∪
       D.canonicalInactiveOuterCarrier = _
   rw [D.iUnion_range_canonicalBooleanLocalPaths choice]
+
+theorem canonicalBooleanAugmentedAmbientSection_update_true_subset
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex) :
+    D.canonicalBooleanAugmentedAmbientSection (Function.update choice b true) ⊆
+      D.canonicalBooleanAugmentedAmbientSection choice ∪
+        (D.centralHeightFlowStraightenedChartFamily.chart b).surgeryPatch := by
+  intro x hx
+  rw [D.canonicalBooleanAugmentedAmbientSection_eq_paths] at hx ⊢
+  rcases hx with (hxOutside | hxLocal) | hxInactive
+  · exact Or.inl (Or.inl (Or.inl hxOutside))
+  · obtain ⟨e, he⟩ := Set.mem_iUnion.mp hxLocal
+    by_cases heb : e = b
+    · subst e
+      exact Or.inr (by simpa using he)
+    · apply Or.inl
+      apply Or.inl
+      apply Or.inr
+      exact Set.mem_iUnion.mpr ⟨e, by
+        simpa [Function.update_of_ne heb] using he⟩
+  · exact Or.inl (Or.inr hxInactive)
+
+theorem canonicalBooleanAugmentedAmbientSection_subset_update_true_union
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    D.canonicalBooleanAugmentedAmbientSection choice ⊆
+      D.canonicalBooleanAugmentedAmbientSection (Function.update choice b true) ∪
+        (D.centralHeightFlowStraightenedChartFamily.chart b).parallelPatch := by
+  intro x hx
+  rw [D.canonicalBooleanAugmentedAmbientSection_eq_paths] at hx ⊢
+  rcases hx with (hxOutside | hxLocal) | hxInactive
+  · exact Or.inl (Or.inl (Or.inl hxOutside))
+  · obtain ⟨e, he⟩ := Set.mem_iUnion.mp hxLocal
+    by_cases heb : e = b
+    · subst e
+      exact Or.inr (by simpa [hb] using he)
+    · apply Or.inl
+      apply Or.inl
+      apply Or.inr
+      exact Set.mem_iUnion.mpr ⟨e, by
+        simpa [Function.update_of_ne heb] using he⟩
+  · exact Or.inl (Or.inr hxInactive)
 
 /-- The exact finite circle section including the fixed seam-free outer circles. -/
 noncomputable def canonicalBooleanAugmentedCircleSection
@@ -1366,6 +1469,44 @@ noncomputable def canonicalBooleanReducedStageEntry
   region := D.canonicalBooleanReducedRegion choice
   isOpen_region := D.isOpen_canonicalBooleanReducedRegion choice
   frontier_region := D.frontier_canonicalBooleanReducedRegion choice
+
+theorem canonicalBooleanReducedStageEntry_update_true_boundary_subset
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex) :
+    (D.canonicalBooleanReducedStageEntry
+        (Function.update choice b true)).parityStage.boundary ⊆
+      (D.canonicalBooleanReducedStageEntry choice).parityStage.boundary ∪
+        transportedTorusPart Phi
+          (D.centralHeightFlowStraightenedChartFamily.chart b).surgeryPatch := by
+  intro x hx
+  change (x : R3) ∈ D.canonicalBooleanAugmentedAmbientSection
+    (Function.update choice b true) at hx
+  rcases D.canonicalBooleanAugmentedAmbientSection_update_true_subset choice b hx with hx | hx
+  · exact Or.inl hx
+  · exact Or.inr hx
+
+theorem canonicalBooleanReducedStageEntry_boundary_subset_update_true
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    (D.canonicalBooleanReducedStageEntry choice).parityStage.boundary ⊆
+      (D.canonicalBooleanReducedStageEntry
+        (Function.update choice b true)).parityStage.boundary ∪
+          transportedTorusPart Phi
+            (D.centralHeightFlowStraightenedChartFamily.chart b).parallelPatch := by
+  intro x hx
+  change (x : R3) ∈ D.canonicalBooleanAugmentedAmbientSection choice at hx
+  rcases D.canonicalBooleanAugmentedAmbientSection_subset_update_true_union
+      choice b hb hx with hx | hx
+  · exact Or.inl hx
+  · exact Or.inr hx
+
+theorem canonicalBooleanReducedStageEntry_update_true_labelChange_subset_lens
+    (choice : D.ConnectorBandIndex → Bool) (b : D.ConnectorBandIndex)
+    (hb : choice b = false) :
+    {x | (x ∈ (D.canonicalBooleanReducedStageEntry choice).parityStage.inside) ≠
+        (x ∈ (D.canonicalBooleanReducedStageEntry
+          (Function.update choice b true)).parityStage.inside)} ⊆
+      D.canonicalFourPortClosedLens b :=
+  D.canonicalBooleanReducedRegion_labelChange_subset_lens choice b hb
 
 noncomputable def canonicalBooleanReducedStageData :
     BooleanChoiceReducedTorusCircleStageData Phi

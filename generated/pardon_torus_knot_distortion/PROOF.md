@@ -542,3 +542,43 @@ complete outer gap, rather than merely a subset of it.  The remaining outside-st
 exact endpoint-only intersection of a retained path with each selected local vertical or
 horizontal chart path.  This now reduces to interval intersection for the endpoint subpaths and
 the standard chart-support incidence; no new global circle geometry remains in that step.
+
+That endpoint-only intersection is now complete, so
+`canonicalBooleanOutsidePathData` unconditionally supplies the fixed matching, all local Boolean
+matchings, their exact incidence, and the resulting finite embedded torus-circle section.
+
+`PeriodicRegularSublevelFrontier` and `SuperellipsoidReducedInitialRegion` construct the initial
+open parity region directly: the strict superellipsoid sublevel on the quotient torus is open and
+its relative frontier is exactly the selected regular outer section.  The filled height-flow
+square has also been upgraded from a boundary construction to an exact disk construction.
+`image_interior_centralConnectorUnitSquare_eq_inside` identifies its open square with the bounded
+theta face, while the canonical ambient theta homeomorphism carries the closed face to the
+standard four-port rectangle.
+
+Consequently `SuperellipsoidCanonicalReducedRegions` now defines, for every band, a closed
+four-port lens and its open interior on the transported torus.  The lens is compact and closed,
+its frontier is exactly the charted rectangle frontier, the closed lens lies in the closure of
+the initial parity region, and its open interior lies strictly inside that region.  For every
+Boolean choice, removing the selected finite closed lens union therefore gives an explicit open
+reduced region.  The exact frontier theorem is now complete for every Boolean choice: selected
+vertical faces disappear, selected horizontal faces appear, and the trimmed outside paths give
+the unchanged outer carrier away from the lenses.  Reindexing its exact finite circle section
+constructs `canonicalBooleanReducedStageData`, the full reduced Boolean stage family.
+
+The successor geometry is also exact at the set level.  Updating a false bit to true adds exactly
+one closed lens to the removed union, so the new region is the old region minus that lens and the
+whole label-change locus lies in it.  The new boundary is contained in the old boundary plus the
+horizontal face, and conversely the old boundary is contained in the new boundary plus the
+vertical face.  `FourPortSixEdgeReducedDiskSide` combines these facts with the existing planar
+outer-face theorem and directly constructs the forward-or-reverse `ReducedCircleStageSideCover`;
+no ambient sphere family appears.
+
+The remaining per-flip construction is therefore precise: extract the six-edge graph's two
+outside routes from the affected quotient cycles of the finite alternating endpoint system,
+identify its vertical and horizontal edge unions with the canonical band faces, and attach the
+selected outer graph circle to its ordinary index in the corresponding reduced endpoint family.
+After that, the all-inessential branch still needs the all-true reduced region split into its two
+open terminal cells.  The essential branch separately needs the axis-circle and transported
+charging packages for the canonical quotient circles.  These are the only remaining inputs to
+`SuperellipsoidReducedBooleanAxisData` before the final benchmark theorem can invoke its complete
+Pardon capstone.
