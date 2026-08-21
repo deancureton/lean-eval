@@ -151,5 +151,41 @@ noncomputable def toSubtypeGraph : FourPortSixEdgePathSystem s where
       (Set.disjoint_iff_inter_eq_empty.mp G.bottom_disjoint_top)
     simpa only [Set.preimage_inter, Set.preimage_union, Set.preimage_empty] using h
 
+@[simp] theorem range_toSubtypeGraph_left :
+    Set.range H.toSubtypeGraph.left = Subtype.val ⁻¹' Set.range G.left :=
+  range_pathToSubtype G.left H.left
+
+@[simp] theorem range_toSubtypeGraph_right :
+    Set.range H.toSubtypeGraph.right = Subtype.val ⁻¹' Set.range G.right :=
+  range_pathToSubtype G.right H.right
+
+@[simp] theorem range_toSubtypeGraph_bottom :
+    Set.range H.toSubtypeGraph.bottom = Subtype.val ⁻¹' Set.range G.bottom :=
+  range_pathToSubtype G.bottom H.bottom
+
+@[simp] theorem range_toSubtypeGraph_top :
+    Set.range H.toSubtypeGraph.top = Subtype.val ⁻¹' Set.range G.top :=
+  range_pathToSubtype G.top H.top
+
+@[simp] theorem coe_toSubtypeGraph_centralCircle (z : Circle) :
+    ((H.toSubtypeGraph.centralCircle z : s) : X) = G.centralCircle z := by
+  apply TwoArcCircle.map_circleMap_of_pointwise
+  · intro t
+    simp only [fourPortCentralUpperPath, Path.trans_apply, Path.symm_apply,
+      Function.comp_apply]
+    split
+    · split <;> rfl
+    · rfl
+  · intro t
+    rfl
+
+@[simp] theorem coe_toSubtypeGraph_bottomCircle (z : Circle) :
+    ((H.toSubtypeGraph.bottomCircle z : s) : X) = G.bottomCircle z := by
+  apply TwoArcCircle.map_circleMap_of_pointwise <;> intro t <;> rfl
+
+@[simp] theorem coe_toSubtypeGraph_topCircle (z : Circle) :
+    ((H.toSubtypeGraph.topCircle z : s) : X) = G.topCircle z := by
+  apply TwoArcCircle.map_circleMap_of_pointwise <;> intro t <;> rfl
+
 end FourPortSixEdgeCarrierData
 end Submission.Topology

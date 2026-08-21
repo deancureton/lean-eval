@@ -29,6 +29,33 @@ def swap (A : FiniteAlternatingEndpointSystem vertex) :
   first := A.second
   second := A.first
 
+/-- Swapping the two edge colours does not change the unoriented cycle index. -/
+noncomputable def swapCycleEquiv
+    (A : FiniteAlternatingEndpointSystem vertex) : A.swap.CycleIndex ≃ A.CycleIndex where
+  toFun := Quotient.map' id fun x y h ↦ by
+    unfold cycleSetoid at h ⊢
+    change Relation.EqvGen A.swap.Incident _ _ at h
+    change Relation.EqvGen A.Incident _ _
+    have hrel : A.swap.Incident ≤ A.Incident := by
+      intro _ _ hxy
+      exact hxy.elim Or.inr Or.inl
+    exact (Relation.EqvGen.mono hrel) x y h
+  invFun := Quotient.map' id fun x y h ↦ by
+    unfold cycleSetoid at h ⊢
+    change Relation.EqvGen A.Incident _ _ at h
+    change Relation.EqvGen A.swap.Incident _ _
+    have hrel : A.Incident ≤ A.swap.Incident := by
+      intro _ _ hxy
+      exact hxy.elim Or.inr Or.inl
+    exact (Relation.EqvGen.mono hrel) x y h
+  left_inv q := Quotient.inductionOn q fun _ ↦ rfl
+  right_inv q := Quotient.inductionOn q fun _ ↦ rfl
+
+@[simp] theorem swapCycleEquiv_cycleOfVertex
+    (A : FiniteAlternatingEndpointSystem vertex) (v : vertex) :
+    A.swapCycleEquiv (A.swap.cycleOfVertex v) = A.cycleOfVertex v :=
+  rfl
+
 namespace OrientedAlternatingArcFamily
 
 /-- The complementary arc based at a prescribed first-colour edge. -/
@@ -66,6 +93,27 @@ variable {vertex : Type u} [Fintype vertex]
   {A : FiniteAlternatingEndpointSystem vertex} {point : vertex → X}
   {firstPaths : FiniteAlternatingEndpointSystem.EndpointPathFamily A.first point}
   {secondPaths : FiniteAlternatingEndpointSystem.EndpointPathFamily A.second point}
+
+/-- The exact edge carrier is unchanged when the two alternating colours are exchanged. -/
+theorem cycleEdgeCarrier_swap
+    (_H : ClosedArcIncidenceData A point firstPaths secondPaths) (q : A.swap.CycleIndex) :
+    cycleEdgeCarrier A.swap point secondPaths firstPaths q =
+      cycleEdgeCarrier A point firstPaths secondPaths (A.swapCycleEquiv q) := by
+  classical
+  have hcycle (v : vertex) :
+      A.swap.cycleOfVertex v = q ↔
+        A.cycleOfVertex v = A.swapCycleEquiv q := by
+    rw [← A.swapCycleEquiv.injective.eq_iff, A.swapCycleEquiv_cycleOfVertex]
+  unfold cycleEdgeCarrier
+  change
+    ((⋃ e : A.second.edge,
+        if A.swap.cycleOfVertex (A.second.endpointEquiv (e, 0)) = q then
+          Set.range (secondPaths.path e) else ∅) ∪
+      (⋃ e : A.first.edge,
+        if A.swap.cycleOfVertex (A.first.endpointEquiv (e, 0)) = q then
+          Set.range (firstPaths.path e) else ∅)) = _
+  simp_rw [hcycle]
+  rw [Set.union_comm]
 
 /-- Exact constituent incidence is symmetric in the two edge colours. -/
 theorem swap

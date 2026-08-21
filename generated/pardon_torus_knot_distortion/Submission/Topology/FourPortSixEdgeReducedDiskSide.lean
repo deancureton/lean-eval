@@ -1,5 +1,6 @@
 import Submission.Topology.FourPortSixEdgeOuterFaceSelection
 import Submission.Topology.ReducedTorusCircleTransitions
+import Submission.Topology.TorusCircleDiskCarrierInvariance
 
 /-!
 # Reduced disk-sided transitions from a six-edge four-port graph
@@ -17,6 +18,7 @@ noncomputable section
 namespace Submission.Topology
 
 open Submission.PardonDistortion Submission.Torus
+open EmbeddedTorusIntersectionCircle
 open FourPortSixEdgeZeroWindingData.OuterRawFaceData
 
 variable {Phi : AmbientIsotopy}
@@ -57,6 +59,13 @@ variable {G : FourPortSixEdgePathSystem (transportedTorus Phi)}
   {O : Z.planePathSystem.OuterRawFaceData D}
   {pre post : ReducedTorusParityStage Phi}
 
+/-- The same lifted lens audits the reverse transition. -/
+def reverse (L : ReducedFourPortFaceLensLiftData Z O pre post) :
+    ReducedFourPortFaceLensLiftData Z O post pre where
+  lift x := L.lift ⟨x, ne_comm.mp x.property⟩
+  projects x := L.projects ⟨x, ne_comm.mp x.property⟩
+  mem_boundedFaces x := L.mem_boundedFaces ⟨x, ne_comm.mp x.property⟩
+
 /-- Every reduced label-change point lies in the selected projected graph disk. -/
 theorem labelChange_subset_selectedDisk
     (L : ReducedFourPortFaceLensLiftData Z O pre post) :
@@ -83,7 +92,9 @@ structure ReducedFourPortOuterCircleAttachment
     (O : Z.planePathSystem.OuterRawFaceData D)
     (F : FiniteDisjointTorusCircleFamily Phi ι) where
   circleIndex : ι
-  outerCircle_eq : F.circle circleIndex = Z.rawEmbeddedCircle O.outerIndex
+  outerCircleCarrier_subset :
+    torusCircleCarrier (Z.rawEmbeddedCircle O.outerIndex) ⊆
+      torusCircleCarrier (F.circle circleIndex)
 
 namespace ReducedFourPortOuterCircleAttachment
 
@@ -95,16 +106,6 @@ variable {G : FourPortSixEdgePathSystem (transportedTorus Phi)}
   {F : FiniteDisjointTorusCircleFamily Phi ι}
   {hzero : F.AllInessential}
 
-private theorem projectedClosedJordanDisk_congr
-    {C E : EmbeddedTorusIntersectionCircle Phi}
-    (hCE : C = E)
-    (hC : C.windingLoop.windingPair = (0, 0))
-    (hE : E.windingLoop.windingPair = (0, 0)) :
-    C.zeroWindingProjectedClosedJordanDisk hC =
-      E.zeroWindingProjectedClosedJordanDisk hE := by
-  subst E
-  rfl
-
 omit [DecidableEq ι] in
 /-- The selected planar graph disk is exactly the chosen reduced-family torus disk. -/
 theorem selectedDisk_eq_torusDiskRange
@@ -114,8 +115,9 @@ theorem selectedDisk_eq_torusDiskRange
       F.torusDiskRange hzero I.circleIndex := by
   rw [FiniteDisjointTorusCircleFamily.torusDiskRange,
     F.range_torusDiskMap_eq_projectedClosedJordanDisk]
-  exact (projectedClosedJordanDisk_congr I.outerCircle_eq
-    (hzero I.circleIndex) (Z.rawZeroWinding O.outerIndex)).symm
+  exact zeroWindingProjectedClosedJordanDisk_eq_of_torusCircleCarrier_subset
+      (Z.rawEmbeddedCircle O.outerIndex) (F.circle I.circleIndex) I.outerCircleCarrier_subset
+      (Z.rawZeroWinding O.outerIndex) (hzero I.circleIndex)
 
 end ReducedFourPortOuterCircleAttachment
 

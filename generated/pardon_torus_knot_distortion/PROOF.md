@@ -622,8 +622,18 @@ endpoint's ordinary reduced-family index.
 The symmetric merge assembly is now complete as well.  If the two pre vertical cycles are
 distinct, the two true horizontal paths form the central route and the complete false circles are
 the disjoint children.  `FourPortSixEdgeSubtype` restricts either conditional ambient graph to the
-transported-torus subtype while preserving every exact incidence equation.  Therefore whichever
-side the lens dichotomy selects already produces the precise `FourPortSixEdgePathSystem
-(transportedTorus Phi)` expected by the outer-face and reduced disk-side modules.  What remains at
-this transition boundary is only the cooriented split/merge dichotomy itself and carrier-level
-identification of the three graph cycles with their canonical reduced endpoint indices.
+transported-torus subtype while preserving every exact incidence equation.
+`SuperellipsoidCanonicalBooleanSixEdgeAttachments` now identifies all three graph cycles with
+their canonical reduced endpoint circles by carrier inclusion, transfers zero winding, and
+attaches whichever planar raw cycle is outer to the appropriate endpoint disk.  It also proves
+the exact parallel/surgery patch carriers and constructs the full reduced stage-side cover in
+both directions; the merge constructor audits the reversed local graph and then reverses the
+resulting cover.
+
+The unresolved per-prefix case is therefore the genuine diagonal reconnection where both the pre
+vertical pair and the post horizontal pair lie on a single quotient cycle.  This cannot be
+discarded by abstract matching combinatorics.  The remaining local topology must either put that
+diagonal move in an auxiliary disk core (the canonical four-port rectangle circle is already
+available) or derive a stage-side endpoint disk from its planar face ordering.  The conditional
+split/merge constructors also retain the explicit rectangle rotation and lifted label-change
+face; these should be discharged from the canonical open covering chart at the same time.

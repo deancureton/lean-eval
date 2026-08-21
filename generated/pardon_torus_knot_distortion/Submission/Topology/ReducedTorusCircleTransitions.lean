@@ -128,6 +128,14 @@ variable {preIndex postIndex : Type*}
   {postZero : postFamily.AllInessential}
   {pre post : ReducedTorusParityStage Phi}
 
+/-- Reversing the audited transition swaps the forward and reverse endpoint choices. -/
+def reverse
+    (D : ReducedCircleStageSideCover preFamily preZero postFamily postZero pre post) :
+    ReducedCircleStageSideCover postFamily postZero preFamily preZero post pre :=
+  match D with
+  | .inl forward => Sum.inr forward
+  | .inr reverse => Sum.inl reverse
+
 /-- Either endpoint choice constructs the same forward reduced transition. -/
 def toReducedInessentialParityTransition
     (D : ReducedCircleStageSideCover preFamily preZero postFamily postZero pre post) :

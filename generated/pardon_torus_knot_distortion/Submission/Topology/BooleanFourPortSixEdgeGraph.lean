@@ -106,14 +106,14 @@ private def falseRightPath
     (congrArg (fourPortChartPoint F.band)
       (D.falseRight_target_eq falseChoice trueChoice b hfalse htrue).symm)
 
-private theorem range_falseLeftPath
+theorem range_falseLeftPath
     (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
     (hfalse : falseChoice b = false) (htrue : trueChoice b = true) :
     Set.range (falseLeftPath (F := F) falseChoice trueChoice b hfalse htrue) =
       Set.range ((booleanFourPortLocalEndpointPaths F.band falseChoice).path (b, 0)) :=
   congrArg Set.range (Path.cast_coe _ _ _)
 
-private theorem range_falseRightPath
+theorem range_falseRightPath
     (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
     (hfalse : falseChoice b = false) (htrue : trueChoice b = true) :
     Set.range (D.falseRightPath falseChoice trueChoice b hfalse htrue) =
@@ -207,6 +207,32 @@ noncomputable def sixEdgePathSystem
   (D.sixEdgeConstituentData falseChoice trueChoice b hfalse htrue hdistinct)
     |>.toFourPortSixEdgePathSystem
 
+theorem range_sixEdgePathSystem_left
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem trueChoice).cycleOfVertex
+          (localEdgeStart trueChoice (b, 0)) ≠
+        (D.localFirstSystem trueChoice).cycleOfVertex
+          (localEdgeStart trueChoice (b, 1))) :
+    Set.range (D.sixEdgePathSystem falseChoice trueChoice b hfalse htrue hdistinct).left =
+      Set.range ((booleanFourPortLocalEndpointPaths F.band falseChoice).path (b, 0)) := by
+  change Set.range (falseLeftPath (F := F) falseChoice trueChoice b hfalse htrue) = _
+  exact range_falseLeftPath (F := F) falseChoice trueChoice b hfalse htrue
+
+theorem range_sixEdgePathSystem_right
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem trueChoice).cycleOfVertex
+          (localEdgeStart trueChoice (b, 0)) ≠
+        (D.localFirstSystem trueChoice).cycleOfVertex
+          (localEdgeStart trueChoice (b, 1))) :
+    Set.range (D.sixEdgePathSystem falseChoice trueChoice b hfalse htrue hdistinct).right =
+      Set.range ((booleanFourPortLocalEndpointPaths F.band falseChoice).path (b, 1)) := by
+  change Set.range (D.falseRightPath falseChoice trueChoice b hfalse htrue) = _
+  exact D.range_falseRightPath falseChoice trueChoice b hfalse htrue
+
 private theorem trueBottom_source_eq
     (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
     (hfalse : falseChoice b = false) (htrue : trueChoice b = true) :
@@ -283,14 +309,14 @@ private def trueTopPath
     (congrArg (fourPortChartPoint F.band)
       (D.trueTop_target_eq falseChoice trueChoice b hfalse htrue).symm)
 
-private theorem range_trueBottomPath
+theorem range_trueBottomPath
     (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
     (hfalse : falseChoice b = false) (htrue : trueChoice b = true) :
     Set.range (trueBottomPath (F := F) falseChoice trueChoice b hfalse htrue) =
       Set.range ((booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, 0)) :=
   congrArg Set.range (Path.cast_coe _ _ _)
 
-private theorem range_trueTopPath
+theorem range_trueTopPath
     (D : BooleanFourPortOutsidePathData Phi F)
     (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
     (hfalse : falseChoice b = false) (htrue : trueChoice b = true) :
@@ -384,6 +410,34 @@ noncomputable def mergeSixEdgePathSystem
     FourPortSixEdgePathSystem R3 :=
   (D.mergeSixEdgeConstituentData falseChoice trueChoice b hfalse htrue hdistinct)
     |>.toFourPortSixEdgePathSystem
+
+theorem range_mergeSixEdgePathSystem_left
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 0)) ≠
+        (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 1))) :
+    Set.range
+        (D.mergeSixEdgePathSystem falseChoice trueChoice b hfalse htrue hdistinct).left =
+      Set.range ((booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, 0)) := by
+  change Set.range (trueBottomPath (F := F) falseChoice trueChoice b hfalse htrue) = _
+  exact range_trueBottomPath (F := F) falseChoice trueChoice b hfalse htrue
+
+theorem range_mergeSixEdgePathSystem_right
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 0)) ≠
+        (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 1))) :
+    Set.range
+        (D.mergeSixEdgePathSystem falseChoice trueChoice b hfalse htrue hdistinct).right =
+      Set.range ((booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, 1)) := by
+  change Set.range (D.trueTopPath falseChoice trueChoice b hfalse htrue) = _
+  exact D.range_trueTopPath falseChoice trueChoice b hfalse htrue
 
 theorem range_localEdgeComplementPath_subset_transportedTorus
     (choice : Fin n → Bool) (e : FourPortLocalEdge n) :

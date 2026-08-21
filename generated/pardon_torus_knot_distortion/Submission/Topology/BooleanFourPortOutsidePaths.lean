@@ -81,6 +81,14 @@ noncomputable def circleSection (D : BooleanFourPortOutsidePathData Phi F)
   (D.incidence choice).finiteEmbeddedTorusCircleSectionOfAmbient D.paths_mem_torus
     (D.localPaths_mem_torus choice)
 
+@[simp] theorem circleSection_circle_apply
+    (D : BooleanFourPortOutsidePathData Phi F) (choice : Fin n → Bool)
+    (q : (D.system choice).CycleIndex) (z : Circle) :
+    ((D.circleSection choice).circle q).circle z =
+      (FiniteAlternatingEndpointSystem.ClosedArcIncidenceData.orientedFamily
+        D.paths (booleanFourPortLocalEndpointPaths F.band choice)).circleMap q z := by
+  rfl
+
 /-- The resolved carrier is exactly the fixed outside arcs plus the selected local arcs. -/
 theorem ambientSection_eq_iUnion_ranges
     (D : BooleanFourPortOutsidePathData Phi F) (choice : Fin n → Bool) :
@@ -90,6 +98,21 @@ theorem ambientSection_eq_iUnion_ranges
           Set.range ((booleanFourPortLocalEndpointPaths F.band choice).path e) :=
   (D.incidence choice).ambientCycleCarrierOfAmbient_eq_iUnion_ranges
     D.paths_mem_torus (D.localPaths_mem_torus choice)
+
+theorem localPath_range_subset_ambientSection
+    (D : BooleanFourPortOutsidePathData Phi F)
+    (choice : Fin n → Bool) (e : FourPortLocalEdge n) :
+    Set.range ((booleanFourPortLocalEndpointPaths F.band choice).path e) ⊆
+      D.ambientSection choice := by
+  rw [D.ambientSection_eq_iUnion_ranges choice]
+  exact fun _ hx ↦ Or.inr (Set.mem_iUnion.mpr ⟨e, hx⟩)
+
+theorem outsidePath_range_subset_ambientSection
+    (D : BooleanFourPortOutsidePathData Phi F)
+    (choice : Fin n → Bool) (e : D.outside.edge) :
+    Set.range (D.paths.path e) ⊆ D.ambientSection choice := by
+  rw [D.ambientSection_eq_iUnion_ranges choice]
+  exact fun _ hx ↦ Or.inl (Set.mem_iUnion.mpr ⟨e, hx⟩)
 
 end BooleanFourPortOutsidePathData
 end Submission.Topology
