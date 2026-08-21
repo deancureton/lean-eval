@@ -594,3 +594,14 @@ are now canonical and exact.  The remaining six-edge step is purely the split-or
 determine on which endpoint the two selected local edges lie in distinct quotient components,
 combine their two complementary paths with the opposite pairing, and identify the selected outer
 cycle with the corresponding endpoint-family disk index.
+
+The specified-edge circle is now also proved to stay inside its exact quotient-cycle edge
+carrier.  This makes disjointness transport from the canonical quotient parametrization to the
+new locally based parametrization.  The canonical outside pairing preserves the lower/upper
+level, so in the all-true resolution the two horizontal local-edge circles at every band are
+provably distinct and disjoint.  `FourPortSixEdgePathSystemConstructor` proves the remaining
+generic topology: two disjoint child circles, together with exact endpoint-only incidence of the
+two vertical sides, determine the embedded central circle and the complete six-edge intersection
+package.  For an intermediate Boolean prefix, the unresolved point is narrower: establish which
+endpoint is the split side from the cooriented parity-region update, then prove those four
+vertical-to-child endpoint incidences from the canonical trimmed-path formulas.

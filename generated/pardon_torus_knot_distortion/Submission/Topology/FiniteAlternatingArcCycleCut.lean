@@ -200,6 +200,124 @@ theorem twoArcDataAt
   second_injective := complementPathAt_injective H v
   range_inter := firstPathAt_inter_complementPathAt H v
 
+private theorem cycleOf_firstEndpoint_zero_eq
+    (e : A.first.edge) (j : Fin 2) :
+    A.cycleOfVertex (A.first.endpointEquiv (e, 0)) =
+      A.cycleOfVertex (A.first.endpointEquiv (e, j)) := by
+  fin_cases j
+  · rfl
+  · exact (A.first_edge_endpoints_same_cycle e).symm
+
+private theorem cycleOf_secondEndpoint_zero_eq
+    (e : A.second.edge) (j : Fin 2) :
+    A.cycleOfVertex (A.second.endpointEquiv (e, 0)) =
+      A.cycleOfVertex (A.second.endpointEquiv (e, j)) := by
+  fin_cases j
+  · rfl
+  · exact (A.second_edge_endpoints_same_cycle e).symm
+
+private theorem first_range_subset_cycleEdgeCarrier
+    (_H : ClosedArcIncidenceData A point firstPaths secondPaths)
+    {q : A.CycleIndex} {v : vertex} (hv : A.cycleOfVertex v = q) :
+    Set.range ((orientedFamily firstPaths secondPaths).first v) ⊆
+      cycleEdgeCarrier A point firstPaths secondPaths q := by
+  intro x hx
+  let p := A.first.endpointEquiv.symm v
+  have hp : A.first.endpointEquiv p = v := A.first.endpointEquiv.apply_symm_apply v
+  have hcycle : A.cycleOfVertex (A.first.endpointEquiv (p.1, 0)) = q := by
+    exact (cycleOf_firstEndpoint_zero_eq p.1 p.2).trans (congrArg A.cycleOfVertex hp) |>.trans hv
+  rw [cycleEdgeCarrier]
+  left
+  refine Set.mem_iUnion.mpr ⟨p.1, ?_⟩
+  rw [if_pos hcycle]
+  change x ∈ Set.range (firstPaths.orientedPath v) at hx
+  rw [firstPaths.range_orientedPath] at hx
+  simpa only [p] using hx
+
+private theorem second_range_subset_cycleEdgeCarrier
+    (_H : ClosedArcIncidenceData A point firstPaths secondPaths)
+    {q : A.CycleIndex} {v : vertex} (hv : A.cycleOfVertex v = q) :
+    Set.range ((orientedFamily firstPaths secondPaths).second v) ⊆
+      cycleEdgeCarrier A point firstPaths secondPaths q := by
+  intro x hx
+  let w := A.first.endpointMate v
+  let p := A.second.endpointEquiv.symm w
+  have hp : A.second.endpointEquiv p = w := A.second.endpointEquiv.apply_symm_apply w
+  have hcycle : A.cycleOfVertex (A.second.endpointEquiv (p.1, 0)) = q := by
+    refine (cycleOf_secondEndpoint_zero_eq p.1 p.2).trans ?_
+    rw [hp, A.first_mate_same_cycle]
+    exact hv
+  rw [cycleEdgeCarrier]
+  right
+  refine Set.mem_iUnion.mpr ⟨p.1, ?_⟩
+  rw [if_pos hcycle]
+  have hx' : x ∈ Set.range (secondPaths.orientedPath w) := by
+    simpa only [orientedFamily,
+      OrientedAlternatingArcFamily.ofEndpointPathFamilies, Path.cast_coe] using hx
+  rw [secondPaths.range_orientedPath] at hx'
+  simpa only [p] using hx'
+
+private theorem successorStepsCarrier_subset_cycleEdgeCarrier
+    (H : ClosedArcIncidenceData A point firstPaths secondPaths)
+    (v : vertex) (n : ℕ) :
+    successorStepsCarrier firstPaths secondPaths v n ⊆
+      cycleEdgeCarrier A point firstPaths secondPaths (A.cycleOfVertex v) := by
+  induction n with
+  | zero =>
+      rw [successorStepsCarrier, range_stepPath]
+      exact Set.union_subset
+        (H.first_range_subset_cycleEdgeCarrier rfl)
+        (H.second_range_subset_cycleEdgeCarrier rfl)
+  | succ n ih =>
+      rw [successorStepsCarrier]
+      apply Set.union_subset ih
+      rw [range_stepPath]
+      have hcycle : A.cycleOfVertex ((A.successor ^ (n + 1)) v) =
+          A.cycleOfVertex v := by
+        induction n + 1 with
+        | zero => rfl
+        | succ k ih =>
+            rw [pow_succ', Equiv.Perm.mul_apply, A.successor_same_cycle]
+            exact ih
+      exact Set.union_subset
+        (H.first_range_subset_cycleEdgeCarrier hcycle)
+        (H.second_range_subset_cycleEdgeCarrier hcycle)
+
+/-- Cutting at a specified edge never leaves its quotient-cycle carrier. -/
+theorem range_firstPathAt_union_complementPathAt_subset_cycleEdgeCarrier
+    (H : ClosedArcIncidenceData A point firstPaths secondPaths) (v : vertex) :
+    Set.range ((orientedFamily firstPaths secondPaths).firstPathAt v) ∪
+        Set.range ((orientedFamily firstPaths secondPaths).complementPathAt v) ⊆
+      cycleEdgeCarrier A point firstPaths secondPaths (A.cycleOfVertex v) := by
+  let D := orientedFamily firstPaths secondPaths
+  apply Set.union_subset
+  · exact H.first_range_subset_cycleEdgeCarrier rfl
+  · let L := A.cycleLengthAt v
+    by_cases hL : L = 1
+    · have hL' : A.cycleLengthAt v = 1 := by simpa only [L] using hL
+      simpa only [D, OrientedAlternatingArcFamily.complementPathAt,
+        dif_pos hL', Path.cast_coe] using H.second_range_subset_cycleEdgeCarrier (q :=
+          A.cycleOfVertex v) (v := v) rfl
+    · have hL' : A.cycleLengthAt v ≠ 1 := by simpa only [L] using hL
+      simp only [OrientedAlternatingArcFamily.complementPathAt,
+        dif_neg hL', Path.cast_coe, Path.trans_range]
+      apply Set.union_subset
+      · exact H.second_range_subset_cycleEdgeCarrier rfl
+      · rw [range_successorStepsNE]
+        have hsubset := H.successorStepsCarrier_subset_cycleEdgeCarrier
+          (A.successor v) (L - 2)
+        rwa [A.successor_same_cycle] at hsubset
+
+/-- Distinct quotient-cycle edge carriers are disjoint. -/
+theorem cycleEdgeCarrier_disjoint
+    (H : ClosedArcIncidenceData A point firstPaths secondPaths)
+    {q r : A.CycleIndex} (hqr : q ≠ r) :
+    Disjoint (cycleEdgeCarrier A point firstPaths secondPaths q)
+      (cycleEdgeCarrier A point firstPaths secondPaths r) := by
+  rw [← H.range_circleMap_eq_cycleEdgeCarrier,
+    ← H.range_circleMap_eq_cycleEdgeCarrier]
+  exact H.circleMap_ranges_disjoint hqr
+
 end ClosedArcIncidenceData
 end FiniteAlternatingEndpointSystem
 end Submission.Topology

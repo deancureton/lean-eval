@@ -95,5 +95,18 @@ theorem range_localEdgeCircle (choice : Fin n → Bool) (e : FourPortLocalEdge n
         Set.range (D.localEdgeComplementPath choice e) := by
   rw [localEdgeCircle, TwoArcCircle.range_circleMap, D.range_localEdgePath]
 
+/-- A specified-edge circle is contained in its quotient-cycle edge carrier. -/
+theorem range_localEdgeCircle_subset_cycleEdgeCarrier
+    (choice : Fin n → Bool) (e : FourPortLocalEdge n) :
+    Set.range (D.localEdgeCircle choice e) ⊆
+      FiniteAlternatingEndpointSystem.ClosedArcIncidenceData.cycleEdgeCarrier
+        (D.localFirstSystem choice) (fourPortChartPoint F.band)
+        (booleanFourPortLocalEndpointPaths F.band choice) D.paths
+        ((D.localFirstSystem choice).cycleOfVertex (localEdgeStart choice e)) := by
+  rw [D.range_localEdgeCircle choice e, ← D.range_localEdgePath choice e]
+  exact (D.localFirstIncidence choice)
+    |>.range_firstPathAt_union_complementPathAt_subset_cycleEdgeCarrier
+      (localEdgeStart choice e)
+
 end BooleanFourPortOutsidePathData
 end Submission.Topology

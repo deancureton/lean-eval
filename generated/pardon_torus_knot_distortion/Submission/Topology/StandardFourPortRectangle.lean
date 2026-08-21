@@ -111,6 +111,22 @@ private theorem range_bandRightPath_inter_bandBottomPath :
     subst x
     exact ⟨⟨0, bandRightPath.source⟩, ⟨1, bandBottomPath.target⟩⟩
 
+theorem range_bandLeftPath_inter_bandTopPath_eq :
+    Set.range bandLeftPath ∩ Set.range bandTopPath = {bandLeftTop} :=
+  range_bandLeftPath_inter_bandTopPath
+
+theorem range_bandTopPath_inter_bandRightPath_eq :
+    Set.range bandTopPath ∩ Set.range bandRightPath = {bandRightTop} :=
+  range_bandTopPath_inter_bandRightPath
+
+theorem range_bandLeftPath_inter_bandBottomPath_eq :
+    Set.range bandLeftPath ∩ Set.range bandBottomPath = {bandLeftBottom} :=
+  range_bandLeftPath_inter_bandBottomPath
+
+theorem range_bandRightPath_inter_bandBottomPath_eq :
+    Set.range bandRightPath ∩ Set.range bandBottomPath = {bandRightBottom} :=
+  range_bandRightPath_inter_bandBottomPath
+
 private theorem bandRightPath_symm_injective :
     Function.Injective bandRightPath.symm := by
   intro s t hst
