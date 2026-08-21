@@ -582,3 +582,15 @@ open terminal cells.  The essential branch separately needs the axis-circle and 
 charging packages for the canonical quotient circles.  These are the only remaining inputs to
 `SuperellipsoidReducedBooleanAxisData` before the final benchmark theorem can invoke its complete
 Pardon capstone.
+
+The affected-cycle extraction no longer depends on the arbitrary quotient representative.
+`FiniteAlternatingArcCycleCut` cuts an alternating quotient cycle at any specified edge and proves
+that the selected edge and its complementary nonempty concatenation form an embedded two-arc
+circle with exact range.  `BooleanFourPortCycleCut` applies this to either local edge of one
+four-port band, and `SuperellipsoidCanonicalBooleanCycleCut` proves that the union of the two
+selected local-edge ranges is exactly the canonical parallel face before the flip and exactly the
+canonical surgery face after it.  Thus the two complementary outside routes and both local faces
+are now canonical and exact.  The remaining six-edge step is purely the split-or-merge assembly:
+determine on which endpoint the two selected local edges lie in distinct quotient components,
+combine their two complementary paths with the opposite pairing, and identify the selected outer
+cycle with the corresponding endpoint-family disk index.
