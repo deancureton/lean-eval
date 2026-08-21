@@ -35,6 +35,20 @@ private theorem trueLocalEndpoint_cycle_eq_start
         (fourPortLocalEndpointEquiv choice ((b, level), 0)) at hedge
     simpa [localEdgeStart, fourPortLocalEndpointEquiv_true hb] using hedge
 
+private theorem falseLocalEndpoint_cycle_eq_start
+    (choice : Fin n → Bool) {b : Fin n} (hb : choice b = false)
+    (side level : Fin 2) :
+    (D.localFirstSystem choice).cycleOfVertex (b, side, level) =
+      (D.localFirstSystem choice).cycleOfVertex (localEdgeStart choice (b, side)) := by
+  fin_cases level
+  · simp [localEdgeStart, fourPortLocalEndpointEquiv_false hb]
+  · have hedge := (D.localFirstSystem choice).first_edge_endpoints_same_cycle (b, side)
+    change (D.localFirstSystem choice).cycleOfVertex
+        (fourPortLocalEndpointEquiv choice ((b, side), 1)) =
+      (D.localFirstSystem choice).cycleOfVertex
+        (fourPortLocalEndpointEquiv choice ((b, side), 0)) at hedge
+    simpa [localEdgeStart, fourPortLocalEndpointEquiv_false hb] using hedge
+
 private theorem localEdge_cycle_ne_of_other
     (choice : Fin n → Bool) {b : Fin n}
     (hdistinct :
@@ -237,6 +251,194 @@ theorem range_falseLocalPath_inter_trueLocalEdgeCircle
     refine ⟨hxFalse, ?_⟩
     rw [D.range_localEdgeCircle trueChoice (b, level)]
     exact Or.inl hxTrue
+
+/-- A horizontal side meets one distinct vertical child carrier at exactly their common port. -/
+theorem range_trueLocalPath_inter_falseCycleEdgeCarrier
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 0)) ≠
+        (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 1)))
+    (level side : Fin 2) :
+    Set.range ((booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, level)) ∩
+        ClosedArcIncidenceData.cycleEdgeCarrier
+          (D.localFirstSystem falseChoice) (fourPortChartPoint F.band)
+          (booleanFourPortLocalEndpointPaths F.band falseChoice) D.paths
+          ((D.localFirstSystem falseChoice).cycleOfVertex
+            (localEdgeStart falseChoice (b, side))) =
+      {fourPortChartPoint F.band (b, side, level)} := by
+  classical
+  let A := D.localFirstSystem falseChoice
+  let point := fourPortChartPoint F.band
+  let q := A.cycleOfVertex (localEdgeStart falseChoice (b, side))
+  let horizontal := (booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, level)
+  apply Set.Subset.antisymm
+  · rintro x ⟨hxHorizontal, hxCarrier⟩
+    change x ∈ ClosedArcIncidenceData.cycleEdgeCarrier A point
+      (booleanFourPortLocalEndpointPaths F.band falseChoice) D.paths q at hxCarrier
+    simp only [ClosedArcIncidenceData.cycleEdgeCarrier, Set.mem_union,
+      Set.mem_iUnion] at hxCarrier
+    rcases hxCarrier with ⟨⟨c, edge⟩, hxLocal⟩ | ⟨e, hxOutside⟩
+    · by_cases hcycle : A.cycleOfVertex
+          (A.first.endpointEquiv ((c, edge), 0)) = q
+      · rw [if_pos hcycle] at hxLocal
+        by_cases hcb : c = b
+        · subst c
+          have hedge : edge = side := by
+            by_contra hne
+            apply D.localEdge_cycle_ne_of_other falseChoice hdistinct hne
+            have hstart : A.first.endpointEquiv ((b, edge), 0) =
+                localEdgeStart falseChoice (b, edge) := rfl
+            rwa [hstart] at hcycle
+          subst edge
+          have hx := Set.mem_inter hxHorizontal hxLocal
+          change x ∈ Set.range (booleanFourPortLocalPath F.band trueChoice (b, level)) ∩
+            Set.range (booleanFourPortLocalPath F.band falseChoice (b, side)) at hx
+          rw [Set.inter_comm,
+            range_falseLocalPath_inter_trueLocalPath F.band falseChoice trueChoice
+              b hfalse htrue side level] at hx
+          exact hx
+        · have hxTrueSupport := F.booleanFourPortLocalEndpointPaths_range_subset_support
+            trueChoice (b, level) hxHorizontal
+          have hxFalseSupport := F.booleanFourPortLocalEndpointPaths_range_subset_support
+            falseChoice (c, edge) hxLocal
+          exact False.elim <| Set.disjoint_left.mp (F.support_pairwise hcb)
+            hxFalseSupport hxTrueSupport
+      · rw [if_neg hcycle] at hxLocal
+        exact hxLocal.elim
+    · by_cases hcycle : A.cycleOfVertex (A.second.endpointEquiv (e, 0)) = q
+      · rw [if_pos hcycle] at hxOutside
+        change D.outside.edge at e
+        change A.cycleOfVertex (D.outside.endpointEquiv (e, 0)) = q at hcycle
+        have hxCross := Set.mem_inter hxOutside hxHorizontal
+        change x ∈ Set.range (D.paths.path e) ∩
+          Set.range (booleanFourPortLocalPath F.band trueChoice (b, level)) at hxCross
+        have hcross := D.cross_intersection trueChoice e (b, level)
+        change Set.range (D.paths.path e) ∩
+          Set.range (booleanFourPortLocalPath F.band trueChoice (b, level)) = _ at hcross
+        rw [hcross] at hxCross
+        obtain ⟨v, hv, rfl⟩ := hxCross
+        obtain ⟨j, hj⟩ := hv.2
+        have hvValue : v = (b, j, level) := by
+          calc
+            v = (fourPortLocalPairing trueChoice).endpointEquiv ((b, level), j) := hj.symm
+            _ = (b, j, level) := fourPortLocalEndpointEquiv_true htrue level j
+        subst v
+        obtain ⟨k, hk⟩ := hv.1
+        have houtsideCycle : A.cycleOfVertex (b, j, level) = q := by
+          calc
+            A.cycleOfVertex (b, j, level) =
+                A.cycleOfVertex (D.outside.endpointEquiv (e, 0)) := by
+              fin_cases k
+              · have hk0 : D.outside.endpointEquiv (e, (0 : Fin 2)) =
+                    (fourPortLocalPairing trueChoice).endpointEquiv
+                      ((b, level), j) := by
+                  convert hk using 1
+                  apply congrArg (fun z : Fin 2 ↦ D.outside.endpointEquiv (e, z))
+                  apply Fin.ext
+                  rfl
+                simpa only [fourPortLocalEndpointEquiv_true htrue] using
+                  congrArg A.cycleOfVertex hk0.symm
+              · have hedge := A.second_edge_endpoints_same_cycle e
+                change A.cycleOfVertex (D.outside.endpointEquiv (e, 1)) =
+                  A.cycleOfVertex (D.outside.endpointEquiv (e, 0)) at hedge
+                have hk1 : D.outside.endpointEquiv (e, (1 : Fin 2)) =
+                    (fourPortLocalPairing trueChoice).endpointEquiv
+                      ((b, level), j) := by
+                  convert hk using 1
+                  apply congrArg (fun z : Fin 2 ↦ D.outside.endpointEquiv (e, z))
+                  apply Fin.ext
+                  rfl
+                exact (by
+                  simpa only [fourPortLocalEndpointEquiv_true htrue] using
+                    (congrArg A.cycleOfVertex hk1).symm.trans hedge)
+            _ = q := hcycle
+        have hjSide : j = side := by
+          by_contra hne
+          apply D.localEdge_cycle_ne_of_other falseChoice hdistinct hne
+          calc
+            A.cycleOfVertex (localEdgeStart falseChoice (b, j)) =
+                A.cycleOfVertex (b, j, level) :=
+              (D.falseLocalEndpoint_cycle_eq_start falseChoice hfalse j level).symm
+            _ = q := houtsideCycle
+            _ = A.cycleOfVertex (localEdgeStart falseChoice (b, side)) := rfl
+        subst j
+        rw [hvValue]
+        exact Set.mem_singleton _
+      · rw [if_neg hcycle] at hxOutside
+        exact hxOutside.elim
+  · rintro x rfl
+    constructor
+    · change fourPortChartPoint F.band (b, side, level) ∈ Set.range horizontal
+      fin_cases side
+      · refine ⟨0, ?_⟩
+        simp [horizontal, fourPortLocalEndpointEquiv_true htrue]
+      · refine ⟨1, ?_⟩
+        simp [horizontal, fourPortLocalEndpointEquiv_true htrue]
+    · change fourPortChartPoint F.band (b, side, level) ∈
+        ClosedArcIncidenceData.cycleEdgeCarrier A point
+          (booleanFourPortLocalEndpointPaths F.band falseChoice) D.paths q
+      simp only [ClosedArcIncidenceData.cycleEdgeCarrier, Set.mem_union,
+        Set.mem_iUnion]
+      left
+      refine ⟨(b, side), ?_⟩
+      have hcycle : A.cycleOfVertex (A.first.endpointEquiv ((b, side), 0)) = q := by
+        simp only [A, q, localFirstSystem]
+        rfl
+      rw [if_pos hcycle]
+      fin_cases level
+      · refine ⟨0, ?_⟩
+        calc
+          (booleanFourPortLocalEndpointPaths F.band falseChoice).path (b, side) 0 =
+              fourPortChartPoint F.band
+                ((fourPortLocalPairing falseChoice).endpointEquiv ((b, side), 0)) :=
+            ((booleanFourPortLocalEndpointPaths F.band falseChoice).path
+              (b, side)).source
+          _ = fourPortChartPoint F.band (b, side, 0) := by
+            rw [fourPortLocalEndpointEquiv_false hfalse]
+      · refine ⟨1, ?_⟩
+        calc
+          (booleanFourPortLocalEndpointPaths F.band falseChoice).path (b, side) 1 =
+              fourPortChartPoint F.band
+                ((fourPortLocalPairing falseChoice).endpointEquiv ((b, side), 1)) :=
+            ((booleanFourPortLocalEndpointPaths F.band falseChoice).path
+              (b, side)).target
+          _ = fourPortChartPoint F.band (b, side, 1) := by
+            rw [fourPortLocalEndpointEquiv_false hfalse]
+
+/-- A horizontal side meets the complete vertical child circle only at their common port. -/
+theorem range_trueLocalPath_inter_falseLocalEdgeCircle
+    (falseChoice trueChoice : Fin n → Bool) (b : Fin n)
+    (hfalse : falseChoice b = false) (htrue : trueChoice b = true)
+    (hdistinct :
+      (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 0)) ≠
+        (D.localFirstSystem falseChoice).cycleOfVertex
+          (localEdgeStart falseChoice (b, 1)))
+    (level side : Fin 2) :
+    Set.range ((booleanFourPortLocalEndpointPaths F.band trueChoice).path (b, level)) ∩
+        Set.range (D.localEdgeCircle falseChoice (b, side)) =
+      {fourPortChartPoint F.band (b, side, level)} := by
+  apply Set.Subset.antisymm
+  · intro x hx
+    have hxCarrier : x ∈
+        ClosedArcIncidenceData.cycleEdgeCarrier
+          (D.localFirstSystem falseChoice) (fourPortChartPoint F.band)
+          (booleanFourPortLocalEndpointPaths F.band falseChoice) D.paths
+          ((D.localFirstSystem falseChoice).cycleOfVertex
+            (localEdgeStart falseChoice (b, side))) :=
+      D.range_localEdgeCircle_subset_cycleEdgeCarrier falseChoice (b, side) hx.2
+    have hx' := Set.mem_inter hx.1 hxCarrier
+    rwa [D.range_trueLocalPath_inter_falseCycleEdgeCarrier falseChoice trueChoice
+      b hfalse htrue hdistinct level side] at hx'
+  · rw [← range_falseLocalPath_inter_trueLocalPath F.band falseChoice trueChoice
+      b hfalse htrue side level, Set.inter_comm]
+    rintro x ⟨hxTrue, hxFalse⟩
+    refine ⟨hxTrue, ?_⟩
+    rw [D.range_localEdgeCircle falseChoice (b, side)]
+    exact Or.inl hxFalse
 
 end BooleanFourPortOutsidePathData
 end Submission.Topology

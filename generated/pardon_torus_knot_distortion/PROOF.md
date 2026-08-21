@@ -618,3 +618,12 @@ remains hidden.  The per-prefix issue is now exactly the split/merge dichotomy: 
 cooriented lens removal that either the two post horizontal cycles are distinct, or symmetrically
 the two pre vertical cycles are distinct, and attach the selected outer graph cycle to that
 endpoint's ordinary reduced-family index.
+
+The symmetric merge assembly is now complete as well.  If the two pre vertical cycles are
+distinct, the two true horizontal paths form the central route and the complete false circles are
+the disjoint children.  `FourPortSixEdgeSubtype` restricts either conditional ambient graph to the
+transported-torus subtype while preserving every exact incidence equation.  Therefore whichever
+side the lens dichotomy selects already produces the precise `FourPortSixEdgePathSystem
+(transportedTorus Phi)` expected by the outer-face and reduced disk-side modules.  What remains at
+this transition boundary is only the cooriented split/merge dichotomy itself and carrier-level
+identification of the three graph cycles with their canonical reduced endpoint indices.
