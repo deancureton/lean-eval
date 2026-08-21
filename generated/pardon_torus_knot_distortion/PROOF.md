@@ -605,3 +605,16 @@ two vertical sides, determine the embedded central circle and the complete six-e
 package.  For an intermediate Boolean prefix, the unresolved point is narrower: establish which
 endpoint is the split side from the cooriented parity-region update, then prove those four
 vertical-to-child endpoint incidences from the canonical trimmed-path formulas.
+
+The endpoint incidence and conditional assembly are now complete.  The standard rectangle
+calculation proves that every false vertical path meets every true horizontal path at exactly its
+labelled corner.  Exact outside/local incidence upgrades this to the whole true quotient-cycle
+carrier, and then to the locally based complete true circle whenever the two true local edges lie
+in distinct quotient cycles.  `BooleanFourPortSixEdgeGraph` uses those four corner equations and
+the disjoint child carriers to construct the full canonical six-edge path system.  Its only
+hypothesis beyond the already unconditional Boolean outside-path package is the explicit
+distinctness of the two true local quotient cycles.  Thus no path-incidence or six-edge assembly
+remains hidden.  The per-prefix issue is now exactly the split/merge dichotomy: prove from the
+cooriented lens removal that either the two post horizontal cycles are distinct, or symmetrically
+the two pre vertical cycles are distinct, and attach the selected outer graph cycle to that
+endpoint's ordinary reduced-family index.
