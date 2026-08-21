@@ -2069,7 +2069,7 @@ theorem globalInwardExcursionPath_injective
       convert ((G.cut.circle g.1.1).windingLoop.periodic_curve left).symm using 1
       all_goals
         dsimp [period]
-        ring
+        ring_nf
     have hp : (g, (0 : Fin 2)) = (g, (1 : Fin 2)) :=
       F.global_path_endpoint_injective (by simpa using hpath)
     have he : (0 : Fin 2) = 1 := congrArg Prod.snd hp
@@ -2286,8 +2286,27 @@ def ofStrip
 def toPairedSeamBandChart (T : GlobalBandTubularChartData F b) :
     PairedSeamBandChart :=
   PairedSeamBandChart.ofTransportedTorusHomeomorph T.strip
-    (F.globalBandOpenNeighborhood b) T.eventRegion
-    T.strip_mem_neighborhood T.strip_mem_eventRegion
+    ((fun uv ↦ (((T.strip uv : T.surfacePatch) : transportedTorus Phi) : R3)) ''
+      standardBandPatchCarrier)
+    (F.globalBandOpenNeighborhood b) Set.Subset.rfl (by
+      rintro _ ⟨z, _, rfl⟩
+      exact T.strip_mem_neighborhood ⟨z, rfl⟩)
+
+@[simp]
+theorem toPairedSeamBandChart_support (T : GlobalBandTubularChartData F b) :
+    T.toPairedSeamBandChart.support =
+      (fun uv ↦ (((T.strip uv : T.surfacePatch) : transportedTorus Phi) : R3)) ''
+        standardBandPatchCarrier := rfl
+
+theorem toPairedSeamBandChart_support_subset_neighborhood
+    (T : GlobalBandTubularChartData F b) :
+    T.toPairedSeamBandChart.support ⊆ F.globalBandOpenNeighborhood b := by
+  rintro _ ⟨z, _, rfl⟩
+  exact T.strip_mem_neighborhood ⟨z, rfl⟩
+
+@[simp]
+theorem toPairedSeamBandChart_eventRegion (T : GlobalBandTubularChartData F b) :
+    T.toPairedSeamBandChart.eventRegion = F.globalBandOpenNeighborhood b := rfl
 
 theorem toPairedSeamBandChart_seamPath_apply
     (T : GlobalBandTubularChartData F b) (u : unitInterval) :
@@ -2357,7 +2376,9 @@ def chart (T : GlobalBandTubularChartFamily F)
 theorem chart_support_pairwise (T : GlobalBandTubularChartFamily F) :
     Pairwise fun b e ↦ Disjoint (T.chart b).support (T.chart e).support := by
   intro b e hbe
-  exact F.globalBandOpenNeighborhood_spec.2 hbe
+  exact (F.globalBandOpenNeighborhood_spec.2 hbe).mono
+    (T.band b).toPairedSeamBandChart_support_subset_neighborhood
+    (T.band e).toPairedSeamBandChart_support_subset_neighborhood
 
 /-- Forget alignment and retain the disjoint standardized four-port charts. -/
 def toFinitePairedSeamBandCharts (T : GlobalBandTubularChartFamily F) :
@@ -2546,7 +2567,7 @@ structure GlobalBandBarrierChartExactness
     (T : CutCircleTransverseCyclicOrderFamily.GlobalBandTubularChartFamily F)
     (L : GlobalBandArcPresentationAlignment F A) where
   singular_local_exact : ∀ b,
-    G.carrier ∩ F.globalBandOpenNeighborhood b = (T.chart b).singularPatch
+    G.carrier ∩ (T.chart b).support = (T.chart b).singularPatch
 
 namespace GlobalBandBarrierChartExactness
 
@@ -2558,7 +2579,12 @@ noncomputable def toBarrierExcursionBandChartRealization
     (X : GlobalBandBarrierChartExactness T L) :
     BarrierExcursionBandChartRealization L.toFiniteBarrierExcursionPairing where
   chart := T.chart
-  support_eq := fun _ ↦ rfl
+  support_subset := fun b ↦
+    (T.band b).toPairedSeamBandChart_support_subset_neighborhood
+  neighborhood_subset_eventRegion := fun b ↦ by
+    change F.globalBandOpenNeighborhood b ⊆
+      (T.band b).toPairedSeamBandChart.eventRegion
+    rw [(T.band b).toPairedSeamBandChart_eventRegion]
   leftVertex_eq := fun b ↦ by
     let b' : Fin F.toPairedSeamEnumeration.bandCount := ⟨b.1, by
       have hb := b.2

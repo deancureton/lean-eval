@@ -578,6 +578,23 @@ noncomputable def canonicalFiniteBarrierExcursionPairing
 
 /-! ## Exact reduction of the remaining chart equation -/
 
+/-- Intersecting the canonical finite carrier presentation with any set distributes over its
+finite edge union. -/
+theorem carrier_inter_eq_iUnion
+    {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
+    {outerIndex cutIndex : Type u} [Fintype outerIndex] [Fintype cutIndex]
+    (G : FiniteSuperellipsoidBarrierGraph Phi frame c R d outerIndex cutIndex)
+    (outerOrder : G.OuterCircleTransverseHeightCyclicOrderFamily)
+    (cutOrder : G.CutCircleTransverseCyclicOrderFamily) (hR : 0 < R)
+    (s : Set R3) :
+    G.carrier ∩ s =
+      ⋃ e : CanonicalBarrierEdge G outerOrder cutOrder,
+        Set.range (canonicalBarrierPath G outerOrder cutOrder e) ∩ s := by
+  rw [carrier_eq_iUnion_range_canonicalBarrierPath G outerOrder cutOrder hR]
+  ext x
+  simp only [Set.mem_inter_iff, Set.mem_iUnion]
+  tauto
+
 /-- Inside one canonical band neighborhood, the literal barrier is exactly the union of the
 pieces of all canonical finite edges lying in that neighborhood.  This separates the already
 proved finite carrier presentation from the remaining regular-neighborhood straightening. -/
@@ -592,15 +609,12 @@ theorem carrier_inter_globalBandOpenNeighborhood_eq_iUnion
       ⋃ e : CanonicalBarrierEdge G outerOrder cutOrder,
         Set.range (canonicalBarrierPath G outerOrder cutOrder e) ∩
           cutOrder.globalBandOpenNeighborhood b := by
-  rw [carrier_eq_iUnion_range_canonicalBarrierPath G outerOrder cutOrder hR]
-  ext x
-  simp only [Set.mem_inter_iff, Set.mem_iUnion]
-  tauto
+  exact carrier_inter_eq_iUnion G outerOrder cutOrder hR _
 
 /-- The precise regular-neighborhood input still needed after the canonical finite carrier has
-been constructed: in every band, its canonical edge pieces are the chart's standard `T` patch.
-Unlike the earlier monolithic carrier equation, this field exposes exactly which finite arcs the
-geometric straightening must control. -/
+been constructed: on every compact replacement support, its canonical edge pieces are the
+chart's standard `T` patch.  The larger open band is used only for isolation and event charging.
+-/
 structure CanonicalGlobalBandChartArcExactness
     {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
     {outerIndex cutIndex : Type u} [Fintype outerIndex] [Fintype cutIndex]
@@ -611,7 +625,7 @@ structure CanonicalGlobalBandChartArcExactness
   local_arc_union_exact : ∀ b,
     (⋃ e : CanonicalBarrierEdge G outerOrder cutOrder,
       Set.range (canonicalBarrierPath G outerOrder cutOrder e) ∩
-        cutOrder.globalBandOpenNeighborhood b) = (T.chart b).singularPatch
+        (T.chart b).support) = (T.chart b).singularPatch
 
 namespace CanonicalGlobalBandChartArcExactness
 
@@ -630,8 +644,7 @@ theorem toGlobalBandBarrierChartExactness
       (canonicalGlobalBandArcPresentationAlignment G outerOrder cutOrder hR) where
   singular_local_exact := by
     intro b
-    rw [carrier_inter_globalBandOpenNeighborhood_eq_iUnion
-      G outerOrder cutOrder hR b]
+    rw [carrier_inter_eq_iUnion G outerOrder cutOrder hR (T.chart b).support]
     exact X.local_arc_union_exact b
 
 /-- For the canonically chosen tubular strips, finite-edge exactness constructs the complete

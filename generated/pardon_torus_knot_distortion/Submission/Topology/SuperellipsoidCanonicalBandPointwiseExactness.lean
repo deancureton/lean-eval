@@ -1,11 +1,11 @@
 import Submission.Topology.SuperellipsoidCanonicalBarrierArcPresentation
 
 /-!
-# Pointwise criterion for canonical band exactness
+# Pointwise criterion for compact canonical band exactness
 
-The canonical band carrier equality follows from two local chart facts: every barrier point in
-the selected neighborhood has a chart coordinate, and the pullback of the barrier is the standard
-three-branch `T`.  This isolates the remaining analytic endpoint-straightening calculation.
+The canonical compact-patch carrier equality follows from an exact support description and the
+pullback equation on that patch.  The surrounding open band remains available for isolation and
+event charging without incorrectly asserting that a circle terminates inside an open chart.
 -/
 
 open LeanEval.KnotTheory.PardonDistortion
@@ -56,11 +56,7 @@ namespace FiniteSuperellipsoidBarrierGraph
 
 universe u
 
-/-- Local analytic facts sufficient for exactness of every canonical band chart.
-
-The first field is a genuine chart-coverage statement.  The second is the signed local equation
-in coordinates; it is the form supplied by a relative endpoint straightener and the seam IFT.
--/
+/-- Local analytic facts sufficient for exactness of every compact canonical band patch. -/
 structure CanonicalGlobalBandChartPointwiseExactness
     {Phi : AmbientIsotopy} {frame : Equiv.Perm (Fin 3)} {c : R3} {R d : ℝ}
     {outerIndex cutIndex : Type u} [Fintype outerIndex] [Fintype cutIndex]
@@ -68,10 +64,10 @@ structure CanonicalGlobalBandChartPointwiseExactness
     (outerOrder : G.OuterCircleTransverseHeightCyclicOrderFamily)
     (cutOrder : G.CutCircleTransverseCyclicOrderFamily)
     (T : cutOrder.GlobalBandTubularChartFamily) where
-  local_carrier_subset_chart : ∀ b,
-    G.carrier ∩ cutOrder.globalBandOpenNeighborhood b ⊆ Set.range (T.chart b).chart
-  chart_mem_carrier_iff : ∀ b u,
-    (T.chart b).chart u ∈ G.carrier ↔ u ∈ standardBandSingularCarrier
+  support_eq : ∀ b,
+    (T.chart b).support = (T.chart b).chart '' standardBandPatchCarrier
+  chart_mem_carrier_iff : ∀ b u, u ∈ standardBandPatchCarrier →
+    ((T.chart b).chart u ∈ G.carrier ↔ u ∈ standardBandSingularCarrier)
 
 namespace CanonicalGlobalBandChartPointwiseExactness
 
@@ -88,19 +84,25 @@ theorem toCanonicalGlobalBandChartArcExactness
     CanonicalGlobalBandChartArcExactness G outerOrder cutOrder T where
   local_arc_union_exact := by
     intro b
-    rw [← carrier_inter_globalBandOpenNeighborhood_eq_iUnion
-      G outerOrder cutOrder hR b]
+    rw [← carrier_inter_eq_iUnion G outerOrder cutOrder hR (T.chart b).support]
     let B := T.chart b
     rw [B.singularPatch_eq_image_standardBandSingularCarrier]
     apply Set.Subset.antisymm
     · intro x hx
-      obtain ⟨u, hu⟩ := X.local_carrier_subset_chart b hx
-      refine ⟨u, (X.chart_mem_carrier_iff b u).mp ?_, hu⟩
-      simpa only [hu] using hx.1
+      rw [X.support_eq b] at hx
+      obtain ⟨u, huPatch, rfl⟩ := hx.2
+      have hiff := X.chart_mem_carrier_iff b u
+      exact ⟨u, (hiff huPatch).mp hx.1, rfl⟩
     · rintro x ⟨u, hu, rfl⟩
-      refine ⟨(X.chart_mem_carrier_iff b u).mpr hu, ?_⟩
-      exact (B.singularPatch_subset_support
-        (B.singularPatch_eq_image_standardBandSingularCarrier.symm ▸ ⟨u, hu, rfl⟩))
+      have huPatch : u ∈ standardBandPatchCarrier := by
+        rcases hu with (hu | hu) | hu
+        · exact range_bandLeftPath_subset_standardBandPatchCarrier hu
+        · exact range_bandRightPath_subset_standardBandPatchCarrier hu
+        · exact range_bandSeamPath_subset_standardBandPatchCarrier hu
+      have hiff := X.chart_mem_carrier_iff b u
+      refine ⟨(hiff huPatch).mpr hu, ?_⟩
+      rw [X.support_eq b]
+      exact ⟨u, huPatch, rfl⟩
 
 end CanonicalGlobalBandChartPointwiseExactness
 end FiniteSuperellipsoidBarrierGraph

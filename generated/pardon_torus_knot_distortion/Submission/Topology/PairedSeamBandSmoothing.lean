@@ -50,6 +50,36 @@ def bandTopPath : Path bandLeftTop bandRightTop :=
 def bandSeamPath : Path bandLeftVertex bandRightVertex :=
   Path.segment bandLeftVertex bandRightVertex
 
+/-- The five standard paths used by the singular and both resolved four-port patches. -/
+def standardBandPatchCarrier : Set Plane :=
+  Set.range bandLeftPath ∪ Set.range bandRightPath ∪
+    Set.range bandBottomPath ∪ Set.range bandTopPath ∪ Set.range bandSeamPath
+
+theorem range_bandLeftPath_subset_standardBandPatchCarrier :
+    Set.range bandLeftPath ⊆ standardBandPatchCarrier := by
+  intro x hx
+  exact Or.inl (Or.inl (Or.inl (Or.inl hx)))
+
+theorem range_bandRightPath_subset_standardBandPatchCarrier :
+    Set.range bandRightPath ⊆ standardBandPatchCarrier := by
+  intro x hx
+  exact Or.inl (Or.inl (Or.inl (Or.inr hx)))
+
+theorem range_bandBottomPath_subset_standardBandPatchCarrier :
+    Set.range bandBottomPath ⊆ standardBandPatchCarrier := by
+  intro x hx
+  exact Or.inl (Or.inl (Or.inr hx))
+
+theorem range_bandTopPath_subset_standardBandPatchCarrier :
+    Set.range bandTopPath ⊆ standardBandPatchCarrier := by
+  intro x hx
+  exact Or.inl (Or.inr hx)
+
+theorem range_bandSeamPath_subset_standardBandPatchCarrier :
+    Set.range bandSeamPath ⊆ standardBandPatchCarrier := by
+  intro x hx
+  exact Or.inr hx
+
 theorem bandLeftPath_injective : Function.Injective bandLeftPath :=
   Path.segment_injective_of_ne (by
     intro h
@@ -100,15 +130,14 @@ theorem bandTopPath_snd (t : unitInterval) : (bandTopPath t).2 = 1 := by
   change (1 - (t : ℝ)) * 1 + (t : ℝ) * 1 = 1
   ring
 
-/-- A chart containing one complete paired seam arc.  The whole planar chart is allowed to be
-compressed into a small ambient neighborhood; only its four standard segments are used below. -/
+/-- A chart containing one complete paired seam arc. -/
 structure PairedSeamBandChart where
   chart : Plane → R3
   chartEmbedding : IsEmbedding chart
   support : Set R3
-  chart_mem_support : Set.range chart ⊆ support
+  chart_patch_mem_support : chart '' standardBandPatchCarrier ⊆ support
   eventRegion : Set R3
-  chart_mem_eventRegion : Set.range chart ⊆ eventRegion
+  chart_patch_mem_eventRegion : chart '' standardBandPatchCarrier ⊆ eventRegion
 
 /-- Forget the transported-torus subtype in an embedded planar surface patch.  This is the direct
 adapter from a transported-torus chart (after its planar domain has been standardized by a
@@ -118,16 +147,16 @@ def PairedSeamBandChart.ofTransportedTorusEmbedding
     (surfaceMap : Plane → transportedTorus Phi)
     (surfaceEmbedding : IsEmbedding surfaceMap)
     (support eventRegion : Set R3)
-    (hSupport : Set.range (fun uv ↦ ((surfaceMap uv : transportedTorus Phi) : R3)) ⊆
-      support)
-    (hEvent : Set.range (fun uv ↦ ((surfaceMap uv : transportedTorus Phi) : R3)) ⊆
-      eventRegion) : PairedSeamBandChart where
+    (hSupport : (fun uv ↦ ((surfaceMap uv : transportedTorus Phi) : R3)) ''
+      standardBandPatchCarrier ⊆ support)
+    (hEvent : (fun uv ↦ ((surfaceMap uv : transportedTorus Phi) : R3)) ''
+      standardBandPatchCarrier ⊆ eventRegion) : PairedSeamBandChart where
   chart := fun uv ↦ surfaceMap uv
   chartEmbedding := IsEmbedding.subtypeVal.comp surfaceEmbedding
   support := support
-  chart_mem_support := hSupport
+  chart_patch_mem_support := hSupport
   eventRegion := eventRegion
-  chart_mem_eventRegion := hEvent
+  chart_patch_mem_eventRegion := hEvent
 
 /-- Homeomorphic planar torus patches are the form produced by `transportedTorusBallHomeomorph`
 after choosing a smaller planar ball and standardizing it by `Schoenflies.planeHomeomorphBall`. -/
@@ -135,10 +164,10 @@ def PairedSeamBandChart.ofTransportedTorusHomeomorph
     {Phi : AmbientIsotopy} {surfacePatch : Set (transportedTorus Phi)}
     (e : Plane ≃ₜ surfacePatch)
     (support eventRegion : Set R3)
-    (hSupport : Set.range
-      (fun uv ↦ (((e uv : surfacePatch) : transportedTorus Phi) : R3)) ⊆ support)
-    (hEvent : Set.range
-      (fun uv ↦ (((e uv : surfacePatch) : transportedTorus Phi) : R3)) ⊆ eventRegion) :
+    (hSupport : (fun uv ↦ (((e uv : surfacePatch) : transportedTorus Phi) : R3)) ''
+      standardBandPatchCarrier ⊆ support)
+    (hEvent : (fun uv ↦ (((e uv : surfacePatch) : transportedTorus Phi) : R3)) ''
+      standardBandPatchCarrier ⊆ eventRegion) :
     PairedSeamBandChart :=
   PairedSeamBandChart.ofTransportedTorusEmbedding
     (fun uv ↦ (e uv : transportedTorus Phi))
@@ -209,51 +238,63 @@ theorem bottomPath_disjoint_topPath :
   rw [bandBottomPath_snd, bandTopPath_snd] at hsnd
   norm_num at hsnd
 
-private theorem path_range_subset_chart_range
-    {x y : Plane} (p : Path x y) (h : Continuous B.chart) :
-    Set.range (p.map h) ⊆ Set.range B.chart := by
+private theorem path_range_subset_of_chart_patch
+    {x y : Plane} (p : Path x y)
+    (hp : Set.range p ⊆ standardBandPatchCarrier) (s : Set R3)
+    (hs : B.chart '' standardBandPatchCarrier ⊆ s) :
+    Set.range (p.map B.chartEmbedding.continuous) ⊆ s := by
   rintro _ ⟨t, rfl⟩
-  exact ⟨p t, rfl⟩
+  exact hs ⟨p t, hp ⟨t, rfl⟩, rfl⟩
 
 theorem leftPath_range_subset_support : Set.range B.leftPath ⊆ B.support :=
-  (B.path_range_subset_chart_range bandLeftPath B.chartEmbedding.continuous).trans
-    B.chart_mem_support
+  B.path_range_subset_of_chart_patch bandLeftPath
+    range_bandLeftPath_subset_standardBandPatchCarrier B.support
+    B.chart_patch_mem_support
 
 theorem rightPath_range_subset_support : Set.range B.rightPath ⊆ B.support :=
-  (B.path_range_subset_chart_range bandRightPath B.chartEmbedding.continuous).trans
-    B.chart_mem_support
+  B.path_range_subset_of_chart_patch bandRightPath
+    range_bandRightPath_subset_standardBandPatchCarrier B.support
+    B.chart_patch_mem_support
 
 theorem bottomPath_range_subset_support : Set.range B.bottomPath ⊆ B.support :=
-  (B.path_range_subset_chart_range bandBottomPath B.chartEmbedding.continuous).trans
-    B.chart_mem_support
+  B.path_range_subset_of_chart_patch bandBottomPath
+    range_bandBottomPath_subset_standardBandPatchCarrier B.support
+    B.chart_patch_mem_support
 
 theorem topPath_range_subset_support : Set.range B.topPath ⊆ B.support :=
-  (B.path_range_subset_chart_range bandTopPath B.chartEmbedding.continuous).trans
-    B.chart_mem_support
+  B.path_range_subset_of_chart_patch bandTopPath
+    range_bandTopPath_subset_standardBandPatchCarrier B.support
+    B.chart_patch_mem_support
 
 theorem seamPath_range_subset_support : Set.range B.seamPath ⊆ B.support :=
-  (B.path_range_subset_chart_range bandSeamPath B.chartEmbedding.continuous).trans
-    B.chart_mem_support
+  B.path_range_subset_of_chart_patch bandSeamPath
+    range_bandSeamPath_subset_standardBandPatchCarrier B.support
+    B.chart_patch_mem_support
 
 theorem leftPath_range_subset_eventRegion : Set.range B.leftPath ⊆ B.eventRegion :=
-  (B.path_range_subset_chart_range bandLeftPath B.chartEmbedding.continuous).trans
-    B.chart_mem_eventRegion
+  B.path_range_subset_of_chart_patch bandLeftPath
+    range_bandLeftPath_subset_standardBandPatchCarrier B.eventRegion
+    B.chart_patch_mem_eventRegion
 
 theorem rightPath_range_subset_eventRegion : Set.range B.rightPath ⊆ B.eventRegion :=
-  (B.path_range_subset_chart_range bandRightPath B.chartEmbedding.continuous).trans
-    B.chart_mem_eventRegion
+  B.path_range_subset_of_chart_patch bandRightPath
+    range_bandRightPath_subset_standardBandPatchCarrier B.eventRegion
+    B.chart_patch_mem_eventRegion
 
 theorem bottomPath_range_subset_eventRegion : Set.range B.bottomPath ⊆ B.eventRegion :=
-  (B.path_range_subset_chart_range bandBottomPath B.chartEmbedding.continuous).trans
-    B.chart_mem_eventRegion
+  B.path_range_subset_of_chart_patch bandBottomPath
+    range_bandBottomPath_subset_standardBandPatchCarrier B.eventRegion
+    B.chart_patch_mem_eventRegion
 
 theorem topPath_range_subset_eventRegion : Set.range B.topPath ⊆ B.eventRegion :=
-  (B.path_range_subset_chart_range bandTopPath B.chartEmbedding.continuous).trans
-    B.chart_mem_eventRegion
+  B.path_range_subset_of_chart_patch bandTopPath
+    range_bandTopPath_subset_standardBandPatchCarrier B.eventRegion
+    B.chart_patch_mem_eventRegion
 
 theorem seamPath_range_subset_eventRegion : Set.range B.seamPath ⊆ B.eventRegion :=
-  (B.path_range_subset_chart_range bandSeamPath B.chartEmbedding.continuous).trans
-    B.chart_mem_eventRegion
+  B.path_range_subset_of_chart_patch bandSeamPath
+    range_bandSeamPath_subset_standardBandPatchCarrier B.eventRegion
+    B.chart_patch_mem_eventRegion
 
 /-- The singular paired `T`-graph in the band: two vertical branches joined by the seam arc. -/
 def singularPatch : Set R3 :=
@@ -445,7 +486,9 @@ structure BarrierExcursionBandChartRealization
     {A : FiniteBarrierArcPresentation G vertex edge}
     (P : FiniteBarrierExcursionPairing A) where
   chart : Fin P.bandCount → PairedSeamBandChart
-  support_eq : ∀ b, (chart b).support = P.bandNeighborhood b
+  support_subset : ∀ b, (chart b).support ⊆ P.bandNeighborhood b
+  neighborhood_subset_eventRegion : ∀ b,
+    P.bandNeighborhood b ⊆ (chart b).eventRegion
   leftVertex_eq : ∀ b,
     (chart b).leftVertex = A.point (P.firstVertex b)
   rightVertex_eq : ∀ b,
@@ -455,7 +498,7 @@ structure BarrierExcursionBandChartRealization
   /-- The band chart is a transported-torus chart, not merely an ambient planar embedding. -/
   chart_mem_torus : ∀ b z, (chart b).chart z ∈ transportedTorus Phi
   singular_local_exact : ∀ b,
-    G.carrier ∩ P.bandNeighborhood b = (chart b).singularPatch
+    G.carrier ∩ (chart b).support = (chart b).singularPatch
 
 namespace BarrierExcursionBandChartRealization
 
@@ -473,23 +516,19 @@ def toFinitePairedSeamBandCharts
   band := C.chart
   support_pairwise := by
     intro b e hbe
-    rw [C.support_eq b, C.support_eq e]
-    exact P.bandNeighborhood_pairwise hbe
+    exact (P.bandNeighborhood_pairwise hbe).mono
+      (C.support_subset b) (C.support_subset e)
 
-/-- The support union of the transported standard charts is exactly the support union named by
-the graph pairing. -/
-theorem supportUnion_eq
+/-- The compact replacement supports lie in the open isolation neighborhoods. -/
+theorem supportUnion_subset_bandNeighborhoods
     (C : BarrierExcursionBandChartRealization P) :
-    C.toFinitePairedSeamBandCharts.supportUnion =
+    C.toFinitePairedSeamBandCharts.supportUnion ⊆
       ⋃ b, P.bandNeighborhood b := by
-  ext x
+  intro x hx
   simp only [FinitePairedSeamBandCharts.supportUnion,
-    toFinitePairedSeamBandCharts, Set.mem_iUnion]
-  constructor
-  · rintro ⟨b, hb⟩
-    exact ⟨b, C.support_eq b ▸ hb⟩
-  · rintro ⟨b, hb⟩
-    exact ⟨b, (C.support_eq b).symm ▸ hb⟩
+    toFinitePairedSeamBandCharts, Set.mem_iUnion] at hx ⊢
+  obtain ⟨b, hb⟩ := hx
+  exact ⟨b, C.support_subset b hb⟩
 
 /-- Every standard smoothing arc lies on the transported torus because the ambient band chart
 is required to be a transported-torus chart. -/
@@ -529,8 +568,19 @@ theorem resolvedGraphCarrier_sdiff_bandNeighborhoods
     (choice : Fin P.bandCount → Bool) :
     C.resolvedGraphCarrier choice \ (⋃ b, P.bandNeighborhood b) =
       G.carrier \ (⋃ b, P.bandNeighborhood b) := by
-  rw [← C.supportUnion_eq, resolvedGraphCarrier,
-    FinitePairedSeamBandCharts.resolvedCarrier_sdiff_supportUnion]
+  let F := C.toFinitePairedSeamBandCharts
+  have hsupport : F.supportUnion ⊆ ⋃ b, P.bandNeighborhood b :=
+    C.supportUnion_subset_bandNeighborhoods
+  ext x
+  constructor
+  · rintro ⟨hx, hxBand⟩
+    rcases hx with hxOld | hxPatch
+    · exact ⟨hxOld.1, hxBand⟩
+    · exact False.elim <| hxBand <| hsupport <| F.patchUnion_subset_supportUnion
+        choice hxPatch
+  · rintro ⟨hxOld, hxBand⟩
+    refine ⟨Or.inl ⟨hxOld, ?_⟩, hxBand⟩
+    exact fun hxSupport ↦ hxBand (hsupport hxSupport)
 
 /-- If all transported band traces are charged to a common event region, every newly introduced
 point is charged there. -/
@@ -544,8 +594,11 @@ theorem resolvedGraphCarrier_subset_oldOutside_union_eventRegion
   have hx' := C.toFinitePairedSeamBandCharts
     |>.resolvedCarrier_subset_oldOutside_union_eventRegion G.carrier choice hx
   rcases hx' with hxOld | hxEvent
-  · rw [C.supportUnion_eq] at hxOld
-    exact Or.inl hxOld
+  · by_cases hxBand : x ∈ ⋃ b, P.bandNeighborhood b
+    · right
+      obtain ⟨b, hb⟩ := Set.mem_iUnion.mp hxBand
+      exact hevent b (C.neighborhood_subset_eventRegion b hb)
+    · exact Or.inl ⟨hxOld.1, hxBand⟩
   · right
     simp only [FinitePairedSeamBandCharts.eventRegion, Set.mem_iUnion] at hxEvent
     obtain ⟨b, hb⟩ := hxEvent

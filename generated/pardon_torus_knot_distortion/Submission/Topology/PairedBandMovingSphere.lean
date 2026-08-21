@@ -203,15 +203,17 @@ structure PairedBandMovingSphereCollarData
   family : FiniteRelativeSphereBandPatchData
   sourceOutside_torus_mem : ∀ k x, x ∉ (family.patch k).region →
     (family.patch k).source x ∈ transportedTorus Phi →
-      (family.patch k).source x ∈ G.carrier \ (⋃ b, P.bandNeighborhood b)
+      (family.patch k).source x ∈
+        G.carrier \ C.toFinitePairedSeamBandCharts.supportUnion
   oldOutside_has_source : ∀ y,
-    y ∈ G.carrier \ (⋃ b, P.bandNeighborhood b) →
+    y ∈ G.carrier \ C.toFinitePairedSeamBandCharts.supportUnion →
       ∃ k x, x ∉ (family.patch k).region ∧ (family.patch k).source x = y
   source_mem_support_iff : ∀ k x,
-    (family.patch k).source x ∈ (⋃ b, P.bandNeighborhood b) ↔
+    (family.patch k).source x ∈ C.toFinitePairedSeamBandCharts.supportUnion ↔
       x ∈ (family.patch k).region
   replacement_region_mem_support : ∀ k x, x ∈ (family.patch k).region →
-    (family.patch k).replacement x ∈ ⋃ b, P.bandNeighborhood b
+    (family.patch k).replacement x ∈
+      C.toFinitePairedSeamBandCharts.supportUnion
   replacement_torus_mem : ∀ k x, x ∈ (family.patch k).region →
     (family.patch k).replacement x ∈ transportedTorus Phi →
       (family.patch k).replacement x ∈
@@ -253,8 +255,9 @@ theorem replacementImage_inter_torus_eq
 union of band supports.  This is derived from support control of the primitive collar sheets. -/
 theorem patchedFamily_sdiff_support_eq_source
     (D : PairedBandMovingSphereCollarData C choice) :
-    D.family.patchedFamily.carrier \ (⋃ b, P.bandNeighborhood b) =
-      D.family.sourceImage \ (⋃ b, P.bandNeighborhood b) := by
+    D.family.patchedFamily.carrier \
+        C.toFinitePairedSeamBandCharts.supportUnion =
+      D.family.sourceImage \ C.toFinitePairedSeamBandCharts.supportUnion := by
   rw [D.family.patchedFamily_carrier]
   ext y
   constructor
@@ -282,10 +285,29 @@ theorem patchedFamily_sdiff_support_eq_source
       Set.mem_iUnion]
     exact ⟨k, x, hx, hxy⟩
 
+/-- Agreement off compact replacement support implies agreement off the larger open isolation
+neighborhoods. -/
+theorem patchedFamily_sdiff_bandNeighborhoods_eq_source
+    (D : PairedBandMovingSphereCollarData C choice) :
+    D.family.patchedFamily.carrier \ (⋃ b, P.bandNeighborhood b) =
+      D.family.sourceImage \ (⋃ b, P.bandNeighborhood b) := by
+  have hsupport := C.supportUnion_subset_bandNeighborhoods
+  have hoff := Set.ext_iff.mp D.patchedFamily_sdiff_support_eq_source
+  ext y
+  constructor
+  · rintro ⟨hy, hyBand⟩
+    have hySupport : y ∉ C.toFinitePairedSeamBandCharts.supportUnion :=
+      fun hy ↦ hyBand (hsupport hy)
+    exact ⟨((hoff y).mp ⟨hy, hySupport⟩).1, hyBand⟩
+  · rintro ⟨hy, hyBand⟩
+    have hySupport : y ∉ C.toFinitePairedSeamBandCharts.supportUnion :=
+      fun hy ↦ hyBand (hsupport hy)
+    exact ⟨((hoff y).mpr ⟨hy, hySupport⟩).1, hyBand⟩
+
 theorem sourceOutsideImage_inter_torus_eq
     (D : PairedBandMovingSphereCollarData C choice) :
     D.family.sourceOutsideImage ∩ transportedTorus Phi =
-      G.carrier \ (⋃ b, P.bandNeighborhood b) := by
+      G.carrier \ C.toFinitePairedSeamBandCharts.supportUnion := by
   ext y
   constructor
   · rintro ⟨hy, hyTorus⟩
@@ -309,7 +331,7 @@ theorem patchedFamily_inter_torus_eq_resolvedGraphCarrier
   rw [D.family.patchedFamily_inter_transportedTorus,
     D.replacementImage_inter_torus_eq, D.sourceOutsideImage_inter_torus_eq,
     BarrierExcursionBandChartRealization.resolvedGraphCarrier,
-    FinitePairedSeamBandCharts.resolvedCarrier, C.supportUnion_eq]
+    FinitePairedSeamBandCharts.resolvedCarrier]
   exact Set.union_comm _ _
 
 /-- Circle and parity-side data attached to the already constructed moving-sphere family.  The
@@ -684,7 +706,7 @@ theorem postBoundary_subset_support
       exact ⟨D.postCarrier_eq ▸ hxPost, hxBand⟩
     have hxPostSource : (x : R3) ∈
         postCollar.family.sourceImage \ (⋃ b, P.bandNeighborhood b) := by
-      rw [← postCollar.patchedFamily_sdiff_support_eq_source]
+      rw [← postCollar.patchedFamily_sdiff_bandNeighborhoods_eq_source]
       exact hxPostPatched
     have hxPreSource : (x : R3) ∈
         preCollar.family.sourceImage \ (⋃ b, P.bandNeighborhood b) := by
@@ -692,7 +714,7 @@ theorem postBoundary_subset_support
       exact hxPostSource
     have hxPrePatched : (x : R3) ∈
         preCollar.family.patchedFamily.carrier \ (⋃ b, P.bandNeighborhood b) := by
-      rw [preCollar.patchedFamily_sdiff_support_eq_source]
+      rw [preCollar.patchedFamily_sdiff_bandNeighborhoods_eq_source]
       exact hxPreSource
     exact D.preCarrier_eq.symm ▸ hxPrePatched.1
 
