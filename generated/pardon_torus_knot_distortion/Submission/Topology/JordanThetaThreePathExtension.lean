@@ -160,7 +160,8 @@ theorem outer12AmbientHomeomorph_apply_path1
   have htarget : (targetPath 1).symm (unitInterval.symm t) = targetPath 1 t := by
     change (targetPath 1).symm.symm t = targetPath 1 t
     rw [Path.symm_symm]
-  simpa only [outer12AmbientHomeomorph, outer12Presentation, hsource, htarget] using h
+  rw [← hsource, ← htarget]
+  exact h
 
 theorem outer12AmbientHomeomorph_apply_path2
     (hG : closure G.circle12.inside =
@@ -177,7 +178,8 @@ theorem outer12AmbientHomeomorph_apply_path2
   have htarget : (targetPath 2).symm (unitInterval.symm t) = targetPath 2 t := by
     change (targetPath 2).symm.symm t = targetPath 2 t
     rw [Path.symm_symm]
-  simpa only [outer12AmbientHomeomorph, outer12Presentation, hsource, htarget] using h
+  rw [← hsource, ← htarget]
+  exact h
 
 end ThreePathSystem
 end Submission.Topology
